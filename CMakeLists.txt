@@ -7,6 +7,9 @@ option(BUILD_EXAMPLES "Build example programs" ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DQUARTZ_DEBUG")
+
+add_subdirectory(3rdparty)
 add_subdirectory(src)
 
 if(BUILD_EXAMPLES)
