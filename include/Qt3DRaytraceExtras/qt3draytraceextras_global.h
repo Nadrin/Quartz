@@ -6,7 +6,12 @@
 
 #pragma once
 
+#include <qtgui-config.h>
 #include <Qt3DCore/qt3dcore_global.h>
+
+#if !QT_CONFIG(vulkan)
+#error "Quartz requires Qt version with Vulkan support enabled at compile time."
+#endif
 
 #if defined(QUARTZ_SHARED)
 #  if defined(QT3DRAYTRACEEXTRAS_LIBRARY)

@@ -7,21 +7,40 @@
 #pragma once
 
 #include <Qt3DRaytraceExtras/qt3draytraceextras_global.h>
-#include <QtGui/QWindow>
+
+#include <QVulkanWindow>
+#include <QScopedPointer>
+
+#include <QAspectEngine>
+#include <QInputAspect>
+#include <QLogicAspect>
+#include <QInputSettings>
+
+#include <Qt3DRaytrace/qraytraceaspect.h>
 
 namespace Qt3DRaytraceExtras {
 
-class Qt3DWindowPrivate;
-
-class QT3DRAYTRACEEXTRASSHARED_EXPORT Qt3DWindow : public QWindow
+class QT3DRAYTRACEEXTRASSHARED_EXPORT Qt3DWindow : public QVulkanWindow
 {
     Q_OBJECT
 public:
-    explicit Qt3DWindow(QScreen *screen = nullptr);
-    virtual ~Qt3DWindow();
+    Qt3DWindow();
 
-private:
-    Q_DECLARE_PRIVATE(Qt3DWindow)
+    QVulkanWindowRenderer *createRenderer() override;
+
+protected:
+    void exposeEvent(QExposeEvent *event) override;
+
+    QScopedPointer<Qt3DCore::QAspectEngine> m_aspectEngine;
+
+    Qt3DRaytrace::QRaytraceAspect *m_raytraceAspect;
+    Qt3DInput::QInputAspect *m_inputAspect;
+    Qt3DLogic::QLogicAspect *m_logicAspect;
+
+    QScopedPointer<Qt3DInput::QInputSettings> m_inputSettings;
+    Qt3DCore::QEntityPtr m_root;
+
+    bool m_initialized = false;
 };
 
 } // Qt3DRaytraceExtras

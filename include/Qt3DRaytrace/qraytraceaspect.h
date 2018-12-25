@@ -12,18 +12,28 @@
 namespace Qt3DRaytrace {
 
 class QRaytraceAspectPrivate;
+class QAbstractRenderer;
 
 class QT3DRAYTRACESHARED_EXPORT QRaytraceAspect : public Qt3DCore::QAbstractAspect
 {
     Q_OBJECT
 public:
     explicit QRaytraceAspect(QObject *parent = nullptr);
-    virtual ~QRaytraceAspect();
+
+    QAbstractRenderer *renderer() const;
+    void setRenderer(QAbstractRenderer *renderer);
 
 protected:
     QRaytraceAspect(QRaytraceAspectPrivate &dd, QObject *parent);
-
     Q_DECLARE_PRIVATE(QRaytraceAspect)
+
+private:
+    QVector<Qt3DCore::QAspectJobPtr> jobsToExecute(qint64 time) override;
+
+    void onRegistered() override;
+    void onUnregistered() override;
+
+    void updateServiceProviders();
 };
 
 } // Qt3DRaytrace

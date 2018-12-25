@@ -9,7 +9,6 @@ find_package(Qt5 COMPONENTS Core Gui 3DCore 3DInput 3DLogic REQUIRED)
 set(SOURCES_PRIVATE
     qt3draytraceextras_global_p.h
     qt3dwindow.cpp
-    qt3dwindow_p.h
 )
 
 set(SOURCES_PUBLIC
@@ -23,7 +22,8 @@ set_target_properties(${MODULE_NAME} PROPERTIES OUTPUT_NAME_DEBUG "${MODULE_LIBN
 
 target_include_directories(${MODULE_NAME} PUBLIC ${QUARTZ_PUBLIC_API})
 target_compile_features(${MODULE_NAME} PUBLIC cxx_std_14)
-target_link_libraries(${MODULE_NAME} Qt5::Core Qt5::GuiPrivate Qt5::3DCore Qt5::3DInput Qt5::3DLogic Qt3DRaytrace)
+target_compile_definitions(${MODULE_NAME} PRIVATE VK_NO_PROTOTYPES)
+target_link_libraries(${MODULE_NAME} Qt5::Core Qt5::Gui Qt5::3DCore Qt5::3DInput Qt5::3DLogic Qt3DRaytrace)
 
 if(BUILD_SHARED_LIBS)
     target_compile_definitions(${MODULE_NAME}
