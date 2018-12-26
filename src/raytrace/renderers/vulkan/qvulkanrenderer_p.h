@@ -9,6 +9,8 @@
 #include <Qt3DRaytrace/qvulkanrenderer.h>
 #include <renderers/vulkan/vulkanframeadvanceservice.h>
 
+#include <vk_mem_alloc.h>
+
 namespace Qt3DRaytrace {
 
 class QVulkanRendererPrivate
@@ -20,6 +22,7 @@ public:
     QScopedPointer<VulkanFrameAdvanceService> m_frameAdvanceService;
 
     VkDevice m_device;
+    VmaAllocator m_allocator;
 
     Q_DECLARE_PUBLIC(QVulkanRenderer)
 

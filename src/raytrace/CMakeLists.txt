@@ -30,7 +30,7 @@ set_target_properties(${MODULE_NAME} PROPERTIES OUTPUT_NAME_DEBUG "${MODULE_LIBN
 target_include_directories(${MODULE_NAME} PUBLIC ${QUARTZ_PUBLIC_API})
 target_compile_features(${MODULE_NAME} PUBLIC cxx_std_14)
 target_compile_definitions(${MODULE_NAME} PRIVATE VK_NO_PROTOTYPES)
-target_link_libraries(${MODULE_NAME} Qt5::Core Qt5::Gui Qt5::3DCorePrivate volk)
+target_link_libraries(${MODULE_NAME} Qt5::Core Qt5::Gui Qt5::3DCorePrivate volk vma)
 
 if(BUILD_SHARED_LIBS)
     target_compile_definitions(${MODULE_NAME}

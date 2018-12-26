@@ -73,6 +73,8 @@ void QVulkanRenderer::initResources()
     d->m_device = d->m_window->device();
     Q_ASSERT(d->m_device);
     volkLoadDevice(d->m_device);
+    initVulkanAllocator();
+
 }
 
 void QVulkanRenderer::initSwapChainResources()
@@ -87,7 +89,7 @@ void QVulkanRenderer::releaseSwapChainResources()
 
 void QVulkanRenderer::releaseResources()
 {
-
+    releaseVulkanAllocator();
 }
 
 void QVulkanRenderer::startNextFrame()
@@ -112,6 +114,48 @@ Qt3DCore::QAbstractFrameAdvanceService *QVulkanRenderer::frameAdvanceService() c
 {
     Q_D(const QVulkanRenderer);
     return d->m_frameAdvanceService.get();
+}
+
+void QVulkanRenderer::initVulkanAllocator()
+{
+    Q_D(QVulkanRenderer);
+
+    VmaVulkanFunctions vmaFunctions;
+    vmaFunctions.vkAllocateMemory = vkAllocateMemory;
+    vmaFunctions.vkBindBufferMemory = vkBindBufferMemory;
+    vmaFunctions.vkBindImageMemory = vkBindImageMemory;
+    vmaFunctions.vkCreateBuffer = vkCreateBuffer;
+    vmaFunctions.vkCreateImage = vkCreateImage;
+    vmaFunctions.vkDestroyBuffer = vkDestroyBuffer;
+    vmaFunctions.vkDestroyImage = vkDestroyImage;
+    vmaFunctions.vkFlushMappedMemoryRanges = vkFlushMappedMemoryRanges;
+    vmaFunctions.vkFreeMemory = vkFreeMemory;
+    vmaFunctions.vkGetImageMemoryRequirements = vkGetImageMemoryRequirements;
+    vmaFunctions.vkGetBufferMemoryRequirements = vkGetBufferMemoryRequirements;
+    vmaFunctions.vkGetPhysicalDeviceProperties = vkGetPhysicalDeviceProperties;
+    vmaFunctions.vkGetImageMemoryRequirements2KHR = vkGetImageMemoryRequirements2KHR;
+    vmaFunctions.vkGetBufferMemoryRequirements2KHR = vkGetBufferMemoryRequirements2KHR;
+    vmaFunctions.vkGetPhysicalDeviceMemoryProperties = vkGetPhysicalDeviceMemoryProperties;
+    vmaFunctions.vkInvalidateMappedMemoryRanges = vkInvalidateMappedMemoryRanges;
+    vmaFunctions.vkMapMemory = vkMapMemory;
+    vmaFunctions.vkUnmapMemory = vkUnmapMemory;
+
+    VmaAllocatorCreateInfo createInfo = {};
+    createInfo.physicalDevice = d->m_window->physicalDevice();
+    createInfo.device = d->m_window->device();
+    createInfo.pVulkanFunctions = &vmaFunctions;
+    if(VKFAILED(vmaCreateAllocator(&createInfo, &d->m_allocator))) {
+        qFatal("QVulkanRenderer: Failed to create Vulkan memory allocator");
+    }
+}
+
+void QVulkanRenderer::releaseVulkanAllocator()
+{
+    Q_D(QVulkanRenderer);
+    if(d->m_allocator != VK_NULL_HANDLE) {
+        vmaDestroyAllocator(d->m_allocator);
+        d->m_allocator = VK_NULL_HANDLE;
+    }
 }
 
 } // Qt3DRaytrace
