@@ -5,7 +5,6 @@ set(MODULE_LIBNAME "Qt53DRaytrace")
 set(MODULE_API ${QUARTZ_PUBLIC_API}/${MODULE_NAME})
 
 find_package(Qt5 COMPONENTS Core Gui 3DCore REQUIRED)
-find_package(Vulkan REQUIRED)
 
 set(SOURCES_PRIVATE
     qt3draytrace_global_p.h
@@ -31,7 +30,7 @@ set_target_properties(${MODULE_NAME} PROPERTIES OUTPUT_NAME_DEBUG "${MODULE_LIBN
 target_include_directories(${MODULE_NAME} PUBLIC ${QUARTZ_PUBLIC_API})
 target_compile_features(${MODULE_NAME} PUBLIC cxx_std_14)
 target_compile_definitions(${MODULE_NAME} PRIVATE VK_NO_PROTOTYPES)
-target_link_libraries(${MODULE_NAME} Qt5::Core Qt5::Gui Qt5::3DCorePrivate Vulkan::Vulkan volk)
+target_link_libraries(${MODULE_NAME} Qt5::Core Qt5::Gui Qt5::3DCorePrivate volk)
 
 if(BUILD_SHARED_LIBS)
     target_compile_definitions(${MODULE_NAME}

@@ -19,6 +19,8 @@ public:
     QVulkanWindow *m_window;
     QScopedPointer<VulkanFrameAdvanceService> m_frameAdvanceService;
 
+    VkDevice m_device;
+
     Q_DECLARE_PUBLIC(QVulkanRenderer)
 
 private:
