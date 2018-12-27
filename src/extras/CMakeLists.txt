@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.8)
 set(MODULE_NAME "Qt3DRaytraceExtras")
 set(MODULE_LIBNAME "Qt53DRaytraceExtras")
 set(MODULE_API ${QUARTZ_PUBLIC_API}/${MODULE_NAME})
+set(MODULE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 find_package(Qt5 COMPONENTS Core Gui 3DCore 3DInput 3DLogic REQUIRED)
 
@@ -18,7 +19,6 @@ set(SOURCES_PUBLIC
 
 add_library(${MODULE_NAME} ${SOURCES_PRIVATE} ${SOURCES_PUBLIC})
 set_target_properties(${MODULE_NAME} PROPERTIES OUTPUT_NAME ${MODULE_LIBNAME})
-set_target_properties(${MODULE_NAME} PROPERTIES OUTPUT_NAME_DEBUG "${MODULE_LIBNAME}d")
 
 target_include_directories(${MODULE_NAME} PUBLIC ${QUARTZ_PUBLIC_API})
 target_compile_features(${MODULE_NAME} PUBLIC cxx_std_14)
