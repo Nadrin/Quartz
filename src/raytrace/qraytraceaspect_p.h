@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <QScopedPointer>
-
 #include <Qt3DRaytrace/qraytraceaspect.h>
 #include <Qt3DRaytrace/qabstractrenderer.h>
 #include <Qt3DCore/private/qabstractaspect_p.h>

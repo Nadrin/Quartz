@@ -14,6 +14,8 @@ using namespace Qt3DCore;
 
 namespace Qt3DRaytrace {
 
+Q_LOGGING_CATEGORY(logAspect, "raytrace.aspect")
+
 QRaytraceAspectPrivate::QRaytraceAspectPrivate()
     : m_renderer(nullptr)
 {}

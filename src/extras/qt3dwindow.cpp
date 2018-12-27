@@ -23,6 +23,7 @@ Qt3DWindow::Qt3DWindow()
     , m_root(new Qt3DCore::QEntity)
 {
     resize(1024, 768);
+    setFlags(QVulkanWindow::PersistentResources);
 
     m_aspectEngine->registerAspect(m_raytraceAspect);
     m_aspectEngine->registerAspect(m_inputAspect);

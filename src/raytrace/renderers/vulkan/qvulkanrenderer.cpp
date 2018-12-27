@@ -5,13 +5,13 @@
  */
 
 #include <renderers/vulkan/qvulkanrenderer_p.h>
+#include <renderers/vulkan/vkcommon.h>
 
 #include <QVulkanWindow>
-#include <volk.h>
-
-#define VKFAILED(x) ((x) != VK_SUCCESS)
 
 namespace Qt3DRaytrace {
+
+Q_LOGGING_CATEGORY(logVulkan, "raytrace.vulkan")
 
 QVulkanRendererPrivate::QVulkanRendererPrivate(QVulkanRenderer *q, QVulkanWindow *window)
     : q_ptr(q)
@@ -34,7 +34,8 @@ void QVulkanRenderer::preInitResources()
     Q_D(QVulkanRenderer);
 
     if(VKFAILED(volkInitialize())) {
-        qFatal("QVulkanRenderer: Failed to initialize Vulkan function loader");
+        qCCritical(logVulkan) << "Failed to initialize Vulkan function loader";
+        return;
     }
 
     QVulkanInstance *instance = d->m_window->vulkanInstance();
@@ -59,10 +60,11 @@ void QVulkanRenderer::preInitResources()
         }
     }
     if(physicalDevice) {
-        qInfo() << "Using physical device:" << d->m_window->physicalDeviceProperties()->deviceName;
+        qCInfo(logVulkan) << "Using physical device:" << d->m_window->physicalDeviceProperties()->deviceName;
+        d->m_window->setDeviceExtensions(RequiredDeviceExtensions);
     }
     else {
-        qFatal("QVulkanRenderer: No suitable physical device found");
+        qCCritical(logVulkan) << "No suitable physical device found";
     }
 }
 
@@ -73,7 +75,11 @@ void QVulkanRenderer::initResources()
     d->m_device = d->m_window->device();
     Q_ASSERT(d->m_device);
     volkLoadDevice(d->m_device);
-    initVulkanAllocator();
+
+    if(!initVulkanAllocator()) {
+        return;
+    }
+
 
 }
 
@@ -116,7 +122,7 @@ Qt3DCore::QAbstractFrameAdvanceService *QVulkanRenderer::frameAdvanceService() c
     return d->m_frameAdvanceService.get();
 }
 
-void QVulkanRenderer::initVulkanAllocator()
+bool QVulkanRenderer::initVulkanAllocator()
 {
     Q_D(QVulkanRenderer);
 
@@ -145,8 +151,10 @@ void QVulkanRenderer::initVulkanAllocator()
     createInfo.device = d->m_window->device();
     createInfo.pVulkanFunctions = &vmaFunctions;
     if(VKFAILED(vmaCreateAllocator(&createInfo, &d->m_allocator))) {
-        qFatal("QVulkanRenderer: Failed to create Vulkan memory allocator");
+        qCCritical(logVulkan) << "Failed to create Vulkan memory allocator";
+        return false;
     }
+    return true;
 }
 
 void QVulkanRenderer::releaseVulkanAllocator()
