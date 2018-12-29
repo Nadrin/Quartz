@@ -10,6 +10,12 @@
 
 #if QUARTZ_DEBUG
 #include <QLoggingCategory>
+
+static const char *logFilterRules = R"(
+        qt.vulkan=true
+        raytrace.aspect=true
+        raytrace.vulkan=true
+)";
 #endif
 
 int main(int argc, char **argv)
@@ -19,7 +25,7 @@ int main(int argc, char **argv)
     QVulkanInstance vulkanInstance;
     vulkanInstance.setApiVersion(QVersionNumber(1, 1));
 #ifdef QUARTZ_DEBUG
-    QLoggingCategory::setFilterRules(QStringLiteral("qt.vulkan=true"));
+    QLoggingCategory::setFilterRules(logFilterRules);
     vulkanInstance.setLayers(QByteArrayList() << "VK_LAYER_LUNARG_stdandard_validation");
 #endif
     if(!vulkanInstance.create()) {
