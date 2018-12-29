@@ -8,6 +8,12 @@ set(VULKAN_SOURCES_PRIVATE
     renderers/vulkan/vulkanframeadvanceservice.h
     renderers/vulkan/shadermodule.cpp
     renderers/vulkan/shadermodule.h
+    renderers/vulkan/pipeline/pipeline.cpp
+    renderers/vulkan/pipeline/pipeline.h
+    renderers/vulkan/pipeline/graphicspipeline.cpp
+    renderers/vulkan/pipeline/graphicspipeline.h
+    renderers/vulkan/pipeline/computepipeline.cpp
+    renderers/vulkan/pipeline/computepipeline.h
 )
 
 set(VULKAN_SOURCES_PUBLIC
