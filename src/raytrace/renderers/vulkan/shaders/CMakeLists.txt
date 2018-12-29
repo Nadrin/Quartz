@@ -6,10 +6,10 @@ file(GLOB_RECURSE GLSL_SOURCES "*.glsl")
 foreach(GLSL_PATH ${GLSL_SOURCES})
     get_filename_component(GLSL_FILE ${GLSL_PATH} NAME)
     string(REGEX REPLACE "\\.[^.]*$" "" GLSL_BASE_FILE ${GLSL_FILE})
-    set(SPV_PATH "${MODULE_BINARY_DIR}/shaders/${GLSL_BASE_FILE}.spv")
+    set(SPV_PATH "${PROJECT_BINARY_DIR}/shaders/${GLSL_BASE_FILE}.spv")
     add_custom_command(
         OUTPUT ${SPV_PATH}
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${MODULE_BINARY_DIR}/shaders/"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/shaders/"
         COMMAND ${GLSLANG} -V ${GLSL_PATH} -o ${SPV_PATH}
         DEPENDS ${GLSL_PATH})
     list(APPEND SPV_BINARY_FILES ${SPV_PATH})
