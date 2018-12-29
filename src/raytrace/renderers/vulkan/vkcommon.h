@@ -38,6 +38,24 @@ protected:
         , m_handle(handle)
     {}
 
+    DeviceHandle(const DeviceHandle<T>&) = delete;
+    DeviceHandle<T>& operator=(const DeviceHandle<T>&) = delete;
+
+    DeviceHandle(DeviceHandle<T> &&other)
+        : m_device(other.m_device)
+        , m_handle(other.m_handle)
+    {
+        other.reset();
+    }
+
+    DeviceHandle<T>& operator=(DeviceHandle<T> &&other)
+    {
+        m_device = other.m_device;
+        m_handle = other.m_handle;
+        other.reset();
+        return *this;
+    }
+
     void reset()
     {
         m_device = VK_NULL_HANDLE;
