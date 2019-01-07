@@ -36,9 +36,6 @@ public:
     Q_DECLARE_PRIVATE(QVulkanRenderer)
 
 private:
-    bool initVulkanAllocator();
-    void releaseVulkanAllocator();
-
     QScopedPointer<QVulkanRendererPrivate> d_ptr;
 };
 
