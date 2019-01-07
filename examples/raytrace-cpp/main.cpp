@@ -26,7 +26,7 @@ int main(int argc, char **argv)
     vulkanInstance.setApiVersion(QVersionNumber(1, 1));
 #ifdef QUARTZ_DEBUG
     QLoggingCategory::setFilterRules(logFilterRules);
-    vulkanInstance.setLayers(QByteArrayList() << "VK_LAYER_LUNARG_stdandard_validation");
+    vulkanInstance.setLayers(QByteArrayList() << "VK_LAYER_LUNARG_standard_validation");
 #endif
     if(!vulkanInstance.create()) {
         qFatal("Failed to create Vulkan instance: %x", vulkanInstance.errorCode());
