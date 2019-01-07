@@ -1,0 +1,211 @@
+/*
+ * Copyright (C) 2018 Michał Siejak
+ * This file is part of Quartz - a raytracing aspect for Qt3D.
+ * See LICENSE file for licensing information.
+ */
+
+#pragma once
+
+#include <renderers/vulkan/vkcommon.h>
+#include <renderers/vulkan/descriptors.h>
+
+#include <QVector>
+
+namespace Qt3DRaytrace {
+namespace Vulkan {
+
+template<typename T>
+struct Initializer : T
+{
+    Initializer(VkStructureType type) : T({type}) {}
+
+    operator T*() { return static_cast<T*>(this); }
+    operator const T*() const { return static_cast<const T*>(this); }
+};
+
+struct SamplerCreateInfo : Initializer<VkSamplerCreateInfo>
+{
+    SamplerCreateInfo(VkFilter filter_=VK_FILTER_NEAREST, VkSamplerMipmapMode mipmapMode_=VK_SAMPLER_MIPMAP_MODE_NEAREST)
+        : Initializer(VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO)
+    {
+        magFilter = filter_;
+        minFilter = filter_;
+        mipmapMode = mipmapMode_;
+    }
+};
+
+struct DescriptorPoolCreateInfo : Initializer<VkDescriptorPoolCreateInfo>
+{
+    DescriptorPoolCreateInfo(uint32_t maxSets_, VkDescriptorPoolCreateFlags flags_=0)
+        : Initializer(VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO)
+    {
+        maxSets = maxSets_;
+        flags = flags_;
+    }
+    DescriptorPoolCreateInfo(uint32_t maxSets_, const QVector<VkDescriptorPoolSize>& poolSizes_, VkDescriptorPoolCreateFlags flags_=0)
+        : DescriptorPoolCreateInfo(maxSets_, flags_)
+    {
+        pPoolSizes = poolSizes_.data();
+        poolSizeCount = uint32_t(poolSizes_.size());
+    }
+};
+
+struct QueryPoolCreateInfo : Initializer<VkQueryPoolCreateInfo>
+{
+    QueryPoolCreateInfo(VkQueryType queryType_, uint32_t queryCount_, VkQueryPipelineStatisticFlags pipelineStatistics_=0)
+        : Initializer(VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO)
+    {
+        queryType = queryType_;
+        queryCount = queryCount_;
+        pipelineStatistics = pipelineStatistics_;
+    }
+};
+
+struct ImageCreateInfo : Initializer<VkImageCreateInfo>
+{
+    ImageCreateInfo(VkImageType imageType_, VkFormat format_, const VkExtent3D &extent_, uint32_t mipLevels_=1, uint32_t arrayLayers_=1)
+        : Initializer(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO)
+    {
+        imageType = imageType_;
+        format = format_;
+        extent = extent_;
+        mipLevels = mipLevels_;
+        arrayLayers = arrayLayers_;
+
+        samples = VK_SAMPLE_COUNT_1_BIT;
+        tiling = VK_IMAGE_TILING_OPTIMAL;
+        sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    }
+};
+
+struct ImageViewCreateInfo : Initializer<VkImageViewCreateInfo>
+{
+    ImageViewCreateInfo(VkImage image_, VkImageViewType viewType_, VkFormat format_, VkImageAspectFlags aspectMask_=VK_IMAGE_ASPECT_COLOR_BIT)
+        : Initializer(VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO)
+    {
+        image = image_;
+        viewType = viewType_;
+        format = format_;
+        subresourceRange.aspectMask = aspectMask_;
+        subresourceRange.levelCount = VK_REMAINING_MIP_LEVELS;
+        subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
+    }
+};
+
+struct DescriptorSetAllocateInfo : Initializer<VkDescriptorSetAllocateInfo>
+{
+    DescriptorSetAllocateInfo(VkDescriptorPool descriptorPool_)
+        : Initializer(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO)
+    {
+        descriptorPool = descriptorPool_;
+    }
+    DescriptorSetAllocateInfo(VkDescriptorPool descriptorPool_, const QVector<VkDescriptorSetLayout> &setLayouts_)
+        : DescriptorSetAllocateInfo(descriptorPool_)
+    {
+        pSetLayouts = setLayouts_.data();
+        descriptorSetCount = uint32_t(setLayouts_.size());
+    }
+};
+
+struct BufferMemoryBarrier : Initializer<VkBufferMemoryBarrier>
+{
+    BufferMemoryBarrier(VkAccessFlags srcAccessMask_, VkAccessFlags dstAccessMask_, VkBuffer buffer_, const BufferRange &range_={})
+        : Initializer(VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER)
+    {
+        srcAccessMask = srcAccessMask_;
+        dstAccessMask = dstAccessMask_;
+        buffer = buffer_;
+        offset = range_.offset;
+        size = range_.size;
+        srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    }
+};
+
+struct ImageMemoryBarrier : Initializer<VkImageMemoryBarrier>
+{
+    ImageMemoryBarrier(VkAccessFlags srcAccessMask_, VkAccessFlags dstAccessMask_, VkImageLayout oldLayout_, VkImageLayout newLayout_, VkImage image_, const ImageSubresourceRange &subresourceRange_)
+        : Initializer(VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER)
+    {
+        srcAccessMask = srcAccessMask_;
+        dstAccessMask = dstAccessMask_;
+        oldLayout = oldLayout_;
+        newLayout = newLayout_;
+        image = image_;
+        subresourceRange = subresourceRange_;
+        srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    }
+};
+
+struct WriteDescriptorSet : Initializer<VkWriteDescriptorSet>
+{
+    WriteDescriptorSet(VkDescriptorSet dstSet_, uint32_t dstBinding_, uint32_t dstArrayElement_, uint32_t descriptorCount_, VkDescriptorType descriptorType_)
+        : Initializer(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET)
+    {
+        dstSet = dstSet_;
+        dstBinding = dstBinding_;
+        dstArrayElement = dstArrayElement_;
+        descriptorType = descriptorType_;
+        descriptorCount = descriptorCount_;
+    }
+    WriteDescriptorSet(VkDescriptorSet dstSet_, uint32_t dstBinding_, uint32_t dstArrayElement_, VkDescriptorType descriptorType_, const DescriptorImageInfo &imageInfo_)
+        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, 1, descriptorType_)
+    {
+        pImageInfo = &imageInfo_;
+    }
+    WriteDescriptorSet(VkDescriptorSet dstSet_, uint32_t dstBinding_, uint32_t dstArrayElement_, VkDescriptorType descriptorType_, const QVector<DescriptorImageInfo> &imageInfos_)
+        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, uint32_t(imageInfos_.size()), descriptorType_)
+    {
+        pImageInfo = imageInfos_.data();
+    }
+    WriteDescriptorSet(VkDescriptorSet dstSet_, uint32_t dstBinding_, uint32_t dstArrayElement_, VkDescriptorType descriptorType_, const DescriptorBufferInfo &bufferInfo_)
+        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, 1, descriptorType_)
+    {
+        pBufferInfo = &bufferInfo_;
+    }
+    WriteDescriptorSet(VkDescriptorSet dstSet_, uint32_t dstBinding_, uint32_t dstArrayElement_, VkDescriptorType descriptorType_, const QVector<DescriptorBufferInfo> &bufferInfos_)
+        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, uint32_t(bufferInfos_.size()), descriptorType_)
+    {
+        pBufferInfo = bufferInfos_.data();
+    }
+    WriteDescriptorSet(VkDescriptorSet dstSet_, uint32_t dstBinding_, uint32_t dstArrayElement_, VkDescriptorType descriptorType_, VkBufferView texelBufferView_)
+        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, 1, descriptorType_)
+    {
+        pTexelBufferView = &texelBufferView_;
+    }
+    WriteDescriptorSet(VkDescriptorSet dstSet_, uint32_t dstBinding_, uint32_t dstArrayElement_, VkDescriptorType descriptorType_, const QVector<VkBufferView> &texelBufferViews_)
+        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, uint32_t(texelBufferViews_.size()), descriptorType_)
+    {
+        pTexelBufferView = texelBufferViews_.data();
+    }
+};
+
+struct RenderPassBeginInfo : Initializer<VkRenderPassBeginInfo>
+{
+    RenderPassBeginInfo(VkRenderPass renderPass_=VK_NULL_HANDLE, VkFramebuffer framebuffer_=VK_NULL_HANDLE)
+        : Initializer(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO)
+    {
+        renderPass = renderPass_;
+        framebuffer = framebuffer_;
+    }
+};
+
+struct AllocationCreateInfo : VmaAllocationCreateInfo
+{
+    AllocationCreateInfo(VmaMemoryUsage usage_, VkMemoryPropertyFlags requiredFlags_=0, VkMemoryPropertyFlags preferredFlags_=0)
+        : VmaAllocationCreateInfo({})
+    {
+        usage = usage_;
+        requiredFlags = requiredFlags_;
+        preferredFlags = preferredFlags_;
+    }
+    operator const VmaAllocationCreateInfo*() const
+    {
+        return this;
+    }
+};
+
+} // Vulkan
+} // Qt3DRaytrace
