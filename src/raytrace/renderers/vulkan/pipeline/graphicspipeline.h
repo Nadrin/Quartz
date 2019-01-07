@@ -15,7 +15,7 @@ namespace Vulkan {
 class GraphicsPipelineBuilder final : public PipelineBuilderImpl<GraphicsPipelineBuilder>
 {
 public:
-    GraphicsPipelineBuilder(VkDevice device, VkRenderPass renderPass, uint32_t subpass=0);
+    GraphicsPipelineBuilder(Device *device, VkRenderPass renderPass, uint32_t subpass=0);
 
     // TODO: Add pipeline configuration functions.
 

@@ -15,7 +15,7 @@
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
-class ShaderModule : public DeviceHandle<VkShaderModule>
+class ShaderModule
 {
 public:
     struct DescriptorSetLayoutBinding {
@@ -41,16 +41,25 @@ public:
 
     bool loadFromFile(VkDevice device, const QString &filename, const QString &entryPoint="main");
     bool loadFromBytecode(VkDevice device, const QByteArray &bytecode, const QString &entryPoint="main");
-    void release();
+    void destroy();
 
+    bool isValid() const
+    {
+        return m_device != VK_NULL_HANDLE && m_module != VK_NULL_HANDLE;
+    }
+
+    VkShaderModule module() const { return m_module; }
     VkShaderStageFlagBits stage() const { return m_stage; }
     const QByteArray &entryPoint() const { return m_entryPoint; }
+
     const QVector<DescriptorSetLayout> &descriptorSets() const { return m_descriptorSets; }
     const QVector<PushConstantRange> &pushConstants() const { return m_pushConstants; }
 
     static QString getModulePath(const QString &name);
 
 private:
+    VkDevice m_device = VK_NULL_HANDLE;
+    VkShaderModule m_module = VK_NULL_HANDLE;
     VkShaderStageFlagBits m_stage;
     QByteArray m_entryPoint;
     QVector<DescriptorSetLayout> m_descriptorSets;

@@ -20,7 +20,7 @@ constexpr VkPipelineColorBlendAttachmentState defaultBlendAttachmentState = {
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_A_BIT,
 };
 
-GraphicsPipelineBuilder::GraphicsPipelineBuilder(VkDevice device, VkRenderPass renderPass, uint32_t subpass)
+GraphicsPipelineBuilder::GraphicsPipelineBuilder(Device *device, VkRenderPass renderPass, uint32_t subpass)
     : PipelineBuilderImpl<GraphicsPipelineBuilder>(device)
     , m_renderPass(renderPass)
     , m_subpass(subpass)
@@ -71,8 +71,9 @@ Pipeline GraphicsPipelineBuilder::build() const
 
     QVector<VkPipelineShaderStageCreateInfo> shaderStages(m_shaders.size());
     for(int i=0; i<m_shaders.size(); ++i) {
+        shaderStages[i].sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         shaderStages[i].stage  = m_shaders[i]->stage();
-        shaderStages[i].module = m_shaders[i]->handle();
+        shaderStages[i].module = m_shaders[i]->module();
         shaderStages[i].pName  = m_shaders[i]->entryPoint().data();
     }
 
@@ -93,6 +94,11 @@ Pipeline GraphicsPipelineBuilder::build() const
     if(viewportState.viewportCount > 0) {
         viewportState.pViewports = m_viewportState.viewport.data();
         viewportState.pScissors = m_viewportState.scissor.data();
+    }
+    else if(m_dynamicStates.contains(VK_DYNAMIC_STATE_VIEWPORT) &&
+            m_dynamicStates.contains(VK_DYNAMIC_STATE_SCISSOR)) {
+        viewportState.viewportCount = 1;
+        viewportState.scissorCount = 1;
     }
 
     VkPipelineColorBlendStateCreateInfo colorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
@@ -123,7 +129,7 @@ Pipeline GraphicsPipelineBuilder::build() const
     createInfo.layout = pipelineLayout;
     createInfo.renderPass = m_renderPass;
     createInfo.subpass = m_subpass;
-    if(VKFAILED(vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline.m_handle))) {
+    if(VKFAILED(vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline.handle))) {
         qCCritical(logVulkan) << "GraphicsPipelineBuilder: Failed to create graphics pipeline";
         vkDestroyPipelineLayout(m_device, pipelineLayout, nullptr);
         for(VkDescriptorSetLayout layout : descriptorSetLayouts) {
@@ -132,8 +138,8 @@ Pipeline GraphicsPipelineBuilder::build() const
         return pipeline;
     }
 
-    pipeline.m_pipelineLayout = pipelineLayout;
-    pipeline.m_descriptorSetLayouts = std::move(descriptorSetLayouts);
+    pipeline.pipelineLayout = pipelineLayout;
+    pipeline.descriptorSetLayouts = std::move(descriptorSetLayouts);
     return pipeline;
 }
 

@@ -15,7 +15,7 @@ namespace Vulkan {
 class ComputePipelineBuilder final : public PipelineBuilderImpl<ComputePipelineBuilder>
 {
 public:
-    explicit ComputePipelineBuilder(VkDevice device);
+    explicit ComputePipelineBuilder(Device *device);
 
     Pipeline build() const;
     bool validate() const;

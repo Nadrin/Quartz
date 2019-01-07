@@ -9,7 +9,7 @@
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
-ComputePipelineBuilder::ComputePipelineBuilder(VkDevice device)
+ComputePipelineBuilder::ComputePipelineBuilder(Device *device)
     : PipelineBuilderImpl<ComputePipelineBuilder>(device)
 {}
 
@@ -32,13 +32,13 @@ Pipeline ComputePipelineBuilder::build() const
     // TODO: Add support for specialization constants.
     VkPipelineShaderStageCreateInfo shaderStage = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
     shaderStage.stage  = VK_SHADER_STAGE_COMPUTE_BIT;
-    shaderStage.module = m_shaders[0]->handle();
+    shaderStage.module = m_shaders[0]->module();
     shaderStage.pName  = m_shaders[0]->entryPoint().data();
 
     VkComputePipelineCreateInfo createInfo = { VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO };
     createInfo.stage = shaderStage;
     createInfo.layout = pipelineLayout;
-    if(VKFAILED(vkCreateComputePipelines(m_device, VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline.m_handle))) {
+    if(VKFAILED(vkCreateComputePipelines(m_device, VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline.handle))) {
         qCCritical(logVulkan) << "ComputePipelineBuilder: Failed to create compute pipeline";
         vkDestroyPipelineLayout(m_device, pipelineLayout, nullptr);
         for(VkDescriptorSetLayout layout : descriptorSetLayouts) {
@@ -47,8 +47,8 @@ Pipeline ComputePipelineBuilder::build() const
         return pipeline;
     }
 
-    pipeline.m_pipelineLayout = pipelineLayout;
-    pipeline.m_descriptorSetLayouts = std::move(descriptorSetLayouts);
+    pipeline.pipelineLayout = pipelineLayout;
+    pipeline.descriptorSetLayouts = std::move(descriptorSetLayouts);
     return pipeline;
 }
 

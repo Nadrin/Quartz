@@ -18,29 +18,18 @@
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
-class Pipeline : public DeviceHandle<VkPipeline>
+class Pipeline : public Resource<VkPipeline>
 {
-    friend class GraphicsPipelineBuilder;
-    friend class ComputePipelineBuilder;
 public:
     explicit Pipeline(VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
-    Pipeline(Pipeline &&other);
-    ~Pipeline();
-
-    Pipeline &operator=(Pipeline &&other);
-
-    void release();
 
     VkPipelineBindPoint bindPoint() const { return m_bindPoint; }
-    VkPipelineLayout pipelineLayout() const { return m_pipelineLayout; }
-    const QVector<VkDescriptorSetLayout> &descriptorSetLayouts() const { return m_descriptorSetLayouts; }
+
+    VkPipelineLayout pipelineLayout;
+    QVector<VkDescriptorSetLayout> descriptorSetLayouts;
 
 private:
     VkPipelineBindPoint m_bindPoint;
-    VkPipelineLayout m_pipelineLayout;
-    QVector<VkDescriptorSetLayout> m_descriptorSetLayouts;
-
-    Q_DISABLE_COPY(Pipeline)
 };
 
 class PipelineBuilder
@@ -57,7 +46,7 @@ public:
     PipelineBuilder &sampler(const QString &name, VkSampler sampler);
 
 protected:
-    explicit PipelineBuilder(VkDevice device);
+    explicit PipelineBuilder(Device *device);
 
     QVector<VkDescriptorSetLayout> buildDescriptorSetLayouts() const;
     VkPipelineLayout buildPipelineLayout(const QVector<VkDescriptorSetLayout> &descriptorSetLayouts) const;
@@ -105,7 +94,7 @@ public:
     }
 
 protected:
-    explicit PipelineBuilderImpl(VkDevice device)
+    explicit PipelineBuilderImpl(Device *device)
         : PipelineBuilder(device)
     {}
 };

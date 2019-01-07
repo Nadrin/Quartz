@@ -5,55 +5,22 @@
  */
 
 #include <renderers/vulkan/pipeline/pipeline.h>
+#include <renderers/vulkan/device.h>
 
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
 Pipeline::Pipeline(VkPipelineBindPoint bindPoint)
     : m_bindPoint(bindPoint)
-    , m_pipelineLayout(VK_NULL_HANDLE)
+    , pipelineLayout(VK_NULL_HANDLE)
 {}
 
-Pipeline::Pipeline(Pipeline &&other)
-    : DeviceHandle<VkPipeline>(std::move(other))
-    , m_bindPoint(other.m_bindPoint)
-    , m_pipelineLayout(other.m_pipelineLayout)
-    , m_descriptorSetLayouts(std::move(other.m_descriptorSetLayouts))
-{
-    other.m_pipelineLayout = VK_NULL_HANDLE;
-}
-
-Pipeline::~Pipeline()
-{
-    release();
-}
-
-Pipeline &Pipeline::operator=(Pipeline &&other)
-{
-    DeviceHandle<VkPipeline>::operator=(std::move(other));
-    m_pipelineLayout = other.m_pipelineLayout;
-    m_descriptorSetLayouts = std::move(other.m_descriptorSetLayouts);
-    other.m_pipelineLayout = VK_NULL_HANDLE;
-    return *this;
-}
-
-void Pipeline::release()
-{
-    vkDestroyPipeline(m_device, m_handle, nullptr);
-    vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
-    for(VkDescriptorSetLayout setLayout : m_descriptorSetLayouts) {
-        vkDestroyDescriptorSetLayout(m_device, setLayout, nullptr);
-    }
-
-    reset();
-    m_pipelineLayout = VK_NULL_HANDLE;
-    m_descriptorSetLayouts.clear();
-}
-
-PipelineBuilder::PipelineBuilder(VkDevice device)
-    : m_device(device)
+PipelineBuilder::PipelineBuilder(Device *device)
+    : m_device(*device)
     , m_defaultSampler(VK_NULL_HANDLE)
-{}
+{
+    Q_ASSERT(m_device != VK_NULL_HANDLE);
+}
 
 QVector<VkDescriptorSetLayout> PipelineBuilder::buildDescriptorSetLayouts() const
 {

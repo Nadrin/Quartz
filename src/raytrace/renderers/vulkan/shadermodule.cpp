@@ -5,6 +5,7 @@
  */
 
 #include <renderers/vulkan/shadermodule.h>
+#include <renderers/vulkan/device.h>
 #include <spirv_reflect.h>
 
 #include <QFile>
@@ -26,7 +27,7 @@ ShaderModule::ShaderModule(VkDevice device, const QByteArray &bytecode, const QS
 
 ShaderModule::~ShaderModule()
 {
-    release();
+    destroy();
 }
 
 bool ShaderModule::loadFromFile(VkDevice device, const QString &name, const QString &entryPoint)
@@ -50,8 +51,9 @@ bool ShaderModule::loadFromFile(VkDevice device, const QString &name, const QStr
 
 bool ShaderModule::loadFromBytecode(VkDevice device, const QByteArray &bytecode, const QString &entryPoint)
 {
-    Q_ASSERT(device != VK_NULL_HANDLE);
-    release();
+    Q_ASSERT(device);
+
+    destroy();
 
     m_device = device;
     m_entryPoint = entryPoint.toLocal8Bit();
@@ -59,7 +61,7 @@ bool ShaderModule::loadFromBytecode(VkDevice device, const QByteArray &bytecode,
     VkShaderModuleCreateInfo createInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
     createInfo.codeSize = static_cast<unsigned long>(bytecode.size());
     createInfo.pCode = reinterpret_cast<const uint32_t*>(bytecode.data());
-    if(VKFAILED(vkCreateShaderModule(m_device, &createInfo, nullptr, &m_handle))) {
+    if(VKFAILED(vkCreateShaderModule(m_device, &createInfo, nullptr, &m_module))) {
         qCCritical(logVulkan) << "Failed to create Vulkan shader module";
         return false;
     }
@@ -107,14 +109,14 @@ bool ShaderModule::loadFromBytecode(VkDevice device, const QByteArray &bytecode,
     return true;
 }
 
-void ShaderModule::release()
+void ShaderModule::destroy()
 {
     if(isValid()) {
-        vkDestroyShaderModule(m_device, m_handle, nullptr);
+        vkDestroyShaderModule(m_device, m_module, nullptr);
         m_descriptorSets.clear();
         m_pushConstants.clear();
+        m_module = VK_NULL_HANDLE;
     }
-    reset();
 }
 
 QString ShaderModule::getModulePath(const QString &name)
