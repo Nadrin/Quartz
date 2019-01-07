@@ -2,12 +2,19 @@ cmake_minimum_required(VERSION 3.8)
 
 set(VULKAN_SOURCES_PRIVATE
     renderers/vulkan/vkcommon.h
+    renderers/vulkan/device.cpp
+    renderers/vulkan/device.h
+    renderers/vulkan/commandbuffer.cpp
+    renderers/vulkan/commandbuffer.h
     renderers/vulkan/qvulkanrenderer.cpp
     renderers/vulkan/qvulkanrenderer_p.h
     renderers/vulkan/vulkanframeadvanceservice.cpp
     renderers/vulkan/vulkanframeadvanceservice.h
     renderers/vulkan/shadermodule.cpp
     renderers/vulkan/shadermodule.h
+    renderers/vulkan/initializers.h
+    renderers/vulkan/descriptors.h
+    renderers/vulkan/resourcebarrier.h
     renderers/vulkan/pipeline/pipeline.cpp
     renderers/vulkan/pipeline/pipeline.h
     renderers/vulkan/pipeline/graphicspipeline.cpp
