@@ -7,6 +7,7 @@
 #include <Qt3DRaytrace/qraytraceaspect.h>
 #include <qraytraceaspect_p.h>
 
+#include <Qt3DCore/QEntity>
 #include <Qt3DCore/private/qservicelocator_p.h>
 #include <Qt3DCore/private/qabstractframeadvanceservice_p.h>
 
@@ -19,6 +20,26 @@ Q_LOGGING_CATEGORY(logAspect, "raytrace.aspect")
 QRaytraceAspectPrivate::QRaytraceAspectPrivate()
     : m_renderer(nullptr)
 {}
+
+void QRaytraceAspectPrivate::registerBackendTypes()
+{
+    Q_Q(QRaytraceAspect);
+
+    q->registerBackendType<Qt3DCore::QEntity>(QSharedPointer<Raytrace::EntityMapper>::create(m_nodeManagers.get(), m_renderer));
+}
+
+void QRaytraceAspectPrivate::updateServiceProviders()
+{
+    if(!m_aspectManager) {
+        return;
+    }
+    if(m_renderer) {
+        QAbstractFrameAdvanceService *advanceService = m_renderer->frameAdvanceService();
+        if(advanceService) {
+            services()->registerServiceProvider(Qt3DCore::QServiceLocator::FrameAdvanceService, advanceService);
+        }
+    }
+}
 
 QRaytraceAspect::QRaytraceAspect(QObject *parent)
     : QRaytraceAspect(*new QRaytraceAspectPrivate, parent)
@@ -34,7 +55,6 @@ void QRaytraceAspect::setRenderer(QAbstractRenderer *renderer)
 {
     Q_D(QRaytraceAspect);
     d->m_renderer = renderer;
-    updateServiceProviders();
 }
 
 QRaytraceAspect::QRaytraceAspect(QRaytraceAspectPrivate &dd, QObject *parent)
@@ -45,32 +65,29 @@ QRaytraceAspect::QRaytraceAspect(QRaytraceAspectPrivate &dd, QObject *parent)
 
 QVector<QAspectJobPtr> QRaytraceAspect::jobsToExecute(qint64 time)
 {
+    Q_D(QRaytraceAspect);
+
     QVector<QAspectJobPtr> jobs;
     return jobs;
 }
 
 void QRaytraceAspect::onRegistered()
 {
-    updateServiceProviders();
+    Q_D(QRaytraceAspect);
+    if(!d->m_renderer) {
+        qCWarning(logAspect) << "No renderer set: cannot properly initialize aspect!";
+        return;
+    }
+
+    d->m_nodeManagers.reset(new Raytrace::NodeManagers);
+    d->updateServiceProviders();
+    d->registerBackendTypes();
 }
 
 void QRaytraceAspect::onUnregistered()
 {
-}
-
-void QRaytraceAspect::updateServiceProviders()
-{
     Q_D(QRaytraceAspect);
-
-    if(!d->m_aspectManager) {
-        return;
-    }
-    if(d->m_renderer) {
-        QAbstractFrameAdvanceService *advanceService = d->m_renderer->frameAdvanceService();
-        if(advanceService) {
-            d->services()->registerServiceProvider(Qt3DCore::QServiceLocator::FrameAdvanceService, advanceService);
-        }
-    }
+    d->m_nodeManagers.reset();
 }
 
 } // Qt3DRaytrace

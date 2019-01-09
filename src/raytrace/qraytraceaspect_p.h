@@ -6,20 +6,28 @@
 
 #pragma once
 
+#include <QScopedPointer>
+
 #include <Qt3DRaytrace/qraytraceaspect.h>
 #include <Qt3DRaytrace/qabstractrenderer.h>
 #include <Qt3DCore/private/qabstractaspect_p.h>
 
 #include <qt3draytrace_global_p.h>
 
+#include <backend/managers_p.h>
+
 namespace Qt3DRaytrace {
 
-class QT3DRAYTRACESHARED_PRIVATE_EXPORT QRaytraceAspectPrivate : public Qt3DCore::QAbstractAspectPrivate
+class QRaytraceAspectPrivate : public Qt3DCore::QAbstractAspectPrivate
 {
 public:
     QRaytraceAspectPrivate();
 
+    void registerBackendTypes();
+    void updateServiceProviders();
+
     QAbstractRenderer *m_renderer;
+    QScopedPointer<Raytrace::NodeManagers> m_nodeManagers;
 
     Q_DECLARE_PUBLIC(QRaytraceAspect)
 };

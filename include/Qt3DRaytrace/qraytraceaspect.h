@@ -32,8 +32,6 @@ private:
 
     void onRegistered() override;
     void onUnregistered() override;
-
-    void updateServiceProviders();
 };
 
 } // Qt3DRaytrace

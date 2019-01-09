@@ -11,6 +11,11 @@ set(SOURCES_PRIVATE
     qt3draytrace_global_p.h
     qraytraceaspect.cpp
     qraytraceaspect_p.h
+    backend/managers_p.h
+    backend/backendnode.cpp
+    backend/backendnode_p.h
+    backend/entity.cpp
+    backend/entity_p.h
 )
 
 set(SOURCES_PUBLIC
