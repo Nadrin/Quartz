@@ -7,5 +7,3 @@
 #pragma once
 
 #include <Qt3DRaytraceExtras/qt3draytraceextras_global.h>
-
-#define QT3DRAYTRACEEXTRASSHARED_PRIVATE_EXPORT QT3DRAYTRACEEXTRASSHARED_EXPORT

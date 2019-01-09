@@ -21,11 +21,11 @@ Qt3DWindow::Qt3DWindow()
     , m_logicAspect(new Qt3DLogic::QLogicAspect)
     , m_inputSettings(new Qt3DInput::QInputSettings)
     , m_root(new Qt3DCore::QEntity)
+    , m_userRoot(nullptr)
 {
     resize(1024, 768);
     setFlags(QVulkanWindow::PersistentResources);
 
-    m_aspectEngine->registerAspect(m_raytraceAspect);
     m_aspectEngine->registerAspect(m_inputAspect);
     m_aspectEngine->registerAspect(m_logicAspect);
 
@@ -36,7 +36,21 @@ QVulkanWindowRenderer *Qt3DWindow::createRenderer()
 {
     auto renderer = new Qt3DRaytrace::QVulkanRenderer(this);
     m_raytraceAspect->setRenderer(renderer);
+    m_aspectEngine->registerAspect(m_raytraceAspect);
     return renderer;
+}
+
+void Qt3DWindow::setRootEntity(Qt3DCore::QEntity *root)
+{
+    if(m_userRoot != root) {
+        if(m_userRoot) {
+            m_userRoot->setParent(static_cast<Qt3DCore::QNode*>(nullptr));
+        }
+        if(root) {
+            root->setParent(m_root);
+        }
+        m_userRoot = root;
+    }
 }
 
 void Qt3DWindow::exposeEvent(QExposeEvent *event)
@@ -45,7 +59,7 @@ void Qt3DWindow::exposeEvent(QExposeEvent *event)
 
     if(!m_initialized) {
         m_root->addComponent(m_inputSettings.get());
-        m_aspectEngine->setRootEntity(m_root);
+        m_aspectEngine->setRootEntity(Qt3DCore::QEntityPtr(m_root));
         m_initialized = true;
     }
 }

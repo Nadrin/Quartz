@@ -28,6 +28,8 @@ public:
 
     QVulkanWindowRenderer *createRenderer() override;
 
+    void setRootEntity(Qt3DCore::QEntity *root);
+
 protected:
     void exposeEvent(QExposeEvent *event) override;
 
@@ -38,7 +40,8 @@ protected:
     Qt3DLogic::QLogicAspect *m_logicAspect;
 
     QScopedPointer<Qt3DInput::QInputSettings> m_inputSettings;
-    Qt3DCore::QEntityPtr m_root;
+    Qt3DCore::QEntity *m_root;
+    Qt3DCore::QEntity *m_userRoot;
 
     bool m_initialized = false;
 };

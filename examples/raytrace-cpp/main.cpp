@@ -8,6 +8,8 @@
 #include <QVulkanInstance>
 #include <Qt3DRaytraceExtras/qt3dwindow.h>
 
+#include <Qt3DCore/QEntity>
+
 #if QUARTZ_DEBUG
 #include <QLoggingCategory>
 
@@ -17,6 +19,13 @@ static const char *logFilterRules = R"(
         raytrace.vulkan=true
 )";
 #endif
+
+static Qt3DCore::QEntity *createScene()
+{
+    Qt3DCore::QEntity *rootEntity = new Qt3DCore::QEntity;
+
+    return rootEntity;
+}
 
 int main(int argc, char **argv)
 {
@@ -34,6 +43,9 @@ int main(int argc, char **argv)
 
     Qt3DRaytraceExtras::Qt3DWindow window;
     window.setVulkanInstance(&vulkanInstance);
+
+    Qt3DCore::QEntity *scene = createScene();
+    window.setRootEntity(scene);
     window.show();
 
     return app.exec();
