@@ -9,8 +9,10 @@
 #include <qt3draytrace_global_p.h>
 #include <backend/backendnode_p.h>
 
+#include <Qt3DCore/QNode>
 #include <Qt3DCore/private/qhandle_p.h>
 #include <QVector>
+#include <QMatrix4x4>
 
 namespace Qt3DRaytrace {
 
@@ -42,8 +44,16 @@ public:
     const QVector<HEntity> &childrenHandles() const { return m_childrenHandles; }
     bool hasChildren() const { return !m_childrenHandles.empty(); }
 
+    void addComponent(Qt3DCore::QNodeIdTypePair idAndType);
+    void removeComponent(Qt3DCore::QNodeId nodeId);
+
+    Qt3DCore::QNodeId transformComponent() const { return m_transformComponent; }
+
+    // TODO: Store via manager.
+    QMatrix4x4 worldTransformMatrix;
+
 protected:
-    void sceneChangeEvent(const Qt3DCore::QSceneChangePtr &change) override;
+    void sceneChangeEvent(const Qt3DCore::QSceneChangePtr &changeEvent) override;
 
 private:
     void initializeFromPeer(const Qt3DCore::QNodeCreatedChangeBasePtr &change) override;
@@ -52,6 +62,8 @@ private:
     HEntity m_handle;
     HEntity m_parentHandle;
     QVector<HEntity> m_childrenHandles;
+
+    Qt3DCore::QNodeId m_transformComponent;
 };
 
 class EntityMapper : public Qt3DCore::QBackendNodeMapper

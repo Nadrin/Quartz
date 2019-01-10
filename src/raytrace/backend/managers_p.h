@@ -9,6 +9,7 @@
 #include <private/qresourcemanager_p.h>
 
 #include <backend/entity_p.h>
+#include <backend/transform_p.h>
 
 namespace Qt3DRaytrace {
 namespace Raytrace {
@@ -26,9 +27,12 @@ public:
     }
 };
 
+using TransformManager = Qt3DCore::QResourceManager<Transform, Qt3DCore::QNodeId>;
+
 struct NodeManagers
 {
     EntityManager entityManager;
+    TransformManager transformManager;
 };
 
 } // Raytrace

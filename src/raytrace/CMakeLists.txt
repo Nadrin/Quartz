@@ -16,6 +16,8 @@ set(SOURCES_PRIVATE
     backend/backendnode_p.h
     backend/entity.cpp
     backend/entity_p.h
+    backend/transform.cpp
+    backend/transform_p.h
 )
 
 set(SOURCES_PUBLIC

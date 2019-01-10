@@ -9,6 +9,11 @@
 
 #include <Qt3DCore/private/qentity_p.h>
 
+#include <Qt3DCore/QComponentAddedChange>
+#include <Qt3DCore/QComponentRemovedChange>
+#include <Qt3DCore/QPropertyNodeAddedChange>
+#include <Qt3DCore/QPropertyNodeRemovedChange>
+
 using namespace Qt3DCore;
 
 namespace Qt3DRaytrace {
@@ -110,14 +115,50 @@ QVector<Entity*> Entity::children() const
     return result;
 }
 
-void Entity::sceneChangeEvent(const QSceneChangePtr &change)
+void Entity::addComponent(QNodeIdTypePair idAndType)
 {
-    // TODO: Implement!
-    switch(change->type()) {
-    case ComponentAdded:
+    const auto type = idAndType.type;
+    const auto id = idAndType.id;
+
+    if(type->inherits(&Qt3DCore::QTransform::staticMetaObject)) {
+        m_transformComponent = id;
+    }
+}
+
+void Entity::removeComponent(QNodeId nodeId)
+{
+    if(nodeId == m_transformComponent) {
+        m_transformComponent = QNodeId{};
+    }
+}
+
+void Entity::sceneChangeEvent(const QSceneChangePtr &changeEvent)
+{
+    switch(changeEvent->type()) {
+    case ComponentAdded: {
+        QComponentAddedChangePtr change = qSharedPointerCast<QComponentAddedChange>(changeEvent);
+        addComponent(QNodeIdTypePair{change->componentId(), change->componentMetaObject()});
         break;
-    case ComponentRemoved:
+    }
+    case ComponentRemoved: {
+        QComponentRemovedChangePtr change = qSharedPointerCast<QComponentRemovedChange>(changeEvent);
+        removeComponent(change->componentId());
         break;
+    }
+    case PropertyValueAdded: {
+        QPropertyNodeAddedChangePtr change = qSharedPointerCast<QPropertyNodeAddedChange>(changeEvent);
+        if(change->metaObject()->inherits(&QEntity::staticMetaObject)) {
+            appendChildHandle(m_nodeManagers->entityManager.lookupHandle(change->addedNodeId()));
+        }
+        break;
+    }
+    case PropertyValueRemoved: {
+        QPropertyNodeRemovedChangePtr change = qSharedPointerCast<QPropertyNodeRemovedChange>(changeEvent);
+        if(change->metaObject()->inherits(&QEntity::staticMetaObject)) {
+            removeChildHandle(m_nodeManagers->entityManager.lookupHandle(change->removedNodeId()));
+        }
+        break;
+    }
     default:
         break;
     }
@@ -127,6 +168,12 @@ void Entity::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
 {
     const auto typedChange = qSharedPointerCast<QNodeCreatedChange<Qt3DCore::QEntityData>>(change);
     const auto &data = typedChange->data;
+
+    m_transformComponent = QNodeId{};
+
+    for(const auto &idAndType : qAsConst(data.componentIdsAndTypes)) {
+        addComponent(idAndType);
+    }
 
     if(!data.parentEntityId.isNull()) {
         setParentHandle(m_nodeManagers->entityManager.lookupHandle(data.parentEntityId));

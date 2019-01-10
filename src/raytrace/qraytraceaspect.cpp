@@ -26,6 +26,9 @@ void QRaytraceAspectPrivate::registerBackendTypes()
     Q_Q(QRaytraceAspect);
 
     q->registerBackendType<Qt3DCore::QEntity>(QSharedPointer<Raytrace::EntityMapper>::create(m_nodeManagers.get(), m_renderer));
+
+    using TransformNodeMapper = Raytrace::BackendNodeMapper<Raytrace::Transform, Raytrace::TransformManager>;
+    q->registerBackendType<Qt3DCore::QTransform>(QSharedPointer<TransformNodeMapper>::create(&m_nodeManagers->transformManager, m_renderer));
 }
 
 void QRaytraceAspectPrivate::updateServiceProviders()
