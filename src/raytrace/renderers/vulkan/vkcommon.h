@@ -15,10 +15,9 @@
 #define VKFAILED(x)    ((x) != VK_SUCCESS)
 
 namespace Qt3DRaytrace {
+namespace Vulkan {
 
 Q_DECLARE_LOGGING_CATEGORY(logVulkan)
-
-namespace Vulkan {
 
 class Device;
 

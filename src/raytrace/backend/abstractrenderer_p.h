@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include <Qt3DRaytrace/qt3draytrace_global.h>
+#include <qt3draytrace_global_p.h>
+#include <Qt3DRaytrace/qrendererinterface.h>
 
 class QSurface;
 
@@ -16,18 +17,10 @@ class QAbstractFrameAdvanceService;
 
 namespace Qt3DRaytrace {
 
-class QT3DRAYTRACESHARED_EXPORT QAbstractRenderer
+class AbstractRenderer : public QRendererInterface
 {
 public:
-    virtual ~QAbstractRenderer() = default;
-
-    enum class API {
-        Vulkan,
-        D3D12,
-    };
-    virtual API api() const = 0;
-
-    virtual QSurface *surface() const = 0;
+    virtual ~AbstractRenderer() = default;
     virtual Qt3DCore::QAbstractFrameAdvanceService *frameAdvanceService() const = 0;
 };
 

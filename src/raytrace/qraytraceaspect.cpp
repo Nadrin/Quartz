@@ -4,12 +4,14 @@
  * See LICENSE file for licensing information.
  */
 
-#include <Qt3DRaytrace/qraytraceaspect.h>
 #include <qraytraceaspect_p.h>
+#include <backend/abstractrenderer_p.h>
 
 #include <Qt3DCore/QEntity>
 #include <Qt3DCore/private/qservicelocator_p.h>
 #include <Qt3DCore/private/qabstractframeadvanceservice_p.h>
+
+#include <renderers/vulkan/renderer.h>
 
 using namespace Qt3DCore;
 
@@ -18,17 +20,16 @@ namespace Qt3DRaytrace {
 Q_LOGGING_CATEGORY(logAspect, "raytrace.aspect")
 
 QRaytraceAspectPrivate::QRaytraceAspectPrivate()
-    : m_renderer(nullptr)
 {}
 
 void QRaytraceAspectPrivate::registerBackendTypes()
 {
     Q_Q(QRaytraceAspect);
 
-    q->registerBackendType<Qt3DCore::QEntity>(QSharedPointer<Raytrace::EntityMapper>::create(m_nodeManagers.get(), m_renderer));
+    q->registerBackendType<Qt3DCore::QEntity>(QSharedPointer<Raytrace::EntityMapper>::create(m_nodeManagers.get(), m_renderer.get()));
 
     using TransformNodeMapper = Raytrace::BackendNodeMapper<Raytrace::Transform, Raytrace::TransformManager>;
-    q->registerBackendType<Qt3DCore::QTransform>(QSharedPointer<TransformNodeMapper>::create(&m_nodeManagers->transformManager, m_renderer));
+    q->registerBackendType<Qt3DCore::QTransform>(QSharedPointer<TransformNodeMapper>::create(&m_nodeManagers->transformManager, m_renderer.get()));
 }
 
 void QRaytraceAspectPrivate::updateServiceProviders()
@@ -48,16 +49,10 @@ QRaytraceAspect::QRaytraceAspect(QObject *parent)
     : QRaytraceAspect(*new QRaytraceAspectPrivate, parent)
 {}
 
-QAbstractRenderer *QRaytraceAspect::renderer() const
+QRendererInterface *QRaytraceAspect::rendererInterface() const
 {
     Q_D(const QRaytraceAspect);
-    return d->m_renderer;
-}
-
-void QRaytraceAspect::setRenderer(QAbstractRenderer *renderer)
-{
-    Q_D(QRaytraceAspect);
-    d->m_renderer = renderer;
+    return d->m_renderer.get();
 }
 
 QRaytraceAspect::QRaytraceAspect(QRaytraceAspectPrivate &dd, QObject *parent)
@@ -77,10 +72,9 @@ QVector<QAspectJobPtr> QRaytraceAspect::jobsToExecute(qint64 time)
 void QRaytraceAspect::onRegistered()
 {
     Q_D(QRaytraceAspect);
-    if(!d->m_renderer) {
-        qCWarning(logAspect) << "No renderer set: cannot properly initialize aspect!";
-        return;
-    }
+
+    // TODO: Make renderer configurable.
+    d->m_renderer.reset(new Vulkan::Renderer);
 
     d->m_nodeManagers.reset(new Raytrace::NodeManagers);
     d->updateServiceProviders();
@@ -91,6 +85,7 @@ void QRaytraceAspect::onUnregistered()
 {
     Q_D(QRaytraceAspect);
     d->m_nodeManagers.reset();
+    d->m_renderer.reset();
 }
 
 } // Qt3DRaytrace

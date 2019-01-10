@@ -19,7 +19,7 @@ using namespace Qt3DCore;
 namespace Qt3DRaytrace {
 namespace Raytrace {
 
-EntityMapper::EntityMapper(NodeManagers *managers, QAbstractRenderer *renderer)
+EntityMapper::EntityMapper(NodeManagers *managers, AbstractRenderer *renderer)
     : m_nodeManagers(managers)
     , m_renderer(renderer)
 {}

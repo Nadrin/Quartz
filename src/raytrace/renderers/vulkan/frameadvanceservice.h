@@ -13,11 +13,12 @@
 #include <QElapsedTimer>
 
 namespace Qt3DRaytrace {
+namespace Vulkan {
 
-class VulkanFrameAdvanceService final : public Qt3DCore::QAbstractFrameAdvanceService
+class FrameAdvanceService final : public Qt3DCore::QAbstractFrameAdvanceService
 {
 public:
-    VulkanFrameAdvanceService();
+    FrameAdvanceService();
 
     qint64 waitForNextFrame() override;
     void start() override;
@@ -30,4 +31,5 @@ private:
     QElapsedTimer m_elapsedTimer;
 };
 
+} // Vulkan
 } // Qt3DRaytrace

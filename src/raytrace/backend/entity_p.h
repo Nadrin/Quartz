@@ -16,7 +16,7 @@
 
 namespace Qt3DRaytrace {
 
-class QAbstractRenderer;
+class AbstractRenderer;
 
 namespace Raytrace {
 
@@ -69,7 +69,7 @@ private:
 class EntityMapper : public Qt3DCore::QBackendNodeMapper
 {
 public:
-    EntityMapper(NodeManagers *managers, QAbstractRenderer *renderer);
+    EntityMapper(NodeManagers *managers, AbstractRenderer *renderer);
 
     Qt3DCore::QBackendNode *create(const Qt3DCore::QNodeCreatedChangeBasePtr &change) const override;
     Qt3DCore::QBackendNode *get(Qt3DCore::QNodeId id) const override;
@@ -77,7 +77,7 @@ public:
 
 private:
     NodeManagers *m_nodeManagers;
-    QAbstractRenderer *m_renderer;
+    AbstractRenderer *m_renderer;
 };
 
 } // Raytrace

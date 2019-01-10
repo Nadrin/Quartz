@@ -11,6 +11,7 @@ set(SOURCES_PRIVATE
     qt3draytrace_global_p.h
     qraytraceaspect.cpp
     qraytraceaspect_p.h
+    backend/abstractrenderer_p.h
     backend/managers_p.h
     backend/backendnode.cpp
     backend/backendnode_p.h
@@ -23,7 +24,7 @@ set(SOURCES_PRIVATE
 set(SOURCES_PUBLIC
     ${MODULE_API}/qt3draytrace_global.h
     ${MODULE_API}/qraytraceaspect.h
-    ${MODULE_API}/qabstractrenderer.h
+    ${MODULE_API}/qrendererinterface.h
 )
 
 add_library(${MODULE_NAME} ${SOURCES_PRIVATE} ${SOURCES_PUBLIC})

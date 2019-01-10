@@ -11,7 +11,7 @@
 
 namespace Qt3DRaytrace {
 
-class QAbstractRenderer;
+class AbstractRenderer;
 
 namespace Raytrace {
 
@@ -20,20 +20,20 @@ class BackendNode : public Qt3DCore::QBackendNode
 public:
     explicit BackendNode(Qt3DCore::QBackendNode::Mode mode = ReadOnly);
 
-    void setRenderer(QAbstractRenderer *renderer)
+    void setRenderer(AbstractRenderer *renderer)
     {
         m_renderer = renderer;
     }
 
 protected:
-    QAbstractRenderer *m_renderer = nullptr;
+    AbstractRenderer *m_renderer = nullptr;
 };
 
 template<typename BackendNodeType, typename ManagerType>
 class BackendNodeMapper : public Qt3DCore::QBackendNodeMapper
 {
 public:
-    BackendNodeMapper(ManagerType *manager, QAbstractRenderer *renderer)
+    BackendNodeMapper(ManagerType *manager, AbstractRenderer *renderer)
         : m_manager(manager)
         , m_renderer(renderer)
     {}
@@ -57,7 +57,7 @@ public:
 
 private:
     ManagerType *m_manager;
-    QAbstractRenderer *m_renderer;
+    AbstractRenderer *m_renderer;
 };
 
 } // Raytrace

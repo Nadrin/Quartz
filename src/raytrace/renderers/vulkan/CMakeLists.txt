@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.8)
 
-set(VULKAN_SOURCES_PRIVATE
+target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/vkcommon.h
     renderers/vulkan/device.cpp
     renderers/vulkan/device.h
     renderers/vulkan/commandbuffer.cpp
     renderers/vulkan/commandbuffer.h
-    renderers/vulkan/qvulkanrenderer.cpp
-    renderers/vulkan/qvulkanrenderer_p.h
-    renderers/vulkan/vulkanframeadvanceservice.cpp
-    renderers/vulkan/vulkanframeadvanceservice.h
+    renderers/vulkan/renderer.cpp
+    renderers/vulkan/renderer.h
+    renderers/vulkan/frameadvanceservice.cpp
+    renderers/vulkan/frameadvanceservice.h
     renderers/vulkan/shadermodule.cpp
     renderers/vulkan/shadermodule.h
     renderers/vulkan/initializers.h
@@ -23,14 +23,5 @@ set(VULKAN_SOURCES_PRIVATE
     renderers/vulkan/pipeline/computepipeline.h
 )
 
-set(VULKAN_SOURCES_PUBLIC
-    ${MODULE_API}/qvulkanrenderer.h
-)
-
 add_subdirectory(shaders)
-
-target_sources(${MODULE_NAME}
-    PRIVATE ${VULKAN_SOURCES_PRIVATE}
-    PUBLIC ${VULKAN_SOURCES_PUBLIC}
-)
 set(VULKAN_LIBRARIES volk vma spirv_reflect PARENT_SCOPE)

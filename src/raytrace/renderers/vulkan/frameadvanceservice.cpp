@@ -4,33 +4,35 @@
  * See LICENSE file for licensing information.
  */
 
-#include <renderers/vulkan/vulkanframeadvanceservice.h>
+#include <renderers/vulkan/frameadvanceservice.h>
 
 namespace Qt3DRaytrace {
+namespace Vulkan {
 
-VulkanFrameAdvanceService::VulkanFrameAdvanceService()
+FrameAdvanceService::FrameAdvanceService()
     : Qt3DCore::QAbstractFrameAdvanceService(QStringLiteral("Vulkan Frame Advance Service"))
 {}
 
-qint64 VulkanFrameAdvanceService::waitForNextFrame()
+qint64 FrameAdvanceService::waitForNextFrame()
 {
     m_semaphore.acquire();
     return m_elapsedTimer.nsecsElapsed();
 }
 
-void VulkanFrameAdvanceService::start()
+void FrameAdvanceService::start()
 {
     m_elapsedTimer.start();
 }
 
-void VulkanFrameAdvanceService::stop()
+void FrameAdvanceService::stop()
 {
     proceedToNextFrame();
 }
 
-void VulkanFrameAdvanceService::proceedToNextFrame()
+void FrameAdvanceService::proceedToNextFrame()
 {
     m_semaphore.release();
 }
 
+} // Vulkan
 } // Qt3DRaytrace

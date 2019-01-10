@@ -5,7 +5,7 @@
  */
 
 #include <Qt3DRaytraceExtras/qt3dwindow.h>
-#include <Qt3DRaytrace/qvulkanrenderer.h>
+#include <qt3dwindowrenderer_p.h>
 
 #include <QEntity>
 
@@ -26,6 +26,7 @@ Qt3DWindow::Qt3DWindow()
     resize(1024, 768);
     setFlags(QVulkanWindow::PersistentResources);
 
+    m_aspectEngine->registerAspect(m_raytraceAspect);
     m_aspectEngine->registerAspect(m_inputAspect);
     m_aspectEngine->registerAspect(m_logicAspect);
 
@@ -34,9 +35,8 @@ Qt3DWindow::Qt3DWindow()
 
 QVulkanWindowRenderer *Qt3DWindow::createRenderer()
 {
-    auto renderer = new Qt3DRaytrace::QVulkanRenderer(this);
-    m_raytraceAspect->setRenderer(renderer);
-    m_aspectEngine->registerAspect(m_raytraceAspect);
+    auto renderer = new Qt3DWindowRenderer(this);
+    renderer->setRendererInterface(m_raytraceAspect->rendererInterface());
     return renderer;
 }
 

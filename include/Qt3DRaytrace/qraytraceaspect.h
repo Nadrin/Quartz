@@ -11,8 +11,8 @@
 
 namespace Qt3DRaytrace {
 
+class QRendererInterface;
 class QRaytraceAspectPrivate;
-class QAbstractRenderer;
 
 class QT3DRAYTRACESHARED_EXPORT QRaytraceAspect : public Qt3DCore::QAbstractAspect
 {
@@ -20,8 +20,7 @@ class QT3DRAYTRACESHARED_EXPORT QRaytraceAspect : public Qt3DCore::QAbstractAspe
 public:
     explicit QRaytraceAspect(QObject *parent = nullptr);
 
-    QAbstractRenderer *renderer() const;
-    void setRenderer(QAbstractRenderer *renderer);
+    QRendererInterface *rendererInterface() const;
 
 protected:
     QRaytraceAspect(QRaytraceAspectPrivate &dd, QObject *parent);

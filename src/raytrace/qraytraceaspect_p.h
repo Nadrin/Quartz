@@ -9,7 +9,6 @@
 #include <QScopedPointer>
 
 #include <Qt3DRaytrace/qraytraceaspect.h>
-#include <Qt3DRaytrace/qabstractrenderer.h>
 #include <Qt3DCore/private/qabstractaspect_p.h>
 
 #include <qt3draytrace_global_p.h>
@@ -26,7 +25,7 @@ public:
     void registerBackendTypes();
     void updateServiceProviders();
 
-    QAbstractRenderer *m_renderer;
+    QScopedPointer<AbstractRenderer> m_renderer;
     QScopedPointer<Raytrace::NodeManagers> m_nodeManagers;
 
     Q_DECLARE_PUBLIC(QRaytraceAspect)
