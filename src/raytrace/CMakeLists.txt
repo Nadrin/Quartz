@@ -19,6 +19,8 @@ set(SOURCES_PRIVATE
     backend/entity_p.h
     backend/transform.cpp
     backend/transform_p.h
+    jobs/updateworldtransformjob.cpp
+    jobs/updateworldtransformjob_p.h
 )
 
 set(SOURCES_PUBLIC
