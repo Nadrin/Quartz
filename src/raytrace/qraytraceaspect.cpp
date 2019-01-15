@@ -66,6 +66,9 @@ QVector<QAspectJobPtr> QRaytraceAspect::jobsToExecute(qint64 time)
     Q_D(QRaytraceAspect);
 
     QVector<QAspectJobPtr> jobs;
+    if(d->m_renderer) {
+        jobs.append(d->m_renderer->renderJobs());
+    }
     return jobs;
 }
 
@@ -86,6 +89,17 @@ void QRaytraceAspect::onUnregistered()
     Q_D(QRaytraceAspect);
     d->m_nodeManagers.reset();
     d->m_renderer.reset();
+}
+
+void QRaytraceAspect::onEngineStartup()
+{
+    Q_D(QRaytraceAspect);
+
+    Q_ASSERT(d->m_nodeManagers);
+    Raytrace::Entity *rootEntity = d->m_nodeManagers->entityManager.lookupResource(rootEntityId());
+    if(rootEntity) {
+        d->m_renderer->setSceneRoot(rootEntity);
+    }
 }
 
 } // Qt3DRaytrace

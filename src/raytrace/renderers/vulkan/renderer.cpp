@@ -22,6 +22,7 @@ Q_LOGGING_CATEGORY(logVulkan, "raytrace.vulkan")
 
 Renderer::Renderer()
     : m_frameAdvanceService(new FrameAdvanceService)
+    , m_updateWorldTransformJob(new Raytrace::UpdateWorldTransformJob)
 {}
 
 void Renderer::preInitResources()
@@ -246,9 +247,24 @@ void Renderer::setSurface(QObject *surfaceObject)
     }
 }
 
+void Renderer::setSceneRoot(Raytrace::Entity *rootEntity)
+{
+    m_sceneRoot = rootEntity;
+    m_updateWorldTransformJob->setRoot(m_sceneRoot);
+}
+
 Qt3DCore::QAbstractFrameAdvanceService *Renderer::frameAdvanceService() const
 {
     return m_frameAdvanceService.get();
+}
+
+QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()
+{
+    QVector<Qt3DCore::QAspectJobPtr> jobs;
+
+    jobs.append(m_updateWorldTransformJob);
+
+    return jobs;
 }
 
 } // Vulkan

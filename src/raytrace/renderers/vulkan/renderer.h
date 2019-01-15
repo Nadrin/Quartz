@@ -13,6 +13,8 @@
 #include <renderers/vulkan/device.h>
 #include <renderers/vulkan/frameadvanceservice.h>
 
+#include <jobs/updateworldtransformjob_p.h>
+
 #include <QScopedPointer>
 #include <QVector>
 
@@ -38,12 +40,23 @@ public:
     QSurface *surface() const override;
     void setSurface(QObject *surfaceObject) override;
 
+    Raytrace::Entity *sceneRoot() const override
+    {
+        return m_sceneRoot;
+    }
+    void setSceneRoot(Raytrace::Entity *rootEntity) override;
+
     Qt3DCore::QAbstractFrameAdvanceService *frameAdvanceService() const override;
+    QVector<Qt3DCore::QAspectJobPtr> renderJobs() override;
 
 private:
     QVulkanWindow *m_window = nullptr;
     QScopedPointer<FrameAdvanceService> m_frameAdvanceService;
     QScopedPointer<Device> m_device;
+
+    Raytrace::UpdateWorldTransformJobPtr m_updateWorldTransformJob;
+
+    Raytrace::Entity *m_sceneRoot = nullptr;
 
     struct FrameResources {
         Image renderBuffer;

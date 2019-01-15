@@ -9,10 +9,11 @@
 #include <qt3draytrace_global_p.h>
 #include <backend/backendnode_p.h>
 
+#include <QVector>
+
 #include <Qt3DCore/QNode>
 #include <Qt3DCore/private/qhandle_p.h>
-#include <QVector>
-#include <QMatrix4x4>
+#include <Qt3DCore/private/matrix4x4_p.h>
 
 namespace Qt3DRaytrace {
 
@@ -21,6 +22,8 @@ class AbstractRenderer;
 namespace Raytrace {
 
 struct NodeManagers;
+
+class Transform;
 
 using HEntity = Qt3DCore::QHandle<class Entity>;
 
@@ -47,10 +50,10 @@ public:
     void addComponent(Qt3DCore::QNodeIdTypePair idAndType);
     void removeComponent(Qt3DCore::QNodeId nodeId);
 
-    Qt3DCore::QNodeId transformComponent() const { return m_transformComponent; }
+    Transform *transformComponent() const;
 
     // TODO: Store via manager.
-    QMatrix4x4 worldTransformMatrix;
+    Matrix4x4 worldTransformMatrix;
 
 protected:
     void sceneChangeEvent(const Qt3DCore::QSceneChangePtr &changeEvent) override;

@@ -132,6 +132,12 @@ void Entity::removeComponent(QNodeId nodeId)
     }
 }
 
+Transform *Entity::transformComponent() const
+{
+    Q_ASSERT(m_nodeManagers);
+    return m_nodeManagers->transformManager.lookupResource(m_transformComponent);
+}
+
 void Entity::sceneChangeEvent(const QSceneChangePtr &changeEvent)
 {
     switch(changeEvent->type()) {

@@ -31,6 +31,7 @@ private:
 
     void onRegistered() override;
     void onUnregistered() override;
+    void onEngineStartup() override;
 };
 
 } // Qt3DRaytrace
