@@ -16,13 +16,11 @@
 #include <Qt3DCore/private/matrix4x4_p.h>
 
 namespace Qt3DRaytrace {
-
-class AbstractRenderer;
-
 namespace Raytrace {
 
 struct NodeManagers;
 
+class AbstractRenderer;
 class Transform;
 
 using HEntity = Qt3DCore::QHandle<class Entity>;

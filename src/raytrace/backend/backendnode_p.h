@@ -7,12 +7,11 @@
 #pragma once
 
 #include <qt3draytrace_global_p.h>
+#include <backend/abstractrenderer_p.h>
+
 #include <Qt3DCore/QBackendNode>
 
 namespace Qt3DRaytrace {
-
-class AbstractRenderer;
-
 namespace Raytrace {
 
 class BackendNode : public Qt3DCore::QBackendNode
@@ -26,6 +25,8 @@ public:
     }
 
 protected:
+    void markDirty(AbstractRenderer::DirtySet changes);
+
     AbstractRenderer *m_renderer = nullptr;
 };
 

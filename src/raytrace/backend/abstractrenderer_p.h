@@ -19,21 +19,31 @@ class QAbstractFrameAdvanceService;
 } // Qt3DCore
 
 namespace Qt3DRaytrace {
-
 namespace Raytrace {
+
+class BackendNode;
 class Entity;
-} // Raytrace
 
 class AbstractRenderer : public QRendererInterface
 {
 public:
+    enum DirtyFlag {
+        TransformDirty = 1 << 0,
+        NoneDirty      = 0,
+        AllDirty       = 0xffffff,
+    };
+    Q_DECLARE_FLAGS(DirtySet, DirtyFlag)
+
     virtual ~AbstractRenderer() = default;
 
-    virtual Raytrace::Entity *sceneRoot() const = 0;
-    virtual void setSceneRoot(Raytrace::Entity *rootEntity) = 0;
+    virtual void markDirty(DirtySet changes, BackendNode *node) = 0;
+
+    virtual Entity *sceneRoot() const = 0;
+    virtual void setSceneRoot(Entity *rootEntity) = 0;
 
     virtual Qt3DCore::QAbstractFrameAdvanceService *frameAdvanceService() const = 0;
     virtual QVector<Qt3DCore::QAspectJobPtr> renderJobs() = 0;
 };
 
+} // Raytrace
 } // Qt3DRaytrace

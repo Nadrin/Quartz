@@ -25,7 +25,7 @@ public:
     void registerBackendTypes();
     void updateServiceProviders();
 
-    QScopedPointer<AbstractRenderer> m_renderer;
+    QScopedPointer<Raytrace::AbstractRenderer> m_renderer;
     QScopedPointer<Raytrace::NodeManagers> m_nodeManagers;
 
     Q_DECLARE_PUBLIC(QRaytraceAspect)

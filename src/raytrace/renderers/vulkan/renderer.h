@@ -23,7 +23,7 @@ class QVulkanWindow;
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
-class Renderer final : public AbstractRenderer
+class Renderer final : public Raytrace::AbstractRenderer
 {
 public:
     Renderer();
@@ -39,6 +39,8 @@ public:
 
     QSurface *surface() const override;
     void setSurface(QObject *surfaceObject) override;
+
+    void markDirty(DirtySet changes, Raytrace::BackendNode *node) override;
 
     Raytrace::Entity *sceneRoot() const override
     {
@@ -57,6 +59,7 @@ private:
     Raytrace::UpdateWorldTransformJobPtr m_updateWorldTransformJob;
 
     Raytrace::Entity *m_sceneRoot = nullptr;
+    DirtySet m_dirtySet = DirtyFlag::AllDirty;
 
     struct FrameResources {
         Image renderBuffer;

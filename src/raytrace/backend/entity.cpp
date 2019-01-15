@@ -144,17 +144,20 @@ void Entity::sceneChangeEvent(const QSceneChangePtr &changeEvent)
     case ComponentAdded: {
         QComponentAddedChangePtr change = qSharedPointerCast<QComponentAddedChange>(changeEvent);
         addComponent(QNodeIdTypePair{change->componentId(), change->componentMetaObject()});
+        markDirty(AbstractRenderer::AllDirty);
         break;
     }
     case ComponentRemoved: {
         QComponentRemovedChangePtr change = qSharedPointerCast<QComponentRemovedChange>(changeEvent);
         removeComponent(change->componentId());
+        markDirty(AbstractRenderer::AllDirty);
         break;
     }
     case PropertyValueAdded: {
         QPropertyNodeAddedChangePtr change = qSharedPointerCast<QPropertyNodeAddedChange>(changeEvent);
         if(change->metaObject()->inherits(&QEntity::staticMetaObject)) {
             appendChildHandle(m_nodeManagers->entityManager.lookupHandle(change->addedNodeId()));
+            markDirty(AbstractRenderer::AllDirty);
         }
         break;
     }
@@ -162,6 +165,7 @@ void Entity::sceneChangeEvent(const QSceneChangePtr &changeEvent)
         QPropertyNodeRemovedChangePtr change = qSharedPointerCast<QPropertyNodeRemovedChange>(changeEvent);
         if(change->metaObject()->inherits(&QEntity::staticMetaObject)) {
             removeChildHandle(m_nodeManagers->entityManager.lookupHandle(change->removedNodeId()));
+            markDirty(AbstractRenderer::AllDirty);
         }
         break;
     }

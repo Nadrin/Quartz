@@ -40,6 +40,7 @@ void Transform::sceneChangeEvent(const QSceneChangePtr &change)
             m_transform.scale = propertyChange->value().value<QVector3D>();
             updateTransformMatrix();
         }
+        markDirty(AbstractRenderer::TransformDirty);
     }
 }
 

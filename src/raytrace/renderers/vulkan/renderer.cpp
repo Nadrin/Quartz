@@ -247,6 +247,12 @@ void Renderer::setSurface(QObject *surfaceObject)
     }
 }
 
+void Renderer::markDirty(DirtySet changes, Raytrace::BackendNode *node)
+{
+    Q_UNUSED(node);
+    m_dirtySet |= changes;
+}
+
 void Renderer::setSceneRoot(Raytrace::Entity *rootEntity)
 {
     m_sceneRoot = rootEntity;
@@ -262,8 +268,11 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()
 {
     QVector<Qt3DCore::QAspectJobPtr> jobs;
 
-    jobs.append(m_updateWorldTransformJob);
+    if(m_dirtySet & DirtyFlag::TransformDirty) {
+        jobs.append(m_updateWorldTransformJob);
+    }
 
+    m_dirtySet = DirtyFlag::NoneDirty;
     return jobs;
 }
 

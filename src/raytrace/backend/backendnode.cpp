@@ -15,5 +15,11 @@ BackendNode::BackendNode(QBackendNode::Mode mode)
     : QBackendNode(mode)
 {}
 
+void BackendNode::markDirty(AbstractRenderer::DirtySet changes)
+{
+    Q_ASSERT(m_renderer);
+    m_renderer->markDirty(changes, this);
+}
+
 } // Raytrace
 } // Qt3DRaytrace
