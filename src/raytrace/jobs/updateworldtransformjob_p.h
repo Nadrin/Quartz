@@ -14,11 +14,9 @@ namespace Raytrace {
 
 class Entity;
 
-class UpdateWorldTransformJob : public Qt3DCore::QAspectJob
+class UpdateWorldTransformJob final : public Qt3DCore::QAspectJob
 {
 public:
-    virtual ~UpdateWorldTransformJob() = default;
-
     void setRoot(Entity *root)
     {
         m_rootEntity = root;

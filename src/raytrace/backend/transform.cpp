@@ -42,6 +42,7 @@ void Transform::sceneChangeEvent(const QSceneChangePtr &change)
         }
         markDirty(AbstractRenderer::TransformDirty);
     }
+    BackendNode::sceneChangeEvent(change);
 }
 
 void Transform::updateTransformMatrix()
