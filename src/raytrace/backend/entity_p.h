@@ -8,6 +8,7 @@
 
 #include <qt3draytrace_global_p.h>
 #include <backend/backendnode_p.h>
+#include <backend/handles_p.h>
 
 #include <QVector>
 
@@ -22,8 +23,7 @@ struct NodeManagers;
 
 class AbstractRenderer;
 class Transform;
-
-using HEntity = Qt3DCore::QHandle<class Entity>;
+class GeometryRenderer;
 
 class Entity : public BackendNode
 {
@@ -49,6 +49,7 @@ public:
     void removeComponent(Qt3DCore::QNodeId nodeId);
 
     Transform *transformComponent() const;
+    GeometryRenderer *geometryRendererComponent() const;
 
     // TODO: Store via manager.
     Matrix4x4 worldTransformMatrix;
@@ -65,6 +66,7 @@ private:
     QVector<HEntity> m_childrenHandles;
 
     Qt3DCore::QNodeId m_transformComponent;
+    Qt3DCore::QNodeId m_geometryRendererComponent;
 };
 
 class EntityMapper : public Qt3DCore::QBackendNodeMapper

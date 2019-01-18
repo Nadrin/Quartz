@@ -39,7 +39,7 @@ public:
         , m_renderer(renderer)
     {}
 
-    Qt3DCore::QBackendNode *create(const Qt3DCore::QNodeCreatedChangeBasePtr &change) const override
+    virtual Qt3DCore::QBackendNode *create(const Qt3DCore::QNodeCreatedChangeBasePtr &change) const override
     {
         BackendNodeType *backendNode = m_manager->getOrCreateResource(change->subjectId());
         backendNode->setRenderer(m_renderer);
@@ -56,7 +56,7 @@ public:
         m_manager->releaseResource(id);
     }
 
-private:
+protected:
     ManagerType *m_manager;
     AbstractRenderer *m_renderer;
 };

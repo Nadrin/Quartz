@@ -25,6 +25,8 @@ public:
     void registerBackendTypes();
     void updateServiceProviders();
 
+    QVector<Qt3DCore::QAspectJobPtr> createGeometryRendererJobs() const;
+
     QScopedPointer<Raytrace::AbstractRenderer> m_renderer;
     QScopedPointer<Raytrace::NodeManagers> m_nodeManagers;
 

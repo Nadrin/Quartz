@@ -29,6 +29,7 @@ class AbstractRenderer : public QRendererInterface
 public:
     enum DirtyFlag {
         TransformDirty = 1 << 0,
+        GeometryDirty  = 1 << 1,
         NoneDirty      = 0,
         AllDirty       = 0xffffff,
     };

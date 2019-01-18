@@ -11,7 +11,12 @@
 #include <Qt3DCore/private/qservicelocator_p.h>
 #include <Qt3DCore/private/qabstractframeadvanceservice_p.h>
 
+#include <Qt3DRaytrace/qgeometry.h>
+#include <Qt3DRaytrace/qgeometryrenderer.h>
+
 #include <renderers/vulkan/renderer.h>
+
+#include <jobs/loadgeometryjob_p.h>
 
 using namespace Qt3DCore;
 
@@ -26,10 +31,19 @@ void QRaytraceAspectPrivate::registerBackendTypes()
 {
     Q_Q(QRaytraceAspect);
 
+    qRegisterMetaType<Qt3DRaytrace::QVertex>();
+    qRegisterMetaType<Qt3DRaytrace::QTriangle>();
+    qRegisterMetaType<Qt3DRaytrace::QGeometryData>();
+
     q->registerBackendType<Qt3DCore::QEntity>(QSharedPointer<Raytrace::EntityMapper>::create(m_nodeManagers.get(), m_renderer.get()));
 
     using TransformNodeMapper = Raytrace::BackendNodeMapper<Raytrace::Transform, Raytrace::TransformManager>;
     q->registerBackendType<Qt3DCore::QTransform>(QSharedPointer<TransformNodeMapper>::create(&m_nodeManagers->transformManager, m_renderer.get()));
+
+    using GeometryNodeMapper = Raytrace::BackendNodeMapper<Raytrace::Geometry, Raytrace::GeometryManager>;
+    q->registerBackendType<QGeometry>(QSharedPointer<GeometryNodeMapper>::create(&m_nodeManagers->geometryManager, m_renderer.get()));
+
+    q->registerBackendType<QGeometryRenderer>(QSharedPointer<Raytrace::GeometryRendererNodeMapper>::create(&m_nodeManagers->geometryRendererManager, m_renderer.get()));
 }
 
 void QRaytraceAspectPrivate::updateServiceProviders()
@@ -43,6 +57,23 @@ void QRaytraceAspectPrivate::updateServiceProviders()
             services()->registerServiceProvider(Qt3DCore::QServiceLocator::FrameAdvanceService, advanceService);
         }
     }
+}
+
+QVector<QAspectJobPtr> QRaytraceAspectPrivate::createGeometryRendererJobs() const
+{
+    auto *geometryRendererManager = &m_nodeManagers->geometryRendererManager;
+    auto dirtyGeometryRenderers = geometryRendererManager->acquireDirtyComponents();
+
+    QVector<QAspectJobPtr> geometryRendererJobs;
+    geometryRendererJobs.reserve(dirtyGeometryRenderers.size());
+    for(const QNodeId &geometryRendererId : dirtyGeometryRenderers) {
+        Raytrace::HGeometryRenderer handle = geometryRendererManager->lookupHandle(geometryRendererId);
+        if(!handle.isNull()) {
+            auto job = Raytrace::LoadGeometryJobPtr::create(m_nodeManagers.get(), handle);
+            geometryRendererJobs.append(job);
+        }
+    }
+    return geometryRendererJobs;
 }
 
 QRaytraceAspect::QRaytraceAspect(QObject *parent)
@@ -66,6 +97,7 @@ QVector<QAspectJobPtr> QRaytraceAspect::jobsToExecute(qint64 time)
     Q_D(QRaytraceAspect);
 
     QVector<QAspectJobPtr> jobs;
+    jobs.append(d->createGeometryRendererJobs());
     if(d->m_renderer) {
         jobs.append(d->m_renderer->renderJobs());
     }

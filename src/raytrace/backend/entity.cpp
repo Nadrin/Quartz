@@ -14,6 +14,8 @@
 #include <Qt3DCore/QPropertyNodeAddedChange>
 #include <Qt3DCore/QPropertyNodeRemovedChange>
 
+#include <Qt3DRaytrace/qgeometryrenderer.h>
+
 using namespace Qt3DCore;
 
 namespace Qt3DRaytrace {
@@ -123,6 +125,9 @@ void Entity::addComponent(QNodeIdTypePair idAndType)
     if(type->inherits(&Qt3DCore::QTransform::staticMetaObject)) {
         m_transformComponent = id;
     }
+    else if(type->inherits(&Qt3DRaytrace::QGeometryRenderer::staticMetaObject)) {
+        m_geometryRendererComponent = id;
+    }
 }
 
 void Entity::removeComponent(QNodeId nodeId)
@@ -130,12 +135,21 @@ void Entity::removeComponent(QNodeId nodeId)
     if(nodeId == m_transformComponent) {
         m_transformComponent = QNodeId{};
     }
+    else if(nodeId == m_geometryRendererComponent) {
+        m_geometryRendererComponent = QNodeId{};
+    }
 }
 
 Transform *Entity::transformComponent() const
 {
     Q_ASSERT(m_nodeManagers);
     return m_nodeManagers->transformManager.lookupResource(m_transformComponent);
+}
+
+GeometryRenderer *Entity::geometryRendererComponent() const
+{
+    Q_ASSERT(m_nodeManagers);
+    return m_nodeManagers->geometryRendererManager.lookupResource(m_geometryRendererComponent);
 }
 
 void Entity::sceneChangeEvent(const QSceneChangePtr &changeEvent)
@@ -172,6 +186,8 @@ void Entity::sceneChangeEvent(const QSceneChangePtr &changeEvent)
     default:
         break;
     }
+
+    BackendNode::sceneChangeEvent(changeEvent);
 }
 
 void Entity::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
