@@ -40,9 +40,7 @@ void QRaytraceAspectPrivate::registerBackendTypes()
     using TransformNodeMapper = Raytrace::BackendNodeMapper<Raytrace::Transform, Raytrace::TransformManager>;
     q->registerBackendType<Qt3DCore::QTransform>(QSharedPointer<TransformNodeMapper>::create(&m_nodeManagers->transformManager, m_renderer.get()));
 
-    using GeometryNodeMapper = Raytrace::BackendNodeMapper<Raytrace::Geometry, Raytrace::GeometryManager>;
-    q->registerBackendType<QGeometry>(QSharedPointer<GeometryNodeMapper>::create(&m_nodeManagers->geometryManager, m_renderer.get()));
-
+    q->registerBackendType<QGeometry>(QSharedPointer<Raytrace::GeometryNodeMapper>::create(&m_nodeManagers->geometryManager, m_renderer.get()));
     q->registerBackendType<QGeometryRenderer>(QSharedPointer<Raytrace::GeometryRendererNodeMapper>::create(&m_nodeManagers->geometryRendererManager, m_renderer.get()));
 }
 

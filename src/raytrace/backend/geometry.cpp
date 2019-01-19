@@ -5,6 +5,7 @@
  */
 
 #include <backend/geometry_p.h>
+#include <backend/managers_p.h>
 #include <frontend/qgeometry_p.h>
 
 #include <Qt3DCore/QPropertyUpdatedChange>
@@ -14,12 +15,21 @@ using namespace Qt3DCore;
 namespace Qt3DRaytrace {
 namespace Raytrace {
 
+void Geometry::setManager(GeometryManager *manager)
+{
+    Q_ASSERT(manager);
+    m_manager = manager;
+}
+
 void Geometry::sceneChangeEvent(const QSceneChangePtr &change)
 {
     if(change->type() == PropertyUpdated) {
         QPropertyUpdatedChangePtr propertyChange = qSharedPointerCast<QPropertyUpdatedChange>(change);
         if(propertyChange->propertyName() == QByteArrayLiteral("data")) {
-            m_data  = propertyChange->value().value<QGeometryData>();
+            m_data = propertyChange->value().value<QGeometryData>();
+            if(m_manager) {
+                m_manager->markComponentDirty(peerId());
+            }
             markDirty(AbstractRenderer::GeometryDirty);
         }
     }
@@ -29,7 +39,11 @@ void Geometry::sceneChangeEvent(const QSceneChangePtr &change)
 void Geometry::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
 {
     const auto typedChange = qSharedPointerCast<Qt3DCore::QNodeCreatedChange<QGeometryData>>(change);
-    m_data  = typedChange->data;
+    m_data = typedChange->data;
+
+    if(m_manager) {
+        m_manager->markComponentDirty(peerId());
+    }
     markDirty(AbstractRenderer::GeometryDirty);
 }
 
