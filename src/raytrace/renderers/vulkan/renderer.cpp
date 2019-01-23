@@ -313,23 +313,24 @@ bool Renderer::submitFrameCommandsAndPresent(uint32_t imageIndex)
         return false;
     }
 
+    m_frameIndex = (m_frameIndex + 1) % int(numConcurrentFrames());
+
     VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = m_renderingFinishedSemaphore;
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = m_swapchain;
     presentInfo.pImageIndices = &imageIndex;
-    if(VKFAILED(result = vkQueuePresentKHR(m_graphicsQueue, &presentInfo))) {
-        if(result != VK_SUBOPTIMAL_KHR) {
-            qCCritical(logVulkan) << "Failed to queue swapchain image for presentation:" << result.toString();
-            return false;
-        }
+    result = vkQueuePresentKHR(m_graphicsQueue, &presentInfo);
+    if(VKSUCCEEDED(result) || result == VK_SUBOPTIMAL_KHR) {
+        Q_ASSERT(m_instance);
+        m_instance->presentQueued(m_window);
+    }
+    else if(result != VK_ERROR_OUT_OF_DATE_KHR) {
+        qCCritical(logVulkan) << "Failed to queue swapchain image for presentation:" << result.toString();
+        return false;
     }
 
-    Q_ASSERT(m_instance);
-    m_instance->presentQueued(m_window);
-
-    m_frameIndex = (m_frameIndex + 1) % int(numConcurrentFrames());
     return true;
 }
 
