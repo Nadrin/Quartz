@@ -429,7 +429,9 @@ VkPhysicalDevice Renderer::choosePhysicalDevice(const QByteArrayList &requiredEx
         selectedQueueFamilyIndex = uint32_t(-1);
         for(uint32_t index=0; index < queueFamilyCount; ++index) {
             const auto &queueFamily = queueFamilies[int(index)];
-            if(!(queueFamily.queueFlags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT))) {
+
+            constexpr VkQueueFlags RequiredQueueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
+            if((queueFamily.queueFlags & RequiredQueueFlags) != RequiredQueueFlags) {
                 continue;
             }
             if(!m_instance->supportsPresent(physicalDevice, index, m_window)) {
