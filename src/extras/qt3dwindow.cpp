@@ -4,17 +4,16 @@
  * See LICENSE file for licensing information.
  */
 
-#include <Qt3DRaytraceExtras/qt3dwindow.h>
-#include <qt3dwindowrenderer_p.h>
+#include <qt3dwindow_p.h>
 
-#include <QEntity>
+#include <Qt3DCore/QEntity>
+#include <Qt3DRaytrace/qrendererinterface.h>
 
-#if QT_CONFIG(vulkan)
-#endif
+#include <QPlatformSurfaceEvent>
 
 namespace Qt3DRaytraceExtras {
 
-Qt3DWindow::Qt3DWindow()
+Qt3DWindowPrivate::Qt3DWindowPrivate()
     : m_aspectEngine(new Qt3DCore::QAspectEngine)
     , m_raytraceAspect(new Qt3DRaytrace::QRaytraceAspect)
     , m_inputAspect(new Qt3DInput::QInputAspect)
@@ -22,45 +21,91 @@ Qt3DWindow::Qt3DWindow()
     , m_inputSettings(new Qt3DInput::QInputSettings)
     , m_root(new Qt3DCore::QEntity)
     , m_userRoot(nullptr)
+{}
+
+Qt3DWindowPrivate::~Qt3DWindowPrivate()
 {
-    resize(1024, 768);
-    setFlags(QVulkanWindow::PersistentResources);
-
-    m_aspectEngine->registerAspect(m_raytraceAspect);
-    m_aspectEngine->registerAspect(m_inputAspect);
-    m_aspectEngine->registerAspect(m_logicAspect);
-
-    m_inputSettings->setEventSource(this);
+    if(!m_initialized) {
+        delete m_inputSettings;
+    }
 }
 
-QVulkanWindowRenderer *Qt3DWindow::createRenderer()
+Qt3DWindow::Qt3DWindow(QWindow *parent)
+    : QWindow(*new Qt3DWindowPrivate, parent)
 {
-    auto renderer = new Qt3DWindowRenderer(this);
-    renderer->setRendererInterface(m_raytraceAspect->rendererInterface());
-    return renderer;
+    Q_D(Qt3DWindow);
+
+    resize(1024, 768);
+    setSurfaceType(SurfaceType::VulkanSurface);
+
+    d->m_aspectEngine->registerAspect(d->m_raytraceAspect);
+    d->m_aspectEngine->registerAspect(d->m_inputAspect);
+    d->m_aspectEngine->registerAspect(d->m_logicAspect);
+
+    d->m_inputSettings->setEventSource(this);
+
+    Qt3DRaytrace::QRendererInterface *renderer = d->m_raytraceAspect->renderer();
+    if(renderer) {
+        renderer->setSurface(this);
+    }
+}
+
+void Qt3DWindow::registerAspect(Qt3DCore::QAbstractAspect *aspect)
+{
+    Q_ASSERT(!isVisible());
+    Q_D(Qt3DWindow);
+    d->m_aspectEngine->registerAspect(aspect);
+}
+
+void Qt3DWindow::registerAspect(const QString &name)
+{
+    Q_ASSERT(!isVisible());
+    Q_D(Qt3DWindow);
+    d->m_aspectEngine->registerAspect(name);
 }
 
 void Qt3DWindow::setRootEntity(Qt3DCore::QEntity *root)
 {
-    if(m_userRoot != root) {
-        if(m_userRoot) {
-            m_userRoot->setParent(static_cast<Qt3DCore::QNode*>(nullptr));
+    Q_D(Qt3DWindow);
+
+    if(d->m_userRoot != root) {
+        if(d->m_userRoot) {
+            d->m_userRoot->setParent(static_cast<Qt3DCore::QNode*>(nullptr));
         }
         if(root) {
-            root->setParent(m_root);
+            root->setParent(d->m_root);
         }
-        m_userRoot = root;
+        d->m_userRoot = root;
     }
 }
 
-void Qt3DWindow::exposeEvent(QExposeEvent *event)
+bool Qt3DWindow::event(QEvent *event)
 {
-    QVulkanWindow::exposeEvent(event);
+    Q_D(Qt3DWindow);
 
-    if(!m_initialized) {
-        m_root->addComponent(m_inputSettings.get());
-        m_aspectEngine->setRootEntity(Qt3DCore::QEntityPtr(m_root));
-        m_initialized = true;
+    switch(event->type()) {
+    case QEvent::PlatformSurface:
+        if(static_cast<QPlatformSurfaceEvent*>(event)->surfaceEventType() == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
+            d->m_aspectEngine.reset();
+        }
+        break;
+    default:
+        break;
+    }
+
+    return QWindow::event(event);
+}
+
+void Qt3DWindow::showEvent(QShowEvent *event)
+{
+    Q_D(Qt3DWindow);
+
+    QWindow::showEvent(event);
+
+    if(!d->m_initialized) {
+        d->m_root->addComponent(d->m_inputSettings);
+        d->m_aspectEngine->setRootEntity(Qt3DCore::QEntityPtr(d->m_root));
+        d->m_initialized = true;
     }
 }
 

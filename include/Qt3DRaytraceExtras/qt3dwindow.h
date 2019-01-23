@@ -8,42 +8,37 @@
 
 #include <Qt3DRaytraceExtras/qt3draytraceextras_global.h>
 
-#include <QVulkanWindow>
-#include <QScopedPointer>
+#include <QWindow>
+#include <QString>
 
-#include <QAspectEngine>
-#include <QInputAspect>
-#include <QLogicAspect>
-#include <QInputSettings>
+class QVulkanInstance;
 
-#include <Qt3DRaytrace/qraytraceaspect.h>
+namespace Qt3DCore {
+class QEntity;
+class QAbstractAspect;
+} // Qt3DCore
 
 namespace Qt3DRaytraceExtras {
 
-class QT3DRAYTRACEEXTRASSHARED_EXPORT Qt3DWindow : public QVulkanWindow
+class Qt3DWindowPrivate;
+
+class QT3DRAYTRACEEXTRASSHARED_EXPORT Qt3DWindow : public QWindow
 {
     Q_OBJECT
+    Q_DECLARE_PRIVATE(Qt3DWindow)
 public:
-    Qt3DWindow();
+    explicit Qt3DWindow(QWindow *parent = nullptr);
 
-    QVulkanWindowRenderer *createRenderer() override;
+    void registerAspect(Qt3DCore::QAbstractAspect *aspect);
+    void registerAspect(const QString &name);
 
     void setRootEntity(Qt3DCore::QEntity *root);
 
 protected:
-    void exposeEvent(QExposeEvent *event) override;
+    Qt3DWindow(Qt3DWindowPrivate &dd, QWindow *parent);
 
-    QScopedPointer<Qt3DCore::QAspectEngine> m_aspectEngine;
-
-    Qt3DRaytrace::QRaytraceAspect *m_raytraceAspect;
-    Qt3DInput::QInputAspect *m_inputAspect;
-    Qt3DLogic::QLogicAspect *m_logicAspect;
-
-    QScopedPointer<Qt3DInput::QInputSettings> m_inputSettings;
-    Qt3DCore::QEntity *m_root;
-    Qt3DCore::QEntity *m_userRoot;
-
-    bool m_initialized = false;
+    bool event(QEvent *event) override;
+    void showEvent(QShowEvent *event) override;
 };
 
 } // Qt3DRaytraceExtras

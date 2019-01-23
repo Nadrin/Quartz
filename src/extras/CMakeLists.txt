@@ -10,8 +10,7 @@ find_package(Qt5 COMPONENTS Core Gui 3DCore 3DInput 3DLogic REQUIRED)
 set(SOURCES_PRIVATE
     qt3draytraceextras_global_p.h
     qt3dwindow.cpp
-    qt3dwindowrenderer.cpp
-    qt3dwindowrenderer_p.h
+    qt3dwindow_p.h
 )
 
 set(SOURCES_PUBLIC
