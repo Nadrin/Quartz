@@ -12,8 +12,6 @@
 #include <QVector>
 #include <Qt3DCore/QAspectJob>
 
-class QSurface;
-
 namespace Qt3DCore {
 class QAbstractFrameAdvanceService;
 } // Qt3DCore
@@ -36,6 +34,9 @@ public:
     Q_DECLARE_FLAGS(DirtySet, DirtyFlag)
 
     virtual ~AbstractRenderer() = default;
+
+    virtual bool initialize() = 0;
+    virtual void shutdown() = 0;
 
     virtual void markDirty(DirtySet changes, BackendNode *node) = 0;
 

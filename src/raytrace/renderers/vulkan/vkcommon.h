@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <volk.h>
 #include <vk_mem_alloc.h>
 
@@ -78,15 +80,21 @@ private:
 template<typename T>
 struct Resource
 {
-    T handle = VK_NULL_HANDLE;
+    Resource(T handle = VK_NULL_HANDLE)
+        : handle(handle)
+    {}
 
     operator T() const { return handle; }
+    operator T*() { return &handle; }
+    operator const T*() const { return &handle; }
     operator bool() const { return isValid(); }
 
     bool isValid() const
     {
         return handle != VK_NULL_HANDLE;
     }
+
+    T handle;
 };
 
 template<typename T>

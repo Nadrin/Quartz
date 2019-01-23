@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Michał Siejak
+ * Copyright (C) 2018-2019 Michał Siejak
  * This file is part of Quartz - a raytracing aspect for Qt3D.
  * See LICENSE file for licensing information.
  */
@@ -10,6 +10,8 @@
 
 class QObject;
 class QSurface;
+
+class QVulkanInstance;
 
 namespace Qt3DRaytrace {
 
@@ -26,13 +28,6 @@ public:
 
     virtual QSurface *surface() const = 0;
     virtual void setSurface(QObject *surfaceObject) = 0;
-
-    virtual void preInitResources() {}
-    virtual void initResources() {}
-    virtual void initSwapChainResources() {}
-    virtual void releaseSwapChainResources() {}
-    virtual void releaseResources() {}
-    virtual void startNextFrame() {}
 };
 
 } // Qt3DRaytrace

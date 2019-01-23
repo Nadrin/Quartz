@@ -20,7 +20,7 @@ class QT3DRAYTRACESHARED_EXPORT QRaytraceAspect : public Qt3DCore::QAbstractAspe
 public:
     explicit QRaytraceAspect(QObject *parent = nullptr);
 
-    QRendererInterface *rendererInterface() const;
+    QRendererInterface *renderer() const;
 
 protected:
     QRaytraceAspect(QRaytraceAspectPrivate &dd, QObject *parent);
@@ -32,6 +32,7 @@ private:
     void onRegistered() override;
     void onUnregistered() override;
     void onEngineStartup() override;
+    void onEngineShutdown() override;
 };
 
 } // Qt3DRaytrace

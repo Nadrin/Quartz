@@ -78,7 +78,7 @@ QRaytraceAspect::QRaytraceAspect(QObject *parent)
     : QRaytraceAspect(*new QRaytraceAspectPrivate, parent)
 {}
 
-QRendererInterface *QRaytraceAspect::rendererInterface() const
+QRendererInterface *QRaytraceAspect::renderer() const
 {
     Q_D(const QRaytraceAspect);
     return d->m_renderer.get();
@@ -126,10 +126,24 @@ void QRaytraceAspect::onEngineStartup()
     Q_D(QRaytraceAspect);
 
     Q_ASSERT(d->m_nodeManagers);
+    Q_ASSERT(d->m_renderer);
+
     Raytrace::Entity *rootEntity = d->m_nodeManagers->entityManager.lookupResource(rootEntityId());
     if(rootEntity) {
         d->m_renderer->setSceneRoot(rootEntity);
     }
+
+    if(!d->m_renderer->initialize()) {
+        qCWarning(logAspect) << "Failed to initialize renderer";
+    }
+}
+
+void QRaytraceAspect::onEngineShutdown()
+{
+    Q_D(QRaytraceAspect);
+
+    Q_ASSERT(d->m_renderer);
+    d->m_renderer->shutdown();
 }
 
 } // Qt3DRaytrace

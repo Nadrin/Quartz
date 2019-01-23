@@ -6,18 +6,51 @@
 
 #include <renderers/vulkan/device.h>
 
+#include <QVulkanInstance>
+
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
-Device::Device(VkDevice device, VkPhysicalDevice physicalDevice)
-    : m_device(device)
-    , m_physicalDevice(physicalDevice)
-    , m_allocator(VK_NULL_HANDLE)
+Device::~Device()
 {
-    Q_ASSERT(m_device != VK_NULL_HANDLE);
-    Q_ASSERT(m_physicalDevice != VK_NULL_HANDLE);
+    if(m_allocator != VK_NULL_HANDLE) {
+        vmaDestroyAllocator(m_allocator);
+    }
+    if(m_device != VK_NULL_HANDLE) {
+        vkDestroyDevice(m_device, nullptr);
+    }
+}
 
-    volkLoadDevice(m_device);
+Device *Device::create(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, const QByteArrayList &enabledExtensions)
+{
+    QScopedPointer<Device> device(new Device);
+    device->m_physicalDevice = physicalDevice;
+    device->m_queueFamilyIndex = queueFamilyIndex;
+
+    QVector<const char*> extensions;
+    extensions.reserve(enabledExtensions.size());
+    for(const QByteArray &extensionName : enabledExtensions) {
+        extensions.append(extensionName.data());
+    }
+
+    const float queuePriority = 1.0f;
+    VkDeviceQueueCreateInfo queueCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
+    queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
+    queueCreateInfo.queueCount = 1;
+    queueCreateInfo.pQueuePriorities = &queuePriority;
+
+    VkDeviceCreateInfo createInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+    createInfo.queueCreateInfoCount = 1;
+    createInfo.pQueueCreateInfos = &queueCreateInfo;
+    createInfo.enabledExtensionCount = uint32_t(extensions.size());
+    createInfo.ppEnabledExtensionNames = extensions.data();
+
+    Result result;
+    if(VKFAILED(result = vkCreateDevice(physicalDevice, &createInfo, nullptr, &device->m_device))) {
+        qCCritical(logVulkan) << "Failed to create logical device:" << result.toString();
+        return nullptr;
+    }
+    volkLoadDevice(device->m_device);
 
     VmaVulkanFunctions vmaFunctions;
     vmaFunctions.vkAllocateMemory = vkAllocateMemory;
@@ -40,21 +73,106 @@ Device::Device(VkDevice device, VkPhysicalDevice physicalDevice)
     vmaFunctions.vkUnmapMemory = vkUnmapMemory;
 
     VmaAllocatorCreateInfo allocatorCreateInfo = {};
-    allocatorCreateInfo.physicalDevice = m_physicalDevice;
-    allocatorCreateInfo.device = m_device;
+    allocatorCreateInfo.physicalDevice = device->m_physicalDevice;
+    allocatorCreateInfo.device = device->m_device;
     allocatorCreateInfo.pVulkanFunctions = &vmaFunctions;
-
-    Result result;
-    if(VKFAILED(result = vmaCreateAllocator(&allocatorCreateInfo, &m_allocator))) {
+    if(VKFAILED(result = vmaCreateAllocator(&allocatorCreateInfo, &device->m_allocator))) {
         qCCritical(logVulkan) << "Failed to create Vulkan memory allocator:" << result.toString();
+        return nullptr;
+    }
+
+    return device.take();
+}
+
+CommandPool Device::createCommandPool(VkCommandPoolCreateFlags createFlags)
+{
+    VkCommandPoolCreateInfo createInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+    createInfo.flags = createFlags;
+    createInfo.queueFamilyIndex = m_queueFamilyIndex;
+
+    CommandPool pool;
+    Result result;
+    if(VKFAILED(result = vkCreateCommandPool(m_device, &createInfo, nullptr, &pool.handle))) {
+        qCCritical(logVulkan) << "Failed to create command pool:" << result.toString();
+    }
+    return pool;
+}
+
+void Device::resetCommandPool(const CommandPool &commandPool, VkCommandPoolResetFlags flags) const
+{
+    Result result;
+    if(VKFAILED(result = vkResetCommandPool(m_device, commandPool, flags))) {
+        qCCritical(logVulkan) << "Failed to reset command pool:" << result.toString();
     }
 }
 
-Device::~Device()
+void Device::destroyCommandPool(CommandPool &commandPool)
 {
-    if(m_allocator != VK_NULL_HANDLE) {
-        vmaDestroyAllocator(m_allocator);
+    vkDestroyCommandPool(m_device, commandPool, nullptr);
+    commandPool = {};
+}
+
+QVector<CommandBuffer> Device::allocateCommandBuffers(const CommandBufferAllocateInfo &allocInfo)
+{
+    QVector<CommandBuffer> commandBuffers;
+    if(allocInfo.commandBufferCount == 0) {
+        qCWarning(logVulkan) << "Tried to allocate zero command buffers";
+        return commandBuffers;
     }
+
+    Result result;
+    commandBuffers.resize(int(allocInfo.commandBufferCount));
+    if(VKFAILED(result = vkAllocateCommandBuffers(m_device, allocInfo, reinterpret_cast<VkCommandBuffer*>(commandBuffers.data())))) {
+        qCCritical(logVulkan) << "Failed to allocate command buffers:" << result.toString();
+    }
+    return commandBuffers;
+}
+
+void Device::freeCommandBuffers(const CommandPool &commandPool, const QVector<CommandBuffer> &commandBuffers)
+{
+    if(commandBuffers.size() > 0) {
+        vkFreeCommandBuffers(m_device, commandPool, uint32_t(commandBuffers.size()), reinterpret_cast<const VkCommandBuffer*>(commandBuffers.data()));
+    }
+}
+
+Swapchain Device::createSwapchain(QWindow *window, VkSurfaceFormatKHR format, uint32_t minImageCount, Swapchain oldSwapchain)
+{
+    VkSurfaceKHR surface = QVulkanInstance::surfaceForWindow(window);
+
+    Result result;
+    VkSurfaceCapabilitiesKHR surfaceCaps;
+    if(VKFAILED(result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, surface, &surfaceCaps))) {
+        qCCritical(logVulkan) << "Failed to query swapchain surface capabilities:" << result.toString();
+        return VK_NULL_HANDLE;
+    }
+
+    Swapchain swapchain;
+    VkSwapchainCreateInfoKHR swapchainCreateInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
+    swapchainCreateInfo.surface = surface;
+    swapchainCreateInfo.minImageCount = minImageCount;
+    swapchainCreateInfo.imageFormat = format.format;
+    swapchainCreateInfo.imageColorSpace = format.colorSpace;
+    swapchainCreateInfo.imageExtent = surfaceCaps.currentExtent;
+    swapchainCreateInfo.imageArrayLayers = 1;
+    swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    swapchainCreateInfo.preTransform = surfaceCaps.currentTransform;
+    swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    swapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+    swapchainCreateInfo.clipped = VK_TRUE;
+    swapchainCreateInfo.oldSwapchain = oldSwapchain;
+    if(VKFAILED(result = vkCreateSwapchainKHR(m_device, &swapchainCreateInfo, nullptr, &swapchain.handle))) {
+        qCCritical(logVulkan) << "Failed to create swapchain:" << result.toString();
+        return VK_NULL_HANDLE;
+    }
+
+    return swapchain;
+}
+
+void Device::destroySwapchain(Swapchain &swapchain)
+{
+    vkDestroySwapchainKHR(m_device, swapchain, nullptr);
+    swapchain = {};
 }
 
 Image Device::createImage(const ImageCreateInfo &createInfo, const AllocationCreateInfo &allocInfo)
@@ -112,6 +230,23 @@ void Device::destroyImage(Image &image)
     image = {};
 }
 
+VkImageView Device::createImageView(const ImageViewCreateInfo &createInfo)
+{
+    VkImageView imageView = VK_NULL_HANDLE;
+
+    Result result;
+    if(VKFAILED(result = vkCreateImageView(m_device, &createInfo, nullptr, &imageView))) {
+        qCCritical(logVulkan) << "Failed to create image view:" << result.toString();
+    }
+    return imageView;
+}
+
+void Device::destroyImageView(VkImageView &imageView)
+{
+    vkDestroyImageView(m_device, imageView, nullptr);
+    imageView = VK_NULL_HANDLE;
+}
+
 DescriptorPool Device::createDescriptorPool(const DescriptorPoolCreateInfo &createInfo)
 {
     DescriptorPool pool;
@@ -122,7 +257,7 @@ DescriptorPool Device::createDescriptorPool(const DescriptorPoolCreateInfo &crea
     return pool;
 }
 
-void Device::resetDescriptorPool(const DescriptorPool &descriptorPool)
+void Device::resetDescriptorPool(const DescriptorPool &descriptorPool) const
 {
     Result result;
     if(VKFAILED(result = vkResetDescriptorPool(m_device, descriptorPool.handle, 0))) {
@@ -192,6 +327,93 @@ void Device::destroySampler(Sampler &sampler)
     sampler = {};
 }
 
+Semaphore Device::createSemaphore()
+{
+    VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+
+    Semaphore semaphore;
+    Result result;
+    if(VKFAILED(result = vkCreateSemaphore(m_device, &createInfo, nullptr, &semaphore.handle))) {
+        qCCritical(logVulkan) << "Failed to create semaphore:" << result.toString();
+    }
+    return semaphore;
+}
+
+void Device::destroySemaphore(Semaphore &semaphore)
+{
+    vkDestroySemaphore(m_device, semaphore, nullptr);
+    semaphore = {};
+}
+
+Fence Device::createFence(VkFenceCreateFlags flags)
+{
+    VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
+    createInfo.flags = flags;
+
+    Fence fence;
+    Result result;
+    if(VKFAILED(result = vkCreateFence(m_device, &createInfo, nullptr, &fence.handle))) {
+        qCCritical(logVulkan) << "Failed to create fence:" << result.toString();
+    }
+    return fence;
+}
+
+bool Device::waitForFence(const Fence &fence, uint64_t timeout) const
+{
+    Result result = vkWaitForFences(m_device, 1, &fence.handle, VK_TRUE, timeout);
+    if(VKFAILED(result) && result != VK_TIMEOUT) {
+        qCCritical(logVulkan) << "Failed to wait for fence:" << result.toString();
+    }
+    return result != VK_TIMEOUT;
+}
+
+Result Device::resetFence(const Fence &fence) const
+{
+    Result result;
+    if(VKFAILED(result = vkResetFences(m_device, 1, &fence.handle))) {
+        qCCritical(logVulkan) << "Failed to reset fence:" << result.toString();
+    }
+    return result;
+}
+
+void Device::destroyFence(Fence &fence)
+{
+    vkDestroyFence(m_device, fence, nullptr);
+    fence = {};
+}
+
+RenderPass Device::createRenderPass(const RenderPassCreateInfo &createInfo)
+{
+    RenderPass renderPass;
+    Result result;
+    if(VKFAILED(result = vkCreateRenderPass(m_device, createInfo, nullptr, &renderPass.handle))) {
+        qCCritical(logVulkan) << "Failed to create render pass:" << result.toString();
+    }
+    return renderPass;
+}
+
+void Device::destroyRenderPass(RenderPass &renderPass)
+{
+    vkDestroyRenderPass(m_device, renderPass, nullptr);
+    renderPass = {};
+}
+
+Framebuffer Device::createFramebuffer(const FramebufferCreateInfo &createInfo)
+{
+    Framebuffer fb;
+    Result result;
+    if(VKFAILED(result = vkCreateFramebuffer(m_device, createInfo, nullptr, &fb.handle))) {
+        qCCritical(logVulkan) << "Failed to create framebuffer:" << result.toString();
+    }
+    return fb;
+}
+
+void Device::destroyFramebuffer(Framebuffer &framebuffer)
+{
+    vkDestroyFramebuffer(m_device, framebuffer, nullptr);
+    framebuffer = {};
+}
+
 void Device::destroyPipeline(Pipeline &pipeline)
 {
     vkDestroyPipeline(m_device, pipeline.handle, nullptr);
@@ -200,6 +422,11 @@ void Device::destroyPipeline(Pipeline &pipeline)
         vkDestroyDescriptorSetLayout(m_device, setLayout, nullptr);
     }
     pipeline = Pipeline{};
+}
+
+void Device::waitIdle() const
+{
+    vkDeviceWaitIdle(m_device);
 }
 
 bool Device::isValid() const

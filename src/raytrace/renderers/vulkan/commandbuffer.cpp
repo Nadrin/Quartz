@@ -13,14 +13,37 @@ namespace Vulkan {
 CommandBuffer::CommandBuffer(VkCommandBuffer commandBuffer)
 {
     handle = commandBuffer;
-    Q_ASSERT(handle != VK_NULL_HANDLE);
 }
 
-void CommandBuffer::clearColorImage(VkImage image, ImageState imageState, const ImageSubresourceRange &range)
+Result CommandBuffer::begin(VkCommandBufferUsageFlags flags, const VkCommandBufferInheritanceInfo *inheritanceInfo) const
 {
-    // We only support clearing to black.
-    const VkClearColorValue clearValue = {};
-    vkCmdClearColorImage(handle, image, ResourceBarrier::getImageLayoutFromState(imageState), &clearValue, 1, &range);
+    VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+    beginInfo.flags = flags;
+    beginInfo.pInheritanceInfo = inheritanceInfo;
+
+    Result result;
+    if(VKFAILED(result = vkBeginCommandBuffer(handle, &beginInfo))) {
+        qCCritical(logVulkan) << "Begin command buffer failed:" << result.toString();
+    }
+    return result;
+}
+
+Result CommandBuffer::end() const
+{
+    Result result;
+    if(VKFAILED(result = vkEndCommandBuffer(handle))) {
+        qCCritical(logVulkan) << "End command buffer failed:" << result.toString();
+    }
+    return result;
+}
+
+Result CommandBuffer::reset(VkCommandBufferResetFlags flags) const
+{
+    Result result;
+    if(VKFAILED(result = vkResetCommandBuffer(handle, flags))) {
+        qCCritical(logVulkan) << "Reset command buffer failed:" << result.toString();
+    }
+    return result;
 }
 
 void CommandBuffer::resourceBarrier(int numBufferTransitions, const BufferTransition *bufferTransitions, int numImageTransitions, const ImageTransition *imageTransitions) const

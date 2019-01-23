@@ -9,6 +9,7 @@
 #include <renderers/vulkan/vkcommon.h>
 #include <renderers/vulkan/descriptors.h>
 
+#include <QRect>
 #include <QVector>
 
 namespace Qt3DRaytrace {
@@ -61,6 +62,16 @@ struct QueryPoolCreateInfo : Initializer<VkQueryPoolCreateInfo>
     }
 };
 
+struct CommandPoolCreateInfo : Initializer<VkCommandPoolCreateInfo>
+{
+    CommandPoolCreateInfo(VkCommandPoolCreateFlags flags_, uint32_t queueFamilyIndex_)
+        : Initializer(VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO)
+    {
+        flags = flags_;
+        queueFamilyIndex = queueFamilyIndex_;
+    }
+};
+
 struct ImageCreateInfo : Initializer<VkImageCreateInfo>
 {
     ImageCreateInfo(VkImageType imageType_, VkFormat format_, const VkExtent3D &extent_, uint32_t mipLevels_=1, uint32_t arrayLayers_=1)
@@ -77,6 +88,13 @@ struct ImageCreateInfo : Initializer<VkImageCreateInfo>
         sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     }
+    ImageCreateInfo(VkImageType imageType_, VkFormat format_, const QSize &extent_, uint32_t mipLevels_=1, uint32_t arrayLayers_=1)
+        : ImageCreateInfo(imageType_, format_, VkExtent3D{}, mipLevels_, arrayLayers_)
+    {
+        extent.width  = uint32_t(extent_.width());
+        extent.height = uint32_t(extent_.height());
+        extent.depth  = 1;
+    }
 };
 
 struct ImageViewCreateInfo : Initializer<VkImageViewCreateInfo>
@@ -90,6 +108,41 @@ struct ImageViewCreateInfo : Initializer<VkImageViewCreateInfo>
         subresourceRange.aspectMask = aspectMask_;
         subresourceRange.levelCount = VK_REMAINING_MIP_LEVELS;
         subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
+    }
+};
+
+struct FramebufferCreateInfo : Initializer<VkFramebufferCreateInfo>
+{
+    FramebufferCreateInfo()
+        : Initializer(VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO)
+    {}
+    FramebufferCreateInfo(VkRenderPass renderPass_, const QVector<VkImageView> &attachments_, uint32_t width_, uint32_t height_, uint32_t layers_=1)
+        : FramebufferCreateInfo()
+    {
+        renderPass = renderPass_;
+        attachmentCount = uint32_t(attachments_.size());
+        pAttachments = attachments_.data();
+        width = width_;
+        height = height_;
+        layers = layers_;
+    }
+};
+
+struct RenderPassCreateInfo : Initializer<VkRenderPassCreateInfo>
+{
+    RenderPassCreateInfo()
+        : Initializer(VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO)
+    {}
+};
+
+struct CommandBufferAllocateInfo : Initializer<VkCommandBufferAllocateInfo>
+{
+    CommandBufferAllocateInfo(VkCommandPool commandPool_, VkCommandBufferLevel level_, uint32_t count_=1)
+        : Initializer(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO)
+    {
+        commandPool = commandPool_;
+        level = level_;
+        commandBufferCount = count_;
     }
 };
 
@@ -184,11 +237,15 @@ struct WriteDescriptorSet : Initializer<VkWriteDescriptorSet>
 
 struct RenderPassBeginInfo : Initializer<VkRenderPassBeginInfo>
 {
-    RenderPassBeginInfo(VkRenderPass renderPass_=VK_NULL_HANDLE, VkFramebuffer framebuffer_=VK_NULL_HANDLE)
+    RenderPassBeginInfo(VkRenderPass renderPass_=VK_NULL_HANDLE, VkFramebuffer framebuffer_=VK_NULL_HANDLE, const QRect &renderArea_={})
         : Initializer(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO)
     {
         renderPass = renderPass_;
         framebuffer = framebuffer_;
+        renderArea.offset.x = int32_t(renderArea_.x());
+        renderArea.offset.y = int32_t(renderArea_.y());
+        renderArea.extent.width = uint32_t(renderArea_.width());
+        renderArea.extent.height = uint32_t(renderArea_.height());
     }
 };
 
