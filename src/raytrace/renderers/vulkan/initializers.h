@@ -111,6 +111,17 @@ struct ImageViewCreateInfo : Initializer<VkImageViewCreateInfo>
     }
 };
 
+struct BufferCreateInfo : Initializer<VkBufferCreateInfo>
+{
+    BufferCreateInfo(VkDeviceSize size_=0, VkBufferUsageFlags usage_=0)
+        : Initializer(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
+    {
+        size = size_;
+        usage = usage_;
+        sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    }
+};
+
 struct FramebufferCreateInfo : Initializer<VkFramebufferCreateInfo>
 {
     FramebufferCreateInfo()

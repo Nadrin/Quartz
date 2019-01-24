@@ -40,6 +40,9 @@ public:
     Image createImage(const ImageCreateInfo &createInfo, const AllocationCreateInfo &allocInfo);
     void destroyImage(Image &image);
 
+    Buffer createBuffer(const BufferCreateInfo &createInfo, const AllocationCreateInfo &allocInfo);
+    void destroyBuffer(Buffer &buffer);
+
     VkImageView createImageView(const ImageViewCreateInfo &createInfo);
     void destroyImageView(VkImageView &imageView);
 
@@ -76,6 +79,9 @@ public:
     void destroyFramebuffer(Framebuffer &framebuffer);
 
     void destroyPipeline(Pipeline &pipeline);
+
+    void *mapMemory(const VmaAllocation &allocation) const;
+    void unmapMemory(const VmaAllocation &allocation) const;
 
     void waitIdle() const;
 

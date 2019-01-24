@@ -235,6 +235,23 @@ void Device::destroyImage(Image &image)
     image = {};
 }
 
+Buffer Device::createBuffer(const BufferCreateInfo &createInfo, const AllocationCreateInfo &allocInfo)
+{
+    Buffer buffer;
+
+    Result result;
+    if(VKFAILED(result = vmaCreateBuffer(m_allocator, createInfo, allocInfo, &buffer.handle, &buffer.allocation, nullptr))) {
+        qCCritical(logVulkan) << "Failed to create buffer resource:" << result.toString();
+    }
+    return buffer;
+}
+
+void Device::destroyBuffer(Buffer &buffer)
+{
+    vmaDestroyBuffer(m_allocator, buffer.handle, buffer.allocation);
+    buffer = {};
+}
+
 VkImageView Device::createImageView(const ImageViewCreateInfo &createInfo)
 {
     VkImageView imageView = VK_NULL_HANDLE;
@@ -456,6 +473,22 @@ void Device::destroyPipeline(Pipeline &pipeline)
         vkDestroyDescriptorSetLayout(m_device, setLayout, nullptr);
     }
     pipeline = Pipeline{};
+}
+
+void *Device::mapMemory(const VmaAllocation &allocation) const
+{
+    void *mappedAddress;
+    Result result;
+    if(VKFAILED(result = vmaMapMemory(m_allocator, allocation, &mappedAddress))) {
+        qCCritical(logVulkan) << "Failed to map resource memory:" << result.toString();
+        return nullptr;
+    }
+    return mappedAddress;
+}
+
+void Device::unmapMemory(const VmaAllocation &allocation) const
+{
+    vmaUnmapMemory(m_allocator, allocation);
 }
 
 void Device::waitIdle() const

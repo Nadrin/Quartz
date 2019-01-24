@@ -54,7 +54,6 @@ public:
         const VkClearColorValue clearValue = {};
         vkCmdClearColorImage(handle, image, ResourceBarrier::getImageLayoutFromState(imageState), &clearValue, 1, &range);
     }
-
     void bindPipeline(const Pipeline &pipeline) const
     {
         vkCmdBindPipeline(handle, pipeline.bindPoint(), pipeline);
@@ -63,7 +62,14 @@ public:
     {
         vkCmdBindDescriptorSets(handle, pipeline.bindPoint(), pipeline.pipelineLayout, firstSet, uint32_t(descriptorSets.size()), descriptorSets.data(), 0, nullptr);
     }
-
+    void copyBuffer(VkBuffer src, VkDeviceSize srcOffset, VkBuffer dest, VkDeviceSize dstOffset, VkDeviceSize size) const
+    {
+        VkBufferCopy bufferCopy;
+        bufferCopy.srcOffset = srcOffset;
+        bufferCopy.dstOffset = dstOffset;
+        bufferCopy.size = size;
+        vkCmdCopyBuffer(handle, src, dest, 1, &bufferCopy);
+    }
     void dispatch(uint32_t groupCountX, uint32_t groupCountY=1, uint32_t groupCountZ=1) const
     {
         vkCmdDispatch(handle, groupCountX, groupCountY, groupCountZ);
@@ -72,7 +78,10 @@ public:
     {
         vkCmdDraw(handle, vertexCount, instanceCount, firstVertex, firstInstance);
     }
-
+    void executeCommands(const QVector<VkCommandBuffer> &commandBuffers) const
+    {
+        vkCmdExecuteCommands(handle, uint32_t(commandBuffers.size()), commandBuffers.data());
+    }
     void setViewport(const QRect &rect, float minDepth=0.0f, float maxDepth=1.0f) const
     {
         VkViewport vkViewport;
@@ -92,6 +101,10 @@ public:
         vkRect.extent.width = uint32_t(rect.width());
         vkRect.extent.height = uint32_t(rect.height());
         vkCmdSetScissor(handle, 0, 1, &vkRect);
+    }
+    void setEvent(VkEvent event, VkPipelineStageFlags stageMask) const
+    {
+        vkCmdSetEvent(handle, event, stageMask);
     }
 };
 
