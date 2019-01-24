@@ -128,6 +128,11 @@ QVector<CommandBuffer> Device::allocateCommandBuffers(const CommandBufferAllocat
     return commandBuffers;
 }
 
+void Device::freeCommandBuffer(const CommandPool &commandPool, const CommandBuffer &commandBuffer)
+{
+    vkFreeCommandBuffers(m_device, commandPool, 1, commandBuffer);
+}
+
 void Device::freeCommandBuffers(const CommandPool &commandPool, const QVector<CommandBuffer> &commandBuffers)
 {
     if(commandBuffers.size() > 0) {
@@ -367,6 +372,12 @@ bool Device::waitForFence(const Fence &fence, uint64_t timeout) const
     return result != VK_TIMEOUT;
 }
 
+bool Device::isFenceSignaled(const Fence &fence) const
+{
+    Result result = vkGetFenceStatus(m_device, fence);
+    return result == VK_SUCCESS;
+}
+
 Result Device::resetFence(const Fence &fence) const
 {
     Result result;
@@ -380,6 +391,29 @@ void Device::destroyFence(Fence &fence)
 {
     vkDestroyFence(m_device, fence, nullptr);
     fence = {};
+}
+
+Event Device::createEvent()
+{
+    Event event;
+    VkEventCreateInfo createInfo = { VK_STRUCTURE_TYPE_EVENT_CREATE_INFO };
+    Result result;
+    if(VKFAILED(vkCreateEvent(m_device, &createInfo, nullptr, &event.handle))) {
+        qCCritical(logVulkan) << "Failed to create event:" << result.toString();
+    }
+    return event;
+}
+
+void Device::destroyEvent(Event &event)
+{
+    vkDestroyEvent(m_device, event, nullptr);
+    event = {};
+}
+
+bool Device::isEventSignaled(const Event &event) const
+{
+    Result result = vkGetEventStatus(m_device, event);
+    return result == VK_EVENT_SET;
 }
 
 RenderPass Device::createRenderPass(const RenderPassCreateInfo &createInfo)

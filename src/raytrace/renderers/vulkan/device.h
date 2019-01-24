@@ -31,6 +31,7 @@ public:
     void destroyCommandPool(CommandPool &commandPool);
 
     QVector<CommandBuffer> allocateCommandBuffers(const CommandBufferAllocateInfo &allocInfo);
+    void freeCommandBuffer(const CommandPool &commandPool, const CommandBuffer &commandBuffer);
     void freeCommandBuffers(const CommandPool &commandPool, const QVector<CommandBuffer> &commandBuffers);
 
     Swapchain createSwapchain(QWindow *window, VkSurfaceFormatKHR format, uint32_t minImageCount, Swapchain oldSwapchain);
@@ -60,8 +61,13 @@ public:
 
     Fence createFence(VkFenceCreateFlags flags=0);
     bool waitForFence(const Fence &fence, uint64_t timeout=UINT64_MAX) const;
+    bool isFenceSignaled(const Fence &fence) const;
     Result resetFence(const Fence &fence) const;
     void destroyFence(Fence &fence);
+
+    Event createEvent();
+    void destroyEvent(Event &event);
+    bool isEventSignaled(const Event &event) const;
 
     RenderPass createRenderPass(const RenderPassCreateInfo &createInfo);
     void destroyRenderPass(RenderPass &renderPass);

@@ -77,6 +77,8 @@ bool Renderer::initialize()
     }
     m_frameResources.resize(numConcurrentFrames);
 
+    m_commandBufferManager.reset(new CommandBufferManager(m_device.get()));
+
     if(!createResources()) {
         return false;
     }
@@ -92,6 +94,8 @@ void Renderer::shutdown()
 
     if(m_device) {
         m_device->waitIdle();
+
+        m_commandBufferManager.reset();
 
         releaseSwapchainResources();
         m_device->destroySwapchain(m_swapchain);
@@ -347,6 +351,8 @@ void Renderer::renderFrame()
     m_device->waitForFence(currentFrame.commandBuffersExecutedFence);
     m_device->resetFence(currentFrame.commandBuffersExecutedFence);
 
+    m_commandBufferManager->submitCommandBuffers(m_graphicsQueue);
+
     uint32_t swapchainImageIndex = 0;
 
     CommandBuffer &commandBuffer = currentFrame.commandBuffer;
@@ -393,6 +399,8 @@ void Renderer::renderFrame()
     commandBuffer.end();
 
     submitFrameCommandsAndPresent(swapchainImageIndex);
+
+    m_commandBufferManager->proceedToNextFrame();
     m_frameAdvanceService->proceedToNextFrame();
 }
 
@@ -583,6 +591,11 @@ void Renderer::setNodeManagers(Raytrace::NodeManagers *nodeManagers)
 Qt3DCore::QAbstractFrameAdvanceService *Renderer::frameAdvanceService() const
 {
     return m_frameAdvanceService.get();
+}
+
+CommandBufferManager *Renderer::commandBufferManager() const
+{
+    return m_commandBufferManager.get();
 }
 
 QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()
