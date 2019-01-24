@@ -7,6 +7,7 @@
 #pragma once
 
 #include <renderers/vulkan/vkcommon.h>
+#include <renderers/vulkan/vkresources.h>
 #include <renderers/vulkan/initializers.h>
 #include <renderers/vulkan/pipeline/pipeline.h>
 #include <renderers/vulkan/commandbuffer.h>
@@ -17,22 +18,6 @@ class QWindow;
 
 namespace Qt3DRaytrace {
 namespace Vulkan {
-
-struct Image : MemoryResource<VkImage>
-{
-    VkImageView view = VK_NULL_HANDLE;
-};
-
-using CommandPool = Resource<VkCommandPool>;
-using DescriptorPool = Resource<VkDescriptorPool>;
-using DescriptorSet = Resource<VkDescriptorSet>;
-using QueryPool = Resource<VkQueryPool>;
-using Sampler = Resource<VkSampler>;
-using Swapchain = Resource<VkSwapchainKHR>;
-using Semaphore = Resource<VkSemaphore>;
-using Fence = Resource<VkFence>;
-using Framebuffer = Resource<VkFramebuffer>;
-using RenderPass = Resource<VkRenderPass>;
 
 class Device
 {

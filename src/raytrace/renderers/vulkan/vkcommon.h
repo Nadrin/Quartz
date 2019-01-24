@@ -100,12 +100,17 @@ struct Resource
 template<typename T>
 struct MemoryResource : Resource<T>
 {
-    VmaAllocation allocation = VK_NULL_HANDLE;
+    MemoryResource(T handle = VK_NULL_HANDLE)
+        : Resource<T>(handle)
+        , allocation(VK_NULL_HANDLE)
+    {}
 
     bool isAllocated() const
     {
         return allocation != VK_NULL_HANDLE;
     }
+
+    VmaAllocation allocation;
 };
 
 struct BufferRange

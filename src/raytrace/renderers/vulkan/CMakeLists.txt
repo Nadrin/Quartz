@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 
 target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/vkcommon.h
+    renderers/vulkan/vkresources.h
     renderers/vulkan/device.cpp
     renderers/vulkan/device.h
     renderers/vulkan/commandbuffer.cpp
