@@ -12,6 +12,8 @@
 #include <renderers/vulkan/pipeline/graphicspipeline.h>
 #include <renderers/vulkan/pipeline/computepipeline.h>
 
+#include <backend/managers_p.h>
+
 #include <QVulkanInstance>
 #include <QWindow>
 #include <QTimer>
@@ -550,6 +552,12 @@ void Renderer::setSurface(QObject *surfaceObject)
     }
 }
 
+Device *Renderer::device() const
+{
+    Q_ASSERT(m_device);
+    return m_device.get();
+}
+
 void Renderer::markDirty(DirtySet changes, Raytrace::BackendNode *node)
 {
     Q_UNUSED(node);
@@ -565,6 +573,11 @@ void Renderer::setSceneRoot(Raytrace::Entity *rootEntity)
 {
     m_sceneRoot = rootEntity;
     m_updateWorldTransformJob->setRoot(m_sceneRoot);
+}
+
+void Renderer::setNodeManagers(Raytrace::NodeManagers *nodeManagers)
+{
+    m_nodeManagers = nodeManagers;
 }
 
 Qt3DCore::QAbstractFrameAdvanceService *Renderer::frameAdvanceService() const

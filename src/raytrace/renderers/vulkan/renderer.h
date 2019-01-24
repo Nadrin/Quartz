@@ -35,8 +35,11 @@ public:
     explicit Renderer(QObject *parent = nullptr);
 
     API api() const override { return API::Vulkan; }
+
     QSurface *surface() const override;
     void setSurface(QObject *surfaceObject) override;
+
+    Device *device() const;
 
     bool initialize() override;
     void shutdown() override;
@@ -46,8 +49,14 @@ public:
     Raytrace::Entity *sceneRoot() const override;
     void setSceneRoot(Raytrace::Entity *rootEntity) override;
 
+    void setNodeManagers(Raytrace::NodeManagers *nodeManagers) override;
+
     Qt3DCore::QAbstractFrameAdvanceService *frameAdvanceService() const override;
     QVector<Qt3DCore::QAspectJobPtr> renderJobs() override;
+
+    int currentFrameIndex() const;
+    int previousFrameIndex() const;
+    uint32_t numConcurrentFrames() const;
 
 private slots:
     void renderFrame();
@@ -67,13 +76,11 @@ private:
     VkPhysicalDevice choosePhysicalDevice(const QByteArrayList &requiredExtensions, uint32_t &queueFamilyIndex) const;
     RenderPass createDisplayRenderPass(VkFormat swapchainFormat) const;
 
-    int currentFrameIndex() const;
-    int previousFrameIndex() const;
-    uint32_t numConcurrentFrames() const;
-
     QWindow *m_window = nullptr;
     QVulkanInstance *m_instance = nullptr;
     QTimer *m_renderTimer = nullptr;
+
+    Raytrace::NodeManagers *m_nodeManagers = nullptr;
 
     QSharedPointer<Device> m_device;
     QSharedPointer<FrameAdvanceService> m_frameAdvanceService;

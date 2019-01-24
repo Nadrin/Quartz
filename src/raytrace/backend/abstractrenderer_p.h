@@ -22,6 +22,8 @@ namespace Raytrace {
 class BackendNode;
 class Entity;
 
+struct NodeManagers;
+
 class AbstractRenderer : public QRendererInterface
 {
 public:
@@ -42,6 +44,8 @@ public:
 
     virtual Entity *sceneRoot() const = 0;
     virtual void setSceneRoot(Entity *rootEntity) = 0;
+
+    virtual void setNodeManagers(NodeManagers *nodeManagers) = 0;
 
     virtual Qt3DCore::QAbstractFrameAdvanceService *frameAdvanceService() const = 0;
     virtual QVector<Qt3DCore::QAspectJobPtr> renderJobs() = 0;

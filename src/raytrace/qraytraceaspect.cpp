@@ -106,10 +106,12 @@ void QRaytraceAspect::onRegistered()
 {
     Q_D(QRaytraceAspect);
 
+    d->m_nodeManagers.reset(new Raytrace::NodeManagers);
+
     // TODO: Make renderer configurable.
     d->m_renderer.reset(new Vulkan::Renderer);
+    d->m_renderer->setNodeManagers(d->m_nodeManagers.get());
 
-    d->m_nodeManagers.reset(new Raytrace::NodeManagers);
     d->updateServiceProviders();
     d->registerBackendTypes();
 }
@@ -117,8 +119,9 @@ void QRaytraceAspect::onRegistered()
 void QRaytraceAspect::onUnregistered()
 {
     Q_D(QRaytraceAspect);
-    d->m_nodeManagers.reset();
+
     d->m_renderer.reset();
+    d->m_nodeManagers.reset();
 }
 
 void QRaytraceAspect::onEngineStartup()
