@@ -16,6 +16,7 @@
 #include <renderers/vulkan/managers/commandbuffermanager.h>
 
 #include <jobs/updateworldtransformjob_p.h>
+#include <renderers/vulkan/jobs/destroyexpiredresourcesjob.h>
 
 #include <QObject>
 #include <QSharedPointer>
@@ -130,6 +131,7 @@ private:
     bool m_clearPreviousRenderBuffer = false;
 
     Raytrace::UpdateWorldTransformJobPtr m_updateWorldTransformJob;
+    DestroyExpiredResourcesJobPtr m_destroyExpiredResourcesJob;
 
     Raytrace::Entity *m_sceneRoot = nullptr;
     DirtySet m_dirtySet = DirtyFlag::AllDirty;
