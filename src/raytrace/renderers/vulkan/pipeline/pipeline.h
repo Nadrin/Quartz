@@ -7,6 +7,7 @@
 #pragma once
 
 #include <renderers/vulkan/vkcommon.h>
+#include <renderers/vulkan/vkresources.h>
 #include <renderers/vulkan/shadermodule.h>
 
 #include <initializer_list>

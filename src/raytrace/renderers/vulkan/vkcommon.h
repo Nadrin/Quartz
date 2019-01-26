@@ -77,59 +77,6 @@ private:
     VkResult m_result;
 };
 
-template<typename T>
-struct Resource
-{
-    Resource(T handle = VK_NULL_HANDLE)
-        : handle(handle)
-    {}
-
-    operator T() const { return handle; }
-    operator T*() { return &handle; }
-    operator const T*() const { return &handle; }
-    operator bool() const { return isValid(); }
-
-    bool isValid() const
-    {
-        return handle != VK_NULL_HANDLE;
-    }
-
-    T handle;
-};
-
-template<typename T>
-struct MemoryResource : Resource<T>
-{
-    MemoryResource(T handle = VK_NULL_HANDLE)
-        : Resource<T>(handle)
-        , allocation(VK_NULL_HANDLE)
-        , hostAddress(nullptr)
-    {}
-
-    bool isAllocated() const
-    {
-        return allocation != VK_NULL_HANDLE;
-    }
-    bool isHostAccessible() const
-    {
-        return hostAddress != nullptr;
-    }
-
-    void *memory() const
-    {
-        Q_ASSERT(hostAddress);
-        return hostAddress;
-    }
-    template<typename U> U *memory() const
-    {
-        Q_ASSERT(hostAddress);
-        return reinterpret_cast<U*>(hostAddress);
-    }
-
-    VmaAllocation allocation;
-    void *hostAddress;
-};
-
 struct BufferRange
 {
     VkDeviceSize offset = 0;
