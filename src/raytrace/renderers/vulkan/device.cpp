@@ -11,6 +11,9 @@
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
+static constexpr VkMemoryPropertyFlags HostMappableMemoryFlags =
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
 Device::~Device()
 {
     if(m_allocator != VK_NULL_HANDLE) {
@@ -180,14 +183,26 @@ void Device::destroySwapchain(Swapchain &swapchain)
     swapchain = {};
 }
 
-Image Device::createImage(const ImageCreateInfo &createInfo, const AllocationCreateInfo &allocInfo)
+Image Device::createImage(const ImageCreateInfo &createInfo, const AllocationCreateInfo &allocCreateInfo)
 {
     Image image;
 
     Result result;
-    if(VKFAILED(result = vmaCreateImage(m_allocator, &createInfo, &allocInfo, &image.handle, &image.allocation, nullptr))) {
+    VmaAllocationInfo allocInfo;
+    if(VKFAILED(result = vmaCreateImage(m_allocator, &createInfo, &allocCreateInfo, &image.handle, &image.allocation, &allocInfo))) {
         qCCritical(logVulkan) << "Failed to create image resource:" << result.toString();
         return image;
+    }
+
+    if(allocInfo.pMappedData) {
+        image.hostAddress = allocInfo.pMappedData;
+    }
+    else if(createInfo.tiling == VK_IMAGE_TILING_LINEAR) {
+        VkMemoryPropertyFlags memoryFlags;
+        vmaGetMemoryTypeProperties(m_allocator, allocInfo.memoryType, &memoryFlags);
+        if((memoryFlags & HostMappableMemoryFlags) == HostMappableMemoryFlags) {
+            image.hostAddress = mapMemory(image.allocation);
+        }
     }
 
     VkImageViewType viewType;
@@ -228,6 +243,14 @@ Image Device::createImage(const ImageCreateInfo &createInfo, const AllocationCre
     return image;
 }
 
+Image Device::createStagingImage(const ImageCreateInfo &createInfo)
+{
+    ImageCreateInfo stagingCreateInfo = createInfo;
+    stagingCreateInfo.tiling = VK_IMAGE_TILING_LINEAR;
+    stagingCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+    return createImage(stagingCreateInfo, VMA_MEMORY_USAGE_CPU_ONLY);
+}
+
 void Device::destroyImage(Image &image)
 {
     vkDestroyImageView(m_device, image.view, nullptr);
@@ -235,15 +258,36 @@ void Device::destroyImage(Image &image)
     image = {};
 }
 
-Buffer Device::createBuffer(const BufferCreateInfo &createInfo, const AllocationCreateInfo &allocInfo)
+Buffer Device::createBuffer(const BufferCreateInfo &createInfo, const AllocationCreateInfo &allocCreateInfo)
 {
     Buffer buffer;
 
     Result result;
-    if(VKFAILED(result = vmaCreateBuffer(m_allocator, createInfo, allocInfo, &buffer.handle, &buffer.allocation, nullptr))) {
+    VmaAllocationInfo allocInfo;
+    if(VKFAILED(result = vmaCreateBuffer(m_allocator, createInfo, allocCreateInfo, &buffer.handle, &buffer.allocation, &allocInfo))) {
         qCCritical(logVulkan) << "Failed to create buffer resource:" << result.toString();
+        return Buffer();
+    }
+
+    if(allocInfo.pMappedData) {
+        buffer.hostAddress = allocInfo.pMappedData;
+    }
+    else {
+        VkMemoryPropertyFlags memoryFlags;
+        vmaGetMemoryTypeProperties(m_allocator, allocInfo.memoryType, &memoryFlags);
+        if((memoryFlags & HostMappableMemoryFlags) == HostMappableMemoryFlags) {
+            buffer.hostAddress = mapMemory(buffer.allocation);
+        }
     }
     return buffer;
+}
+
+Buffer Device::createStagingBuffer(VkDeviceSize size)
+{
+    BufferCreateInfo createInfo;
+    createInfo.size = size;
+    createInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    return createBuffer(createInfo, VMA_MEMORY_USAGE_CPU_ONLY);
 }
 
 void Device::destroyBuffer(Buffer &buffer)

@@ -103,14 +103,31 @@ struct MemoryResource : Resource<T>
     MemoryResource(T handle = VK_NULL_HANDLE)
         : Resource<T>(handle)
         , allocation(VK_NULL_HANDLE)
+        , hostAddress(nullptr)
     {}
 
     bool isAllocated() const
     {
         return allocation != VK_NULL_HANDLE;
     }
+    bool isHostAccessible() const
+    {
+        return hostAddress != nullptr;
+    }
+
+    void *memory() const
+    {
+        Q_ASSERT(hostAddress);
+        return hostAddress;
+    }
+    template<typename U> U *memory() const
+    {
+        Q_ASSERT(hostAddress);
+        return reinterpret_cast<U*>(hostAddress);
+    }
 
     VmaAllocation allocation;
+    void *hostAddress;
 };
 
 struct BufferRange

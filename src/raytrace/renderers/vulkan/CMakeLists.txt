@@ -22,8 +22,8 @@ target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/pipeline/graphicspipeline.h
     renderers/vulkan/pipeline/computepipeline.cpp
     renderers/vulkan/pipeline/computepipeline.h
-    renderers/vulkan/managers/stagingresourcemanager.cpp
-    renderers/vulkan/managers/stagingresourcemanager.h
+    renderers/vulkan/jobs/destroyexpiredresourcesjob.cpp
+    renderers/vulkan/jobs/destroyexpiredresourcesjob.h
     renderers/vulkan/managers/commandbuffermanager.cpp
     renderers/vulkan/managers/commandbuffermanager.h
 )

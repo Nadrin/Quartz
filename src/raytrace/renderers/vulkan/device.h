@@ -37,10 +37,12 @@ public:
     Swapchain createSwapchain(QWindow *window, VkSurfaceFormatKHR format, uint32_t minImageCount, Swapchain oldSwapchain);
     void destroySwapchain(Swapchain& swapchain);
 
-    Image createImage(const ImageCreateInfo &createInfo, const AllocationCreateInfo &allocInfo);
+    Image createImage(const ImageCreateInfo &createInfo, const AllocationCreateInfo &allocCreateInfo);
+    Image createStagingImage(const ImageCreateInfo &createInfo);
     void destroyImage(Image &image);
 
-    Buffer createBuffer(const BufferCreateInfo &createInfo, const AllocationCreateInfo &allocInfo);
+    Buffer createBuffer(const BufferCreateInfo &createInfo, const AllocationCreateInfo &allocCreateInfo);
+    Buffer createStagingBuffer(VkDeviceSize size);
     void destroyBuffer(Buffer &buffer);
 
     VkImageView createImageView(const ImageViewCreateInfo &createInfo);

@@ -13,7 +13,6 @@
 #include <renderers/vulkan/device.h>
 #include <renderers/vulkan/commandbuffer.h>
 #include <renderers/vulkan/frameadvanceservice.h>
-#include <renderers/vulkan/managers/stagingresourcemanager.h>
 #include <renderers/vulkan/managers/commandbuffermanager.h>
 
 #include <jobs/updateworldtransformjob_p.h>
@@ -54,7 +53,6 @@ public:
     void setNodeManagers(Raytrace::NodeManagers *nodeManagers) override;
 
     Qt3DCore::QAbstractFrameAdvanceService *frameAdvanceService() const override;
-    StagingResourceManager *stagingResourceManager() const;
     CommandBufferManager *commandBufferManager() const;
 
     QVector<Qt3DCore::QAspectJobPtr> renderJobs() override;
@@ -89,7 +87,6 @@ private:
 
     QSharedPointer<Device> m_device;
     QSharedPointer<FrameAdvanceService> m_frameAdvanceService;
-    QSharedPointer<StagingResourceManager> m_stagingResourceManager;
     QSharedPointer<CommandBufferManager> m_commandBufferManager;
 
     VkQueue m_graphicsQueue = VK_NULL_HANDLE;

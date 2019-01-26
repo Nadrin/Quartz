@@ -77,7 +77,6 @@ bool Renderer::initialize()
     }
     m_frameResources.resize(numConcurrentFrames);
 
-    m_stagingResourceManager.reset(new StagingResourceManager(m_device.get()));
     m_commandBufferManager.reset(new CommandBufferManager(m_device.get()));
 
     if(!createResources()) {
@@ -96,7 +95,6 @@ void Renderer::shutdown()
     if(m_device) {
         m_device->waitIdle();
 
-        m_stagingResourceManager.reset();
         m_commandBufferManager.reset();
 
         releaseSwapchainResources();
@@ -403,7 +401,6 @@ void Renderer::renderFrame()
     submitFrameCommandsAndPresent(swapchainImageIndex);
 
     m_commandBufferManager->proceedToNextFrame();
-    m_stagingResourceManager->proceedToNextFrame();
     m_frameAdvanceService->proceedToNextFrame();
 }
 
@@ -594,11 +591,6 @@ void Renderer::setNodeManagers(Raytrace::NodeManagers *nodeManagers)
 Qt3DCore::QAbstractFrameAdvanceService *Renderer::frameAdvanceService() const
 {
     return m_frameAdvanceService.get();
-}
-
-StagingResourceManager *Renderer::stagingResourceManager() const
-{
-    return m_stagingResourceManager.get();
 }
 
 CommandBufferManager *Renderer::commandBufferManager() const

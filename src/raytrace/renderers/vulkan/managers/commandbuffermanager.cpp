@@ -23,6 +23,8 @@ CommandBufferManager::CommandBufferManager(Device *device)
 CommandBufferManager::~CommandBufferManager()
 {
     cleanup(false);
+    destroyExpiredResources();
+
     if(m_pendingCommandBuffers.size() > 0) {
         qCWarning(logVulkan) << "CommandBufferManager:" << m_pendingCommandBuffers.size() << "orphaned pending batches";
     }
@@ -37,7 +39,7 @@ TransientCommandBuffer CommandBufferManager::acquireCommandBuffer()
         CommandPool commandPool = m_device->createCommandPool(VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
         m_localCommandPool.setLocalData(commandPool);
 
-        QMutexLocker lock(&m_mutex);
+        QMutexLocker lock(&m_commandBuffersMutex);
         m_commandPools.append(commandPool);
     }
 
@@ -61,15 +63,15 @@ TransientCommandBuffer CommandBufferManager::acquireCommandBuffer()
     return commandBuffer;
 }
 
-bool CommandBufferManager::releaseCommandBuffer(TransientCommandBuffer &commandBuffer)
+bool CommandBufferManager::releaseCommandBuffer(TransientCommandBuffer &commandBuffer, const QVector<Buffer> &transientBuffers)
 {
     if(!commandBuffer.buffer.end()) {
         qCWarning(logVulkan) << "Cannot end recoding transient command buffer";
         return false;
     }
 
-    QMutexLocker lock(&m_mutex);
-    m_executableCommandBuffers.append(commandBuffer);
+    QMutexLocker lock(&m_commandBuffersMutex);
+    m_executableCommandBuffers.append({commandBuffer, transientBuffers});
     commandBuffer = {};
     return true;
 }
@@ -92,8 +94,9 @@ bool CommandBufferManager::submitCommandBuffers(VkQueue queue)
     pendingBatch.commandBuffers.reserve(m_executableCommandBuffers.size());
     pendingBatch.parentCommandPools.reserve(m_executableCommandBuffers.size());
     for(auto &executableCommandBuffer : m_executableCommandBuffers) {
-        pendingBatch.commandBuffers.append(executableCommandBuffer.buffer);
-        pendingBatch.parentCommandPools.append(executableCommandBuffer.parentCommandPool);
+        pendingBatch.commandBuffers.append(executableCommandBuffer.commandBuffer.buffer);
+        pendingBatch.parentCommandPools.append(executableCommandBuffer.commandBuffer.parentCommandPool);
+        pendingBatch.transientBuffers.append(std::move(executableCommandBuffer.transientBuffers));
     }
 
     Result submitResult;
@@ -111,14 +114,29 @@ bool CommandBufferManager::submitCommandBuffers(VkQueue queue)
     return true;
 }
 
+void CommandBufferManager::destroyExpiredResources()
+{
+    QVector<Buffer> expiredBuffers;
+    {
+        QMutexLocker lock(&m_expiredResourcesMutex);
+        expiredBuffers = std::move(m_expiredBuffers);
+    }
+
+    for(Buffer &buffer : expiredBuffers) {
+        m_device->destroyBuffer(buffer);
+    }
+}
+
 void CommandBufferManager::proceedToNextFrame()
 {
-    // TODO: Make this thread-safe once renderer is moved to a dedicated thread.
     cleanup();
 }
 
 void CommandBufferManager::cleanup(bool freeCommandBuffers)
 {
+    QVector<Buffer> expiredBuffers;
+
+    // TODO: Make this thread-safe once renderer is moved to a dedicated thread.
     QMutableVectorIterator<PendingCommandBuffersBatch> it(m_pendingCommandBuffers);
     while(it.hasNext()) {
         auto &pendingBatch = it.next();
@@ -130,10 +148,15 @@ void CommandBufferManager::cleanup(bool freeCommandBuffers)
                     m_device->freeCommandBuffer(pendingBatch.parentCommandPools[i], pendingBatch.commandBuffers[i]);
                 }
             }
+
             m_device->destroyFence(pendingBatch.commandsExecutedFence);
+            expiredBuffers.append(std::move(pendingBatch.transientBuffers));
             it.remove();
         }
     }
+
+    QMutexLocker lock(&m_expiredResourcesMutex);
+    m_expiredBuffers.append(std::move(expiredBuffers));
 }
 
 } // Vulkan
