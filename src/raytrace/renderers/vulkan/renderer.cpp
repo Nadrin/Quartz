@@ -344,12 +344,12 @@ bool Renderer::submitFrameCommandsAndPresent(uint32_t imageIndex)
 
     VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
     submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = m_presentationFinishedSemaphore;
+    submitInfo.pWaitSemaphores = &m_presentationFinishedSemaphore.handle;
     submitInfo.pWaitDstStageMask = &submitWaitStage;
     submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = frame.commandBuffer;
+    submitInfo.pCommandBuffers = &frame.commandBuffer.handle;
     submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = m_renderingFinishedSemaphore;
+    submitInfo.pSignalSemaphores = &m_renderingFinishedSemaphore.handle;
     if(VKFAILED(result = vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, frame.commandBuffersExecutedFence))) {
         qCCritical(logVulkan) << "Failed to submit frame commands to the graphics queue:" << result.toString();
         return false;
@@ -359,9 +359,9 @@ bool Renderer::submitFrameCommandsAndPresent(uint32_t imageIndex)
 
     VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
     presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = m_renderingFinishedSemaphore;
+    presentInfo.pWaitSemaphores = &m_renderingFinishedSemaphore.handle;
     presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = m_swapchain;
+    presentInfo.pSwapchains = &m_swapchain.handle;
     presentInfo.pImageIndices = &imageIndex;
     result = vkQueuePresentKHR(m_graphicsQueue, &presentInfo);
     if(VKSUCCEEDED(result) || result == VK_SUBOPTIMAL_KHR) {

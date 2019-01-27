@@ -151,7 +151,7 @@ QVector<CommandBuffer> Device::allocateCommandBuffers(const CommandBufferAllocat
 
 void Device::freeCommandBuffer(const CommandPool &commandPool, const CommandBuffer &commandBuffer)
 {
-    vkFreeCommandBuffers(m_device, commandPool, 1, commandBuffer);
+    vkFreeCommandBuffers(m_device, commandPool, 1, &commandBuffer.handle);
 }
 
 void Device::freeCommandBuffers(const CommandPool &commandPool, const QVector<CommandBuffer> &commandBuffers)

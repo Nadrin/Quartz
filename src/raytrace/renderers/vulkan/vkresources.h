@@ -19,8 +19,6 @@ struct Resource
     {}
 
     operator T() const { return handle; }
-    operator T*() { return &handle; }
-    operator const T*() const { return &handle; }
     operator bool() const { return isValid(); }
 
     bool isValid() const
