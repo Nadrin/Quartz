@@ -194,10 +194,16 @@ void Renderer::releaseResources()
         m_device->destroyFence(frame.commandBuffersExecutedFence);
     }
 
-    for(auto &geometry : m_geometry) {
+    if(m_sceneResources.sceneTLAS) {
+        m_device->destroyAccelerationStructure(m_sceneResources.sceneTLAS);
+    }
+    for(auto &retiredTLAS : m_sceneResources.retiredTLAS) {
+        m_device->destroyAccelerationStructure(retiredTLAS.resource);
+    }
+    for(auto &geometry : m_sceneResources.geometry) {
         m_device->destroyGeometry(geometry);
     }
-    m_geometry.clear();
+    m_sceneResources = {};
 }
 
 void Renderer::createSwapchainResources()
@@ -380,6 +386,8 @@ void Renderer::renderFrame()
 
     m_device->waitForFence(currentFrame.commandBuffersExecutedFence);
     m_device->resetFence(currentFrame.commandBuffersExecutedFence);
+
+    updateRetiredResources();
 
     m_commandBufferManager->submitCommandBuffers(m_graphicsQueue);
 
@@ -602,10 +610,61 @@ void Renderer::markDirty(DirtySet changes, Raytrace::BackendNode *node)
     m_dirtySet |= changes;
 }
 
-void Renderer::addGeometry(const Geometry &geometry)
+QVector<Geometry> Renderer::sceneGeometry() const
 {
-    QMutexLocker lock(&m_geometryMutex);
-    m_geometry.append(geometry);
+    QMutexLocker lock(&m_sceneMutex);
+    return m_sceneResources.geometry;
+}
+
+AccelerationStructure Renderer::sceneTLAS() const
+{
+    QMutexLocker lock(&m_sceneMutex);
+    return m_sceneResources.sceneTLAS;
+}
+
+void Renderer::addSceneGeometry(const Geometry &geometry)
+{
+    QMutexLocker lock(&m_sceneMutex);
+    m_sceneResources.geometry.append(geometry);
+}
+
+void Renderer::updateSceneTLAS(const AccelerationStructure &tlas)
+{
+    QMutexLocker lock(&m_sceneMutex);
+    if(m_sceneResources.sceneTLAS) {
+        RetiredResource<AccelerationStructure> retiredTLAS;
+        retiredTLAS.resource = m_sceneResources.sceneTLAS;
+        retiredTLAS.ttl = numConcurrentFrames();
+        m_sceneResources.retiredTLAS.append(retiredTLAS);
+    }
+    m_sceneResources.sceneTLAS = tlas;
+}
+
+void Renderer::updateRetiredResources()
+{
+    QMutexLocker lock(&m_sceneMutex);
+    for(auto &retiredTLAS : m_sceneResources.retiredTLAS) {
+        retiredTLAS.updateTTL();
+    }
+}
+
+void Renderer::destroyRetiredResources()
+{
+    QVector<AccelerationStructure> retiredTLAS;
+    {
+        QMutexLocker lock(&m_sceneMutex);
+        QMutableVectorIterator<RetiredResource<AccelerationStructure>> it(m_sceneResources.retiredTLAS);
+        while(it.hasNext()) {
+            const auto &tlas = it.value();
+            if(tlas.ttl == 0) {
+                retiredTLAS.append(tlas.resource);
+                it.remove();
+            }
+        }
+    }
+    for(auto &tlas : retiredTLAS) {
+        m_device->destroyAccelerationStructure(tlas);
+    }
 }
 
 Raytrace::Entity *Renderer::sceneRoot() const

@@ -131,7 +131,7 @@ void BuildGeometryJob::run()
     }
     commandBufferManager->releaseCommandBuffer(commandBuffer, {stagingAttributes, stagingIndices, scratchBuffer});
 
-    m_renderer->addGeometry(geometry);
+    m_renderer->addSceneGeometry(geometry);
 }
 
 } // Vulkan

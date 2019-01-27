@@ -48,7 +48,14 @@ public:
 
     void markDirty(DirtySet changes, Raytrace::BackendNode *node) override;
 
-    void addGeometry(const Geometry &geometry);
+    QVector<Geometry> sceneGeometry() const;
+    AccelerationStructure sceneTLAS() const;
+
+    void addSceneGeometry(const Geometry &geometry);
+    void updateSceneTLAS(const AccelerationStructure &tlas);
+
+    void updateRetiredResources();
+    void destroyRetiredResources();
 
     Raytrace::Entity *sceneRoot() const override;
     void setSceneRoot(Raytrace::Entity *rootEntity) override;
@@ -130,8 +137,13 @@ private:
     QVector<FrameResources> m_frameResources;
     int m_frameIndex = 0;
 
-    QMutex m_geometryMutex;
-    QVector<Geometry> m_geometry;
+    struct SceneResources {
+        AccelerationStructure sceneTLAS;
+        QVector<Geometry> geometry;
+        QVector<RetiredResource<AccelerationStructure>> retiredTLAS;
+    };
+    SceneResources m_sceneResources;
+    mutable QMutex m_sceneMutex;
 
     bool m_renderBuffersReady = false;
     bool m_clearPreviousRenderBuffer = false;

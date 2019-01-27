@@ -64,6 +64,25 @@ struct MemoryResource : Resource<T>
     void *hostAddress;
 };
 
+template<typename T>
+struct RetiredResource
+{
+    explicit RetiredResource(T resource=T(), uint32_t initialTTL=0)
+        : resource(resource)
+        , ttl(initialTTL)
+    {}
+
+    bool updateTTL()
+    {
+        Q_ASSERT(ttl > 0);
+        --ttl;
+        return ttl > 0;
+    }
+
+    T resource;
+    uint32_t ttl;
+};
+
 struct Image : MemoryResource<VkImage>
 {
     VkImageView view = VK_NULL_HANDLE;
