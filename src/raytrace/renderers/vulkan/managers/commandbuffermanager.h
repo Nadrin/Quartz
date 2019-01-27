@@ -53,7 +53,7 @@ public:
     bool releaseCommandBuffer(TransientCommandBuffer &commandBuffer, const QVector<Buffer> &transientBuffers={});
 
     bool submitCommandBuffers(VkQueue queue);
-    void destroyExpiredResources();
+    void destroyRetiredResources();
     void proceedToNextFrame();
 
 private:
@@ -79,8 +79,8 @@ private:
     QVector<CommandPool> m_commandPools;
     QThreadStorage<CommandPool> m_localCommandPool;
 
-    QMutex m_expiredResourcesMutex;
-    QVector<Buffer> m_expiredBuffers;
+    QMutex m_retiredResourcesMutex;
+    QVector<Buffer> m_retiredBuffers;
 };
 
 } // Vulkan

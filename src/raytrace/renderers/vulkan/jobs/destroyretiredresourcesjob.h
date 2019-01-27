@@ -14,10 +14,10 @@ namespace Vulkan {
 
 class Renderer;
 
-class DestroyExpiredResourcesJob final : public Qt3DCore::QAspectJob
+class DestroyRetiredResourcesJob final : public Qt3DCore::QAspectJob
 {
 public:
-    explicit DestroyExpiredResourcesJob(Renderer *renderer);
+    explicit DestroyRetiredResourcesJob(Renderer *renderer);
 
     void run() override;
 
@@ -25,7 +25,7 @@ private:
     Renderer *m_renderer;
 };
 
-using DestroyExpiredResourcesJobPtr = QSharedPointer<DestroyExpiredResourcesJob>;
+using DestroyRetiredResourcesJobPtr = QSharedPointer<DestroyRetiredResourcesJob>;
 
 } // Vulkan
 } // Qt3DRaytrace

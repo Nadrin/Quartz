@@ -23,7 +23,7 @@ CommandBufferManager::CommandBufferManager(Device *device)
 CommandBufferManager::~CommandBufferManager()
 {
     cleanup(false);
-    destroyExpiredResources();
+    destroyRetiredResources();
 
     if(m_pendingCommandBuffers.size() > 0) {
         qCWarning(logVulkan) << "CommandBufferManager:" << m_pendingCommandBuffers.size() << "orphaned pending batches";
@@ -114,12 +114,12 @@ bool CommandBufferManager::submitCommandBuffers(VkQueue queue)
     return true;
 }
 
-void CommandBufferManager::destroyExpiredResources()
+void CommandBufferManager::destroyRetiredResources()
 {
     QVector<Buffer> expiredBuffers;
     {
-        QMutexLocker lock(&m_expiredResourcesMutex);
-        expiredBuffers = std::move(m_expiredBuffers);
+        QMutexLocker lock(&m_retiredResourcesMutex);
+        expiredBuffers = std::move(m_retiredBuffers);
     }
 
     for(Buffer &buffer : expiredBuffers) {
@@ -134,7 +134,7 @@ void CommandBufferManager::proceedToNextFrame()
 
 void CommandBufferManager::cleanup(bool freeCommandBuffers)
 {
-    QVector<Buffer> expiredBuffers;
+    QVector<Buffer> retiredBuffers;
 
     // TODO: Make this thread-safe once renderer is moved to a dedicated thread.
     QMutableVectorIterator<PendingCommandBuffersBatch> it(m_pendingCommandBuffers);
@@ -150,13 +150,13 @@ void CommandBufferManager::cleanup(bool freeCommandBuffers)
             }
 
             m_device->destroyFence(pendingBatch.commandsExecutedFence);
-            expiredBuffers.append(std::move(pendingBatch.transientBuffers));
+            retiredBuffers.append(std::move(pendingBatch.transientBuffers));
             it.remove();
         }
     }
 
-    QMutexLocker lock(&m_expiredResourcesMutex);
-    m_expiredBuffers.append(std::move(expiredBuffers));
+    QMutexLocker lock(&m_retiredResourcesMutex);
+    m_retiredBuffers.append(std::move(retiredBuffers));
 }
 
 } // Vulkan

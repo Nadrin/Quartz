@@ -32,7 +32,7 @@ Renderer::Renderer(QObject *parent)
     , m_renderTimer(new QTimer(this))
     , m_frameAdvanceService(new FrameAdvanceService)
     , m_updateWorldTransformJob(new Raytrace::UpdateWorldTransformJob)
-    , m_destroyExpiredResourcesJob(new DestroyExpiredResourcesJob(this))
+    , m_destroyRetiredResourcesJob(new DestroyRetiredResourcesJob(this))
 {
     QObject::connect(m_renderTimer, &QTimer::timeout, this, &Renderer::renderFrame);
 }
@@ -645,7 +645,7 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()
         jobs.append(createGeometryJobs());
     }
 
-    jobs.append(m_destroyExpiredResourcesJob);
+    jobs.append(m_destroyRetiredResourcesJob);
 
     m_dirtySet = DirtyFlag::NoneDirty;
     return jobs;
