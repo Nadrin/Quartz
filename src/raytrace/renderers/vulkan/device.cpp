@@ -608,6 +608,14 @@ void Device::destroyPipeline(Pipeline &pipeline)
     pipeline = Pipeline{};
 }
 
+void Device::destroyGeometry(Geometry &geometry)
+{
+    destroyBuffer(geometry.attributes);
+    destroyBuffer(geometry.indices);
+    destroyAccelerationStructure(geometry.blas);
+    geometry = {};
+}
+
 void *Device::mapMemory(const VmaAllocation &allocation) const
 {
     void *mappedAddress;

@@ -48,9 +48,10 @@ public:
 
     void markDirty(DirtySet changes, Raytrace::BackendNode *node) override;
 
+    void addGeometry(const Geometry &geometry);
+
     Raytrace::Entity *sceneRoot() const override;
     void setSceneRoot(Raytrace::Entity *rootEntity) override;
-
     void setNodeManagers(Raytrace::NodeManagers *nodeManagers) override;
 
     Qt3DCore::QAbstractFrameAdvanceService *frameAdvanceService() const override;
@@ -66,6 +67,8 @@ private slots:
     void renderFrame();
 
 private:
+    QVector<Qt3DCore::QAspectJobPtr> createGeometryJobs();
+
     bool createResources();
     void releaseResources();
     void createSwapchainResources();
@@ -126,6 +129,9 @@ private:
     };
     QVector<FrameResources> m_frameResources;
     int m_frameIndex = 0;
+
+    QMutex m_geometryMutex;
+    QVector<Geometry> m_geometry;
 
     bool m_renderBuffersReady = false;
     bool m_clearPreviousRenderBuffer = false;

@@ -12,6 +12,8 @@
 #include <renderers/vulkan/pipeline/graphicspipeline.h>
 #include <renderers/vulkan/pipeline/computepipeline.h>
 
+#include <renderers/vulkan/jobs/buildgeometryjob.h>
+
 #include <backend/managers_p.h>
 
 #include <QVulkanInstance>
@@ -40,6 +42,7 @@ bool Renderer::initialize()
     static const QByteArrayList RequiredDeviceExtensions {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
         VK_NV_RAY_TRACING_EXTENSION_NAME,
+        VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
     };
 
     if(!m_window) {
@@ -109,6 +112,27 @@ void Renderer::shutdown()
     m_graphicsQueue = VK_NULL_HANDLE;
 }
 
+QVector<Qt3DCore::QAspectJobPtr> Renderer::createGeometryJobs()
+{
+    QVector<Qt3DCore::QAspectJobPtr> geometryJobs;
+
+    auto *geometryManager = &m_nodeManagers->geometryManager;
+    auto dirtyGeometry = geometryManager->acquireDirtyComponents();
+
+    QVector<Qt3DCore::QAspectJobPtr> buildGeometryJobs;
+    buildGeometryJobs.reserve(dirtyGeometry.size());
+    for(const Qt3DCore::QNodeId &geometryId : dirtyGeometry) {
+        Raytrace::HGeometry handle = geometryManager->lookupHandle(geometryId);
+        if(!handle.isNull()) {
+            auto job = BuildGeometryJobPtr::create(this, m_nodeManagers, handle);
+            buildGeometryJobs.append(job);
+        }
+    }
+
+    geometryJobs.append(buildGeometryJobs);
+    return geometryJobs;
+}
+
 bool Renderer::createResources()
 {
     m_renderingFinishedSemaphore = m_device->createSemaphore();
@@ -169,6 +193,11 @@ void Renderer::releaseResources()
     for(auto &frame : m_frameResources) {
         m_device->destroyFence(frame.commandBuffersExecutedFence);
     }
+
+    for(auto &geometry : m_geometry) {
+        m_device->destroyGeometry(geometry);
+    }
+    m_geometry.clear();
 }
 
 void Renderer::createSwapchainResources()
@@ -573,6 +602,12 @@ void Renderer::markDirty(DirtySet changes, Raytrace::BackendNode *node)
     m_dirtySet |= changes;
 }
 
+void Renderer::addGeometry(const Geometry &geometry)
+{
+    QMutexLocker lock(&m_geometryMutex);
+    m_geometry.append(geometry);
+}
+
 Raytrace::Entity *Renderer::sceneRoot() const
 {
     return m_sceneRoot;
@@ -607,7 +642,7 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()
         jobs.append(m_updateWorldTransformJob);
     }
     if(m_dirtySet & DirtyFlag::GeometryDirty) {
-
+        jobs.append(createGeometryJobs());
     }
 
     jobs.append(m_destroyExpiredResourcesJob);

@@ -11,6 +11,7 @@
 #include <renderers/vulkan/initializers.h>
 #include <renderers/vulkan/pipeline/pipeline.h>
 #include <renderers/vulkan/commandbuffer.h>
+#include <renderers/vulkan/geometry.h>
 
 #include <QMutex>
 #include <QVector>
@@ -91,6 +92,7 @@ public:
     void destroyFramebuffer(Framebuffer &framebuffer);
 
     void destroyPipeline(Pipeline &pipeline);
+    void destroyGeometry(Geometry &geometry);
 
     void *mapMemory(const VmaAllocation &allocation) const;
     void unmapMemory(const VmaAllocation &allocation) const;

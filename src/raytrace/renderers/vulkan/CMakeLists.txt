@@ -16,12 +16,15 @@ target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/initializers.h
     renderers/vulkan/descriptors.h
     renderers/vulkan/resourcebarrier.h
+    renderers/vulkan/geometry.h
     renderers/vulkan/pipeline/pipeline.cpp
     renderers/vulkan/pipeline/pipeline.h
     renderers/vulkan/pipeline/graphicspipeline.cpp
     renderers/vulkan/pipeline/graphicspipeline.h
     renderers/vulkan/pipeline/computepipeline.cpp
     renderers/vulkan/pipeline/computepipeline.h
+    renderers/vulkan/jobs/buildgeometryjob.cpp
+    renderers/vulkan/jobs/buildgeometryjob.h
     renderers/vulkan/jobs/destroyexpiredresourcesjob.cpp
     renderers/vulkan/jobs/destroyexpiredresourcesjob.h
     renderers/vulkan/managers/commandbuffermanager.cpp
