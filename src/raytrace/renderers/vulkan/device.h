@@ -12,6 +12,7 @@
 #include <renderers/vulkan/pipeline/pipeline.h>
 #include <renderers/vulkan/commandbuffer.h>
 
+#include <QMutex>
 #include <QVector>
 
 class QWindow;
@@ -23,6 +24,11 @@ class Device
 {
 public:
     ~Device();
+
+    enum class ScratchBufferType {
+        Build,
+        Update,
+    };
 
     static Device *create(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, const QByteArrayList &enabledExtensions={});
 
@@ -47,6 +53,10 @@ public:
 
     VkImageView createImageView(const ImageViewCreateInfo &createInfo);
     void destroyImageView(VkImageView &imageView);
+
+    AccelerationStructure createAccelerationStructure(const AccelerationStructureCreateInfo &createInfo);
+    Buffer createAccelerationStructureScratchBuffer(const AccelerationStructure &as, ScratchBufferType type);
+    void destroyAccelerationStructure(AccelerationStructure &as);
 
     DescriptorPool createDescriptorPool(const DescriptorPoolCreateInfo &createInfo);
     void resetDescriptorPool(const DescriptorPool &descriptorPool) const;
@@ -104,6 +114,9 @@ private:
     VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
     VmaAllocator m_allocator = VK_NULL_HANDLE;
     uint32_t m_queueFamilyIndex = uint32_t(-1);
+
+    VmaPool m_accelerationStructuresPool = VK_NULL_HANDLE;
+    QMutex m_accelerationStructuresPoolMutex;
 };
 
 } // Vulkan

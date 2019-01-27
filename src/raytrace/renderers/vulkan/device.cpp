@@ -6,6 +6,7 @@
 
 #include <renderers/vulkan/device.h>
 
+#include <QMutexLocker>
 #include <QVulkanInstance>
 
 namespace Qt3DRaytrace {
@@ -16,6 +17,9 @@ static constexpr VkMemoryPropertyFlags HostMappableMemoryFlags =
 
 Device::~Device()
 {
+    if(m_accelerationStructuresPool != VK_NULL_HANDLE) {
+        vmaDestroyPool(m_allocator, m_accelerationStructuresPool);
+    }
     if(m_allocator != VK_NULL_HANDLE) {
         vmaDestroyAllocator(m_allocator);
     }
@@ -81,6 +85,20 @@ Device *Device::create(VkPhysicalDevice physicalDevice, uint32_t queueFamilyInde
     allocatorCreateInfo.pVulkanFunctions = &vmaFunctions;
     if(VKFAILED(result = vmaCreateAllocator(&allocatorCreateInfo, &device->m_allocator))) {
         qCCritical(logVulkan) << "Failed to create Vulkan memory allocator:" << result.toString();
+        return nullptr;
+    }
+
+    uint32_t accelerationStructuresPoolMemoryTypeIndex;
+    VmaAllocationCreateInfo accelerationStructuresPoolDesc = {};
+    accelerationStructuresPoolDesc.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    vmaFindMemoryTypeIndex(device->m_allocator, UINT32_MAX, &accelerationStructuresPoolDesc, &accelerationStructuresPoolMemoryTypeIndex);
+
+    VmaPoolCreateInfo accelerationStructuresPoolCreateInfo = {};
+    accelerationStructuresPoolCreateInfo.memoryTypeIndex = accelerationStructuresPoolMemoryTypeIndex;
+    accelerationStructuresPoolCreateInfo.flags = VMA_POOL_CREATE_IGNORE_BUFFER_IMAGE_GRANULARITY_BIT;
+    if(VKFAILED(result = vmaCreatePool(device->m_allocator, &accelerationStructuresPoolCreateInfo, &device->m_accelerationStructuresPool))) {
+        qCCritical(logVulkan) << "Failed to create required custom Vulkan memory pools" << result.toString();
+        vmaDestroyAllocator(device->m_allocator);
         return nullptr;
     }
 
@@ -311,6 +329,77 @@ void Device::destroyImageView(VkImageView &imageView)
 {
     vkDestroyImageView(m_device, imageView, nullptr);
     imageView = VK_NULL_HANDLE;
+}
+
+AccelerationStructure Device::createAccelerationStructure(const AccelerationStructureCreateInfo &createInfo)
+{
+    AccelerationStructure as;
+
+    Result result;
+    if(VKFAILED(result = vkCreateAccelerationStructureNV(m_device, createInfo, nullptr, &as.handle))) {
+        qCCritical(logVulkan) << "Failed to ctreate acceleration structure:" << result.toString();
+    }
+
+    VkAccelerationStructureMemoryRequirementsInfoNV memoryRequirementsInfo = { VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_NV };
+    memoryRequirementsInfo.accelerationStructure = as;
+    memoryRequirementsInfo.type = VK_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_TYPE_OBJECT_NV;
+
+    VkMemoryRequirements2KHR memoryRequirements;
+    vkGetAccelerationStructureMemoryRequirementsNV(m_device, &memoryRequirementsInfo, &memoryRequirements);
+
+    VmaAllocationInfo allocationInfo;
+    VmaAllocationCreateInfo allocationCreateInfo = {};
+    allocationCreateInfo.pool = m_accelerationStructuresPool;
+    if(VKFAILED(result = vmaAllocateMemory(m_allocator, &memoryRequirements.memoryRequirements, &allocationCreateInfo, &as.allocation, &allocationInfo))) {
+        qCCritical(logVulkan) << "Failed to allocate memory for acceleration structure:" << result.toString();
+        destroyAccelerationStructure(as);
+        return AccelerationStructure();
+    }
+
+    VkBindAccelerationStructureMemoryInfoNV bindObjectMemoryInfo = { VK_STRUCTURE_TYPE_BIND_ACCELERATION_STRUCTURE_MEMORY_INFO_NV };
+    bindObjectMemoryInfo.accelerationStructure = as;
+    bindObjectMemoryInfo.memory = allocationInfo.deviceMemory;
+    bindObjectMemoryInfo.memoryOffset = allocationInfo.offset;
+
+    {
+        QMutexLocker lock(&m_accelerationStructuresPoolMutex);
+        result = vkBindAccelerationStructureMemoryNV(m_device, 1, &bindObjectMemoryInfo);
+    }
+    if(VKFAILED(result)) {
+        qCCritical(logVulkan) << "Failed to bind device memory to acceleration structure object:" << result.toString();
+        destroyAccelerationStructure(as);
+    }
+
+    return as;
+}
+
+Buffer Device::createAccelerationStructureScratchBuffer(const AccelerationStructure &as, ScratchBufferType type)
+{
+    VkAccelerationStructureMemoryRequirementsInfoNV memoryRequirementsInfo = { VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_NV };
+    memoryRequirementsInfo.accelerationStructure = as.handle;
+    switch(type) {
+    case ScratchBufferType::Build:
+        memoryRequirementsInfo.type = VK_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_TYPE_BUILD_SCRATCH_NV;
+        break;
+    case ScratchBufferType::Update:
+        memoryRequirementsInfo.type = VK_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_TYPE_UPDATE_SCRATCH_NV;
+        break;
+    }
+
+    VkMemoryRequirements2KHR memoryRequirements;
+    vkGetAccelerationStructureMemoryRequirementsNV(m_device, &memoryRequirementsInfo, &memoryRequirements);
+
+    BufferCreateInfo createInfo;
+    createInfo.size = memoryRequirements.memoryRequirements.size;
+    createInfo.usage = VK_BUFFER_USAGE_RAY_TRACING_BIT_NV;
+    return createBuffer(createInfo, VMA_MEMORY_USAGE_GPU_ONLY);
+}
+
+void Device::destroyAccelerationStructure(AccelerationStructure &as)
+{
+    vkDestroyAccelerationStructureNV(m_device, as.handle, nullptr);
+    vmaFreeMemory(m_allocator, as.allocation);
+    as = {};
 }
 
 DescriptorPool Device::createDescriptorPool(const DescriptorPoolCreateInfo &createInfo)

@@ -39,6 +39,14 @@ public:
         resourceBarrier(0, nullptr, 1, &imageTransition);
     }
 
+    void pipelineBarrier(VkPipelineStageFlags srcStageMask, VkAccessFlags srcAccessMask, VkPipelineStageFlags dstStageMask, VkAccessFlags dstAccessMask) const
+    {
+        VkMemoryBarrier memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER };
+        memoryBarrier.srcAccessMask = srcAccessMask;
+        memoryBarrier.dstAccessMask = dstAccessMask;
+        vkCmdPipelineBarrier(handle, srcStageMask, dstStageMask, 0, 1, &memoryBarrier, 0, nullptr, 0, nullptr);
+    }
+
     void beginRenderPass(const RenderPassBeginInfo &beginInfo, VkSubpassContents contents) const
     {
         vkCmdBeginRenderPass(handle, beginInfo, contents);
@@ -61,6 +69,10 @@ public:
     void bindDescriptorSets(const Pipeline &pipeline, uint32_t firstSet, const QVector<VkDescriptorSet> &descriptorSets) const
     {
         vkCmdBindDescriptorSets(handle, pipeline.bindPoint(), pipeline.pipelineLayout, firstSet, uint32_t(descriptorSets.size()), descriptorSets.data(), 0, nullptr);
+    }
+    void buildAccelerationStructure(const VkAccelerationStructureInfoNV &info, VkAccelerationStructureNV dst, VkBuffer scratch, VkDeviceSize scratchOffset=0) const
+    {
+        vkCmdBuildAccelerationStructureNV(handle, &info, VK_NULL_HANDLE, 0, VK_FALSE, dst, VK_NULL_HANDLE, scratch, scratchOffset);
     }
     void copyBuffer(VkBuffer src, VkDeviceSize srcOffset, VkBuffer dest, VkDeviceSize dstOffset, VkDeviceSize size) const
     {

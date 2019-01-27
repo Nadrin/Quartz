@@ -146,6 +146,16 @@ struct RenderPassCreateInfo : Initializer<VkRenderPassCreateInfo>
     {}
 };
 
+struct AccelerationStructureCreateInfo : Initializer<VkAccelerationStructureCreateInfoNV>
+{
+    AccelerationStructureCreateInfo(const VkAccelerationStructureInfoNV &info_={}, VkDeviceSize compactedSize_=0)
+        : Initializer(VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_NV)
+    {
+        info = info_;
+        compactedSize = compactedSize_;
+    }
+};
+
 struct CommandBufferAllocateInfo : Initializer<VkCommandBufferAllocateInfo>
 {
     CommandBufferAllocateInfo(VkCommandPool commandPool_, VkCommandBufferLevel level_, uint32_t count_=1)
