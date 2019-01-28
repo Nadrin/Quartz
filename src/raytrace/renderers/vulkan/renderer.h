@@ -18,9 +18,11 @@
 #include <jobs/updateworldtransformjob_p.h>
 #include <renderers/vulkan/jobs/destroyretiredresourcesjob.h>
 
+#include <Qt3DCore/QNodeId>
 #include <QObject>
 #include <QSharedPointer>
 #include <QVector>
+#include <QHash>
 #include <QSize>
 
 class QWindow;
@@ -48,11 +50,12 @@ public:
 
     void markDirty(DirtySet changes, Raytrace::BackendNode *node) override;
 
-    QVector<Geometry> sceneGeometry() const;
+    QVector<Geometry> geometry() const;
     AccelerationStructure sceneTLAS() const;
 
-    void addSceneGeometry(const Geometry &geometry);
+    void addGeometry(Qt3DCore::QNodeId geometryNodeId, const Geometry &geometry);
     void updateSceneTLAS(const AccelerationStructure &tlas);
+    uint64_t lookupBLAS(Qt3DCore::QNodeId geometryNodeId) const;
 
     void updateRetiredResources();
     void destroyRetiredResources();
@@ -140,6 +143,7 @@ private:
     struct SceneResources {
         AccelerationStructure sceneTLAS;
         QVector<Geometry> geometry;
+        QHash<Qt3DCore::QNodeId, uint64_t> blasHandles;
         QVector<RetiredResource<AccelerationStructure>> retiredTLAS;
     };
     SceneResources m_sceneResources;

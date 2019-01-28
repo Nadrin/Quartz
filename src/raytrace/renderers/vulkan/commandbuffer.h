@@ -70,9 +70,15 @@ public:
     {
         vkCmdBindDescriptorSets(handle, pipeline.bindPoint(), pipeline.pipelineLayout, firstSet, uint32_t(descriptorSets.size()), descriptorSets.data(), 0, nullptr);
     }
-    void buildAccelerationStructure(const VkAccelerationStructureInfoNV &info, VkAccelerationStructureNV dst, VkBuffer scratch, VkDeviceSize scratchOffset=0) const
+    void buildTopLevelAccelerationStructure(const VkAccelerationStructureInfoNV &info, VkAccelerationStructureNV dst, VkAccelerationStructureNV src, VkBuffer instanceData, VkBuffer scratch) const
     {
-        vkCmdBuildAccelerationStructureNV(handle, &info, VK_NULL_HANDLE, 0, VK_FALSE, dst, VK_NULL_HANDLE, scratch, scratchOffset);
+        const VkBool32 update = (src != VK_NULL_HANDLE) ? VK_TRUE : VK_FALSE;
+        vkCmdBuildAccelerationStructureNV(handle, &info, instanceData, 0, update, dst, src, scratch, 0);
+    }
+    void buildBottomLevelAccelerationStructure(const VkAccelerationStructureInfoNV &info, VkAccelerationStructureNV dst, VkAccelerationStructureNV src, VkBuffer scratch) const
+    {
+        const VkBool32 update = (src != VK_NULL_HANDLE) ? VK_TRUE : VK_FALSE;
+        vkCmdBuildAccelerationStructureNV(handle, &info, VK_NULL_HANDLE, 0, update, dst, src, scratch, 0);
     }
     void copyBuffer(VkBuffer src, VkDeviceSize srcOffset, VkBuffer dest, VkDeviceSize dstOffset, VkDeviceSize size) const
     {

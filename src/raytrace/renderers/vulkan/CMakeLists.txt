@@ -25,6 +25,8 @@ target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/pipeline/computepipeline.h
     renderers/vulkan/jobs/buildgeometryjob.cpp
     renderers/vulkan/jobs/buildgeometryjob.h
+    renderers/vulkan/jobs/buildscenetlasjob.cpp
+    renderers/vulkan/jobs/buildscenetlasjob.h
     renderers/vulkan/jobs/destroyretiredresourcesjob.cpp
     renderers/vulkan/jobs/destroyretiredresourcesjob.h
     renderers/vulkan/managers/commandbuffermanager.cpp

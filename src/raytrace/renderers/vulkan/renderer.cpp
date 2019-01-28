@@ -12,6 +12,7 @@
 #include <renderers/vulkan/pipeline/graphicspipeline.h>
 #include <renderers/vulkan/pipeline/computepipeline.h>
 
+#include <renderers/vulkan/jobs/buildscenetlasjob.h>
 #include <renderers/vulkan/jobs/buildgeometryjob.h>
 
 #include <backend/managers_p.h>
@@ -610,7 +611,7 @@ void Renderer::markDirty(DirtySet changes, Raytrace::BackendNode *node)
     m_dirtySet |= changes;
 }
 
-QVector<Geometry> Renderer::sceneGeometry() const
+QVector<Geometry> Renderer::geometry() const
 {
     QMutexLocker lock(&m_sceneMutex);
     return m_sceneResources.geometry;
@@ -622,10 +623,11 @@ AccelerationStructure Renderer::sceneTLAS() const
     return m_sceneResources.sceneTLAS;
 }
 
-void Renderer::addSceneGeometry(const Geometry &geometry)
+void Renderer::addGeometry(Qt3DCore::QNodeId geometryNodeId, const Geometry &geometry)
 {
     QMutexLocker lock(&m_sceneMutex);
     m_sceneResources.geometry.append(geometry);
+    m_sceneResources.blasHandles.insert(geometryNodeId, geometry.blasHandle);
 }
 
 void Renderer::updateSceneTLAS(const AccelerationStructure &tlas)
@@ -638,6 +640,12 @@ void Renderer::updateSceneTLAS(const AccelerationStructure &tlas)
         m_sceneResources.retiredTLAS.append(retiredTLAS);
     }
     m_sceneResources.sceneTLAS = tlas;
+}
+
+uint64_t Renderer::lookupBLAS(Qt3DCore::QNodeId geometryNodeId) const
+{
+    QMutexLocker lock(&m_sceneMutex);
+    return m_sceneResources.blasHandles.value(geometryNodeId, 0);
 }
 
 void Renderer::updateRetiredResources()
@@ -696,12 +704,27 @@ CommandBufferManager *Renderer::commandBufferManager() const
 QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()
 {
     QVector<Qt3DCore::QAspectJobPtr> jobs;
+    bool shouldUpdateTLAS = false;
 
     if(m_dirtySet & DirtyFlag::TransformDirty) {
         jobs.append(m_updateWorldTransformJob);
+        shouldUpdateTLAS = true;
     }
+
+    QVector<Qt3DCore::QAspectJobPtr> geometryJobs;
     if(m_dirtySet & DirtyFlag::GeometryDirty) {
-        jobs.append(createGeometryJobs());
+        geometryJobs = createGeometryJobs();
+        jobs.append(geometryJobs);
+        shouldUpdateTLAS = true;
+    }
+
+    if(shouldUpdateTLAS) {
+        Qt3DCore::QAspectJobPtr buildSceneTLASJob = BuildSceneTopLevelAccelerationStructureJobPtr::create(this, m_nodeManagers);
+        buildSceneTLASJob->addDependency(m_updateWorldTransformJob);
+        for(const auto &job : geometryJobs) {
+            buildSceneTLASJob->addDependency(job);
+        }
+        jobs.append(buildSceneTLASJob);
     }
 
     jobs.append(m_destroyRetiredResourcesJob);

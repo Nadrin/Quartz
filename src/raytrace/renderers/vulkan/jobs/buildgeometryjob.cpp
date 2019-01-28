@@ -125,13 +125,13 @@ void BuildGeometryJob::run()
         commandBuffer->copyBuffer(stagingIndices, 0, geometry.indices, 0, indexBufferSize);
         commandBuffer->pipelineBarrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
                                        VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_NV, VK_ACCESS_MEMORY_READ_BIT);
-        commandBuffer->buildAccelerationStructure(blasInfo, geometry.blas, scratchBuffer);
+        commandBuffer->buildBottomLevelAccelerationStructure(blasInfo, geometry.blas, VK_NULL_HANDLE, scratchBuffer);
         commandBuffer->pipelineBarrier(VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_NV, VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_NV,
                                        VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_NV, VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_NV);
     }
     commandBufferManager->releaseCommandBuffer(commandBuffer, {stagingAttributes, stagingIndices, scratchBuffer});
 
-    m_renderer->addSceneGeometry(geometry);
+    m_renderer->addGeometry(geometryNode->peerId(), geometry);
 }
 
 } // Vulkan
