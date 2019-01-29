@@ -48,9 +48,9 @@ RayTracingPipelineBuilder &RayTracingPipelineBuilder::maxRecursionDepth(uint32_t
     return *this;
 }
 
-Pipeline RayTracingPipelineBuilder::build() const
+RayTracingPipeline RayTracingPipelineBuilder::build() const
 {
-    Pipeline pipeline;
+    RayTracingPipeline pipeline;
     pipeline.bindPoint = VK_PIPELINE_BIND_POINT_RAY_TRACING_NV;
 
     if(!validate()) {

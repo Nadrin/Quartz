@@ -12,6 +12,13 @@
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
+struct RayTracingPipeline : Pipeline
+{
+    Buffer shaderBindingTable;
+    VkDeviceSize shaderBindingTableStride = 0;
+    VkDeviceSize shaderBindingTableHitGroupOffset = 0;
+};
+
 class RayTracingPipelineBuilder final : public PipelineBuilderImpl<RayTracingPipelineBuilder>
 {
 public:
@@ -19,7 +26,7 @@ public:
 
     RayTracingPipelineBuilder &maxRecursionDepth(uint32_t maxDepth);
 
-    Pipeline build() const;
+    RayTracingPipeline build() const;
     bool validate() const;
 
 private:

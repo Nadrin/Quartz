@@ -9,6 +9,7 @@
 #include <renderers/vulkan/vkcommon.h>
 #include <renderers/vulkan/initializers.h>
 #include <renderers/vulkan/pipeline/pipeline.h>
+#include <renderers/vulkan/pipeline/raytracingpipeline.h>
 #include <renderers/vulkan/resourcebarrier.h>
 
 #include <QVector>
@@ -100,11 +101,11 @@ public:
     {
         vkCmdExecuteCommands(handle, uint32_t(commandBuffers.size()), commandBuffers.data());
     }
-    void traceRays(const Pipeline &rayTracingPipeline, uint32_t width, uint32_t height) const
+    void traceRays(const RayTracingPipeline &rayTracingPipeline, uint32_t width, uint32_t height) const
     {
         traceRays(rayTracingPipeline, width, height, 0, 0);
     }
-    void traceRays(const Pipeline &rayTracingPipeline, uint32_t width, uint32_t height, uint32_t missShaderBindingIndex, uint32_t hitShaderBindingIndex) const
+    void traceRays(const RayTracingPipeline &rayTracingPipeline, uint32_t width, uint32_t height, uint32_t missShaderBindingIndex, uint32_t hitShaderBindingIndex) const
     {
         Q_ASSERT(rayTracingPipeline.bindPoint == VK_PIPELINE_BIND_POINT_RAY_TRACING_NV);
         VkBuffer shaderBindingTableBuffer = rayTracingPipeline.shaderBindingTable;

@@ -24,9 +24,6 @@ struct Pipeline : Resource<VkPipeline>
     VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     QVector<VkDescriptorSetLayout> descriptorSetLayouts;
-    Buffer shaderBindingTable;
-    VkDeviceSize shaderBindingTableStride = 0;
-    VkDeviceSize shaderBindingTableHitGroupOffset = 0;
 };
 
 class PipelineBuilder

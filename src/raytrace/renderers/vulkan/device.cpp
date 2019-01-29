@@ -607,10 +607,16 @@ void Device::destroyPipeline(Pipeline &pipeline)
     for(VkDescriptorSetLayout setLayout : pipeline.descriptorSetLayouts) {
         vkDestroyDescriptorSetLayout(m_device, setLayout, nullptr);
     }
-    if(pipeline.shaderBindingTable) {
-        destroyBuffer(pipeline.shaderBindingTable);
+    if(pipeline.bindPoint == VK_PIPELINE_BIND_POINT_RAY_TRACING_NV) {
+        RayTracingPipeline &rayTracingPipeline = *static_cast<RayTracingPipeline*>(&pipeline);
+        if(rayTracingPipeline.shaderBindingTable) {
+            destroyBuffer(rayTracingPipeline.shaderBindingTable);
+        }
+        rayTracingPipeline = RayTracingPipeline{};
     }
-    pipeline = Pipeline{};
+    else {
+        pipeline = Pipeline{};
+    }
 }
 
 void Device::destroyGeometry(Geometry &geometry)
