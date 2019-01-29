@@ -77,6 +77,12 @@ typedef enum SpvExecutionModel_ {
     SpvExecutionModelFragment = 4,
     SpvExecutionModelGLCompute = 5,
     SpvExecutionModelKernel = 6,
+    SpvExecutionModelRayGenerationNV = 5313,
+    SpvExecutionModelIntersectionNV = 5314,
+    SpvExecutionModelAnyHitNV = 5315,
+    SpvExecutionModelClosestHitNV = 5316,
+    SpvExecutionModelMissNV = 5317,
+    SpvExecutionModelCallableNV = 5318,
     SpvExecutionModelMax = 0x7fffffff,
 } SpvExecutionModel;
 
@@ -1060,6 +1066,7 @@ typedef enum SpvOp_ {
     SpvOpFragmentMaskFetchAMD = 5011,
     SpvOpFragmentFetchAMD = 5012,
     SpvOpGroupNonUniformPartitionNV = 5296,
+    SpvOpTypeAccelerationStructureNV = 5341,
     SpvOpSubgroupShuffleINTEL = 5571,
     SpvOpSubgroupShuffleDownINTEL = 5572,
     SpvOpSubgroupShuffleUpINTEL = 5573,
