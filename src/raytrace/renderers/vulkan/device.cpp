@@ -102,6 +102,8 @@ Device *Device::create(VkPhysicalDevice physicalDevice, uint32_t queueFamilyInde
         return nullptr;
     }
 
+    device->queryPhysicalDeviceProperties();
+
     return device.take();
 }
 
@@ -605,6 +607,9 @@ void Device::destroyPipeline(Pipeline &pipeline)
     for(VkDescriptorSetLayout setLayout : pipeline.descriptorSetLayouts) {
         vkDestroyDescriptorSetLayout(m_device, setLayout, nullptr);
     }
+    if(pipeline.shaderBindingTable) {
+        destroyBuffer(pipeline.shaderBindingTable);
+    }
     pipeline = Pipeline{};
 }
 
@@ -640,6 +645,17 @@ void Device::waitIdle() const
 bool Device::isValid() const
 {
     return m_device != VK_NULL_HANDLE && m_allocator != VK_NULL_HANDLE;
+}
+
+void Device::queryPhysicalDeviceProperties()
+{
+    m_rayTracingProperties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PROPERTIES_NV };
+
+    VkPhysicalDeviceProperties2 properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
+    properties.pNext = &m_rayTracingProperties;
+    vkGetPhysicalDeviceProperties2(m_physicalDevice, &properties);
+
+    m_physicalDeviceProperties = properties.properties;
 }
 
 } // Vulkan

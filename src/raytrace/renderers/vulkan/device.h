@@ -106,11 +106,15 @@ public:
     VmaAllocator allocator() const { return m_allocator; }
     uint32_t queueFamilyIndex() const { return m_queueFamilyIndex; }
 
+    const VkPhysicalDeviceProperties &physicalDeviceProperties() const { return m_physicalDeviceProperties; }
+    const VkPhysicalDeviceRayTracingPropertiesNV &rayTracingProperties() const { return m_rayTracingProperties; }
+
     bool isValid() const;
 
     Q_DISABLE_COPY(Device)
 private:
     Device() = default;
+    void queryPhysicalDeviceProperties();
 
     VkDevice m_device = VK_NULL_HANDLE;
     VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
@@ -119,6 +123,9 @@ private:
 
     VmaPool m_accelerationStructuresPool = VK_NULL_HANDLE;
     QMutex m_accelerationStructuresPoolMutex;
+
+    VkPhysicalDeviceProperties m_physicalDeviceProperties;
+    VkPhysicalDeviceRayTracingPropertiesNV m_rayTracingProperties;
 };
 
 } // Vulkan

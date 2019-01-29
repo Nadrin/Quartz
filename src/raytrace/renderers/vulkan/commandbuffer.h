@@ -100,6 +100,24 @@ public:
     {
         vkCmdExecuteCommands(handle, uint32_t(commandBuffers.size()), commandBuffers.data());
     }
+    void traceRays(const Pipeline &rayTracingPipeline, uint32_t width, uint32_t height) const
+    {
+        traceRays(rayTracingPipeline, width, height, 0, 0);
+    }
+    void traceRays(const Pipeline &rayTracingPipeline, uint32_t width, uint32_t height, uint32_t missShaderBindingIndex, uint32_t hitShaderBindingIndex) const
+    {
+        Q_ASSERT(rayTracingPipeline.bindPoint == VK_PIPELINE_BIND_POINT_RAY_TRACING_NV);
+        VkBuffer shaderBindingTableBuffer = rayTracingPipeline.shaderBindingTable;
+        VkDeviceSize shaderBindingTableStride = rayTracingPipeline.shaderBindingTableStride;
+        VkDeviceSize missShaderBindingOffset = (1 + missShaderBindingIndex) * shaderBindingTableStride;
+        VkDeviceSize hitShaderBindingOffset = rayTracingPipeline.shaderBindingTableHitGroupOffset + hitShaderBindingIndex * shaderBindingTableStride;
+        vkCmdTraceRaysNV(handle,
+                         shaderBindingTableBuffer, 0,
+                         shaderBindingTableBuffer, missShaderBindingOffset, shaderBindingTableStride,
+                         shaderBindingTableBuffer, hitShaderBindingOffset, shaderBindingTableStride,
+                         VK_NULL_HANDLE, 0, 0,
+                         width, height, 1);
+    }
     void setViewport(const QRect &rect, float minDepth=0.0f, float maxDepth=1.0f) const
     {
         VkViewport vkViewport;

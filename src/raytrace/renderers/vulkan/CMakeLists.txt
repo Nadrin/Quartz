@@ -23,6 +23,8 @@ target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/pipeline/graphicspipeline.h
     renderers/vulkan/pipeline/computepipeline.cpp
     renderers/vulkan/pipeline/computepipeline.h
+    renderers/vulkan/pipeline/raytracingpipeline.cpp
+    renderers/vulkan/pipeline/raytracingpipeline.h
     renderers/vulkan/jobs/buildgeometryjob.cpp
     renderers/vulkan/jobs/buildgeometryjob.h
     renderers/vulkan/jobs/buildscenetlasjob.cpp
