@@ -1,10 +1,11 @@
 /*
- * Copyright (C) 2018 Michał Siejak
+ * Copyright (C) 2018-2019 Michał Siejak
  * This file is part of Quartz - a raytracing aspect for Qt3D.
  * See LICENSE file for licensing information.
  */
 
 #include <renderers/vulkan/pipeline/computepipeline.h>
+#include <renderers/vulkan/device.h>
 
 namespace Qt3DRaytrace {
 namespace Vulkan {
@@ -15,17 +16,17 @@ ComputePipelineBuilder::ComputePipelineBuilder(Device *device)
 
 Pipeline ComputePipelineBuilder::build() const
 {
-    Pipeline pipeline(VK_PIPELINE_BIND_POINT_COMPUTE);
+    Pipeline pipeline;
+    pipeline.bindPoint = VK_PIPELINE_BIND_POINT_COMPUTE;
+
     if(!validate()) {
         return pipeline;
     }
 
-    QVector<VkDescriptorSetLayout> descriptorSetLayouts = buildDescriptorSetLayouts();
-    VkPipelineLayout pipelineLayout = buildPipelineLayout(descriptorSetLayouts);
-    if(pipelineLayout == VK_NULL_HANDLE) {
-        for(VkDescriptorSetLayout layout : descriptorSetLayouts) {
-            vkDestroyDescriptorSetLayout(m_device, layout, nullptr);
-        }
+    pipeline.descriptorSetLayouts = buildDescriptorSetLayouts();
+    pipeline.pipelineLayout = buildPipelineLayout(pipeline.descriptorSetLayouts);
+    if(pipeline.pipelineLayout == VK_NULL_HANDLE) {
+        m_device->destroyPipeline(pipeline);
         return pipeline;
     }
 
@@ -37,18 +38,13 @@ Pipeline ComputePipelineBuilder::build() const
 
     VkComputePipelineCreateInfo createInfo = { VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO };
     createInfo.stage = shaderStage;
-    createInfo.layout = pipelineLayout;
-    if(VKFAILED(vkCreateComputePipelines(m_device, VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline.handle))) {
-        qCCritical(logVulkan) << "ComputePipelineBuilder: Failed to create compute pipeline";
-        vkDestroyPipelineLayout(m_device, pipelineLayout, nullptr);
-        for(VkDescriptorSetLayout layout : descriptorSetLayouts) {
-            vkDestroyDescriptorSetLayout(m_device, layout, nullptr);
-        }
-        return pipeline;
-    }
+    createInfo.layout = pipeline.pipelineLayout;
 
-    pipeline.pipelineLayout = pipelineLayout;
-    pipeline.descriptorSetLayouts = std::move(descriptorSetLayouts);
+    Result result;
+    if(VKFAILED(result = vkCreateComputePipelines(*m_device, VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline.handle))) {
+        qCCritical(logVulkan) << "ComputePipelineBuilder: Failed to create compute pipeline" << result.toString();
+        m_device->destroyPipeline(pipeline);
+    }
     return pipeline;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Michał Siejak
+ * Copyright (C) 2018-2019 Michał Siejak
  * This file is part of Quartz - a raytracing aspect for Qt3D.
  * See LICENSE file for licensing information.
  */
@@ -10,16 +10,11 @@
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
-Pipeline::Pipeline(VkPipelineBindPoint bindPoint)
-    : m_bindPoint(bindPoint)
-    , pipelineLayout(VK_NULL_HANDLE)
-{}
-
 PipelineBuilder::PipelineBuilder(Device *device)
-    : m_device(*device)
+    : m_device(device)
     , m_defaultSampler(VK_NULL_HANDLE)
 {
-    Q_ASSERT(m_device != VK_NULL_HANDLE);
+    Q_ASSERT(m_device);
 }
 
 QVector<VkDescriptorSetLayout> PipelineBuilder::buildDescriptorSetLayouts() const
@@ -126,7 +121,7 @@ QVector<VkDescriptorSetLayout> PipelineBuilder::buildDescriptorSetLayouts() cons
         }
 
         VkDescriptorSetLayout vulkanSetLayout;
-        if(VKFAILED(vkCreateDescriptorSetLayout(m_device, &layoutCreateInfo, nullptr, &vulkanSetLayout))) {
+        if(VKFAILED(vkCreateDescriptorSetLayout(*m_device, &layoutCreateInfo, nullptr, &vulkanSetLayout))) {
             qCCritical(logVulkan) << "PipelineBuilder: Failed to create descriptor set layout";
             break;
         }
@@ -145,8 +140,9 @@ VkPipelineLayout PipelineBuilder::buildPipelineLayout(const QVector<VkDescriptor
     }
 
     VkPipelineLayout pipelineLayout;
-    if(VKFAILED(vkCreatePipelineLayout(m_device, &createInfo, nullptr, &pipelineLayout))) {
-        qCCritical(logVulkan) << "PipelineBuilder: Failed to create pipeline layout";
+    Result result;
+    if(VKFAILED(result = vkCreatePipelineLayout(*m_device, &createInfo, nullptr, &pipelineLayout))) {
+        qCCritical(logVulkan) << "PipelineBuilder: Failed to create pipeline layout" << result.toString();
         return VK_NULL_HANDLE;
     }
     return pipelineLayout;
@@ -184,7 +180,7 @@ PipelineBuilder &PipelineBuilder::shaders(std::initializer_list<QString> moduleN
     QVector<const ShaderModule*> modules;
     modules.reserve(static_cast<int>(moduleNames.size()));
     for(const QString &name : moduleNames) {
-        ShaderModule *module{new ShaderModule(m_device, name)};
+        ShaderModule *module{new ShaderModule(*m_device, name)};
         modules.append(module);
         m_ownedModules.append(module);
     }
@@ -196,7 +192,7 @@ PipelineBuilder &PipelineBuilder::bytecodes(std::initializer_list<QByteArray> mo
     QVector<const ShaderModule*> modules;
     modules.reserve(static_cast<int>(moduleBytecodes.size()));
     for(const QByteArray &bytecode : moduleBytecodes) {
-        ShaderModule *module{new ShaderModule(m_device, bytecode)};
+        ShaderModule *module{new ShaderModule(*m_device, bytecode)};
         modules.append(module);
         m_ownedModules.append(module);
     }

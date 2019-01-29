@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Michał Siejak
+ * Copyright (C) 2018-2019 Michał Siejak
  * This file is part of Quartz - a raytracing aspect for Qt3D.
  * See LICENSE file for licensing information.
  */

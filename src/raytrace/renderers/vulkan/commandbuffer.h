@@ -64,11 +64,11 @@ public:
     }
     void bindPipeline(const Pipeline &pipeline) const
     {
-        vkCmdBindPipeline(handle, pipeline.bindPoint(), pipeline);
+        vkCmdBindPipeline(handle, pipeline.bindPoint, pipeline);
     }
     void bindDescriptorSets(const Pipeline &pipeline, uint32_t firstSet, const QVector<VkDescriptorSet> &descriptorSets) const
     {
-        vkCmdBindDescriptorSets(handle, pipeline.bindPoint(), pipeline.pipelineLayout, firstSet, uint32_t(descriptorSets.size()), descriptorSets.data(), 0, nullptr);
+        vkCmdBindDescriptorSets(handle, pipeline.bindPoint, pipeline.pipelineLayout, firstSet, uint32_t(descriptorSets.size()), descriptorSets.data(), 0, nullptr);
     }
     void buildTopLevelAccelerationStructure(const VkAccelerationStructureInfoNV &info, VkAccelerationStructureNV dst, VkAccelerationStructureNV src, VkBuffer instanceData, VkBuffer scratch) const
     {

@@ -1,15 +1,16 @@
 /*
- * Copyright (C) 2018 Michał Siejak
+ * Copyright (C) 2018-2019 Michał Siejak
  * This file is part of Quartz - a raytracing aspect for Qt3D.
  * See LICENSE file for licensing information.
  */
 
 #include <renderers/vulkan/pipeline/graphicspipeline.h>
+#include <renderers/vulkan/device.h>
 
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
-constexpr VkPipelineColorBlendAttachmentState defaultBlendAttachmentState = {
+static constexpr VkPipelineColorBlendAttachmentState DefaultBlendAttachmentState = {
     VK_FALSE,
     VK_BLEND_FACTOR_SRC_ALPHA,
     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
@@ -46,7 +47,7 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder(Device *device, VkRenderPass re
     // TODO: Configure default stencil state.
 
     m_colorBlendState.attachments.resize(1);
-    m_colorBlendState.attachments[0] = defaultBlendAttachmentState;
+    m_colorBlendState.attachments[0] = DefaultBlendAttachmentState;
 
     m_dynamicStates.resize(2);
     m_dynamicStates[0] = VK_DYNAMIC_STATE_VIEWPORT;
@@ -55,17 +56,17 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder(Device *device, VkRenderPass re
 
 Pipeline GraphicsPipelineBuilder::build() const
 {
-    Pipeline pipeline(VK_PIPELINE_BIND_POINT_GRAPHICS);
+    Pipeline pipeline;
+    pipeline.bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+
     if(!validate()) {
         return pipeline;
     }
 
-    QVector<VkDescriptorSetLayout> descriptorSetLayouts = buildDescriptorSetLayouts();
-    VkPipelineLayout pipelineLayout = buildPipelineLayout(descriptorSetLayouts);
-    if(pipelineLayout == VK_NULL_HANDLE) {
-        for(VkDescriptorSetLayout layout : descriptorSetLayouts) {
-            vkDestroyDescriptorSetLayout(m_device, layout, nullptr);
-        }
+    pipeline.descriptorSetLayouts = buildDescriptorSetLayouts();
+    pipeline.pipelineLayout = buildPipelineLayout(pipeline.descriptorSetLayouts);
+    if(pipeline.pipelineLayout == VK_NULL_HANDLE) {
+        m_device->destroyPipeline(pipeline);
         return pipeline;
     }
 
@@ -126,20 +127,15 @@ Pipeline GraphicsPipelineBuilder::build() const
     createInfo.pDepthStencilState = &m_depthStencilState;
     createInfo.pColorBlendState = &colorBlendState;
     createInfo.pDynamicState = &dynamicState;
-    createInfo.layout = pipelineLayout;
+    createInfo.layout = pipeline.pipelineLayout;
     createInfo.renderPass = m_renderPass;
     createInfo.subpass = m_subpass;
-    if(VKFAILED(vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline.handle))) {
-        qCCritical(logVulkan) << "GraphicsPipelineBuilder: Failed to create graphics pipeline";
-        vkDestroyPipelineLayout(m_device, pipelineLayout, nullptr);
-        for(VkDescriptorSetLayout layout : descriptorSetLayouts) {
-            vkDestroyDescriptorSetLayout(m_device, layout, nullptr);
-        }
-        return pipeline;
-    }
 
-    pipeline.pipelineLayout = pipelineLayout;
-    pipeline.descriptorSetLayouts = std::move(descriptorSetLayouts);
+    Result result;
+    if(VKFAILED(result = vkCreateGraphicsPipelines(*m_device, VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline.handle))) {
+        qCCritical(logVulkan) << "GraphicsPipelineBuilder: Failed to create graphics pipeline" << result.toString();
+        m_device->destroyPipeline(pipeline);
+    }
     return pipeline;
 }
 

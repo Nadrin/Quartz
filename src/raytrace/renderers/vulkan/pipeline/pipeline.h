@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Michał Siejak
+ * Copyright (C) 2018-2019 Michał Siejak
  * This file is part of Quartz - a raytracing aspect for Qt3D.
  * See LICENSE file for licensing information.
  */
@@ -19,18 +19,14 @@
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
-class Pipeline : public Resource<VkPipeline>
+struct Pipeline : Resource<VkPipeline>
 {
-public:
-    explicit Pipeline(VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
-
-    VkPipelineBindPoint bindPoint() const { return m_bindPoint; }
-
-    VkPipelineLayout pipelineLayout;
+    VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     QVector<VkDescriptorSetLayout> descriptorSetLayouts;
-
-private:
-    VkPipelineBindPoint m_bindPoint;
+    Buffer shaderBindingTable;
+    VkDeviceSize shaderBindingTableStride = 0;
+    VkDeviceSize shaderBindingTableHitGroupOffset = 0;
 };
 
 class PipelineBuilder
@@ -52,8 +48,8 @@ protected:
     QVector<VkDescriptorSetLayout> buildDescriptorSetLayouts() const;
     VkPipelineLayout buildPipelineLayout(const QVector<VkDescriptorSetLayout> &descriptorSetLayouts) const;
 
-    VkDevice m_device;
-    VkSampler m_defaultSampler;
+    Device *m_device;
+    Sampler m_defaultSampler;
 
     QVector<const ShaderModule*> m_shaders;
 
