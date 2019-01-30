@@ -1652,6 +1652,22 @@ static SpvReflectResult ParseDescriptorBindings(Parser* p_parser, SpvReflectShad
         return SPV_REFLECT_RESULT_ERROR_SPIRV_INVALID_ID_REFERENCE;
       }
     }
+    // If the type is an array, resolve it
+    if (p_type->op == SpvOpTypeArray) {
+      SpvReflectTypeDescription* p_array_type = p_type;
+      // Find the type's node
+      Node* p_type_node = FindNode(p_parser, p_type->id);
+      if (IsNull(p_type_node)) {
+        return SPV_REFLECT_RESULT_ERROR_SPIRV_INVALID_ID_REFERENCE;
+      }
+      // Should be the resolved type
+      p_type = FindType(p_module, p_type_node->array_traits.element_type_id);
+      if (IsNull(p_type)) {
+        return SPV_REFLECT_RESULT_ERROR_SPIRV_INVALID_ID_REFERENCE;
+      }
+      // Apply parent type array traits to descriptor type
+      memcpy(&p_type->traits.array, &p_array_type->traits.array, sizeof(p_type->traits.array));
+    }
 
     SpvReflectDescriptorBinding* p_descriptor = &p_module->descriptor_bindings[descriptor_index];
     p_descriptor->spirv_id = p_node->result_id;
