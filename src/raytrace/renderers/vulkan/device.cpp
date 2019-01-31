@@ -445,10 +445,28 @@ QVector<DescriptorSet> Device::allocateDescriptorSets(const DescriptorSetAllocat
     return descriptorSets;
 }
 
-void Device::writeDescriptorSets(const QVector<WriteDescriptorSet> &writeOperations)
+void Device::writeDescriptor(const WriteDescriptorSet &writeOp)
 {
-    if(writeOperations.size() > 0) {
-        vkUpdateDescriptorSets(m_device, uint32_t(writeOperations.size()), writeOperations.data(), 0, nullptr);
+    vkUpdateDescriptorSets(m_device, 1, &writeOp, 0, nullptr);
+}
+
+void Device::writeDescriptor(const WriteDescriptorSet &writeOp, const AccelerationStructure &as)
+{
+    VkWriteDescriptorSetAccelerationStructureNV writeAccelerationStructureOp = {
+        VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_NV
+    };
+    writeAccelerationStructureOp.accelerationStructureCount = 1;
+    writeAccelerationStructureOp.pAccelerationStructures = &as.handle;
+
+    VkWriteDescriptorSet extendedWriteOp = writeOp;
+    extendedWriteOp.pNext = &writeAccelerationStructureOp;
+    vkUpdateDescriptorSets(m_device, 1, &extendedWriteOp, 0, nullptr);
+}
+
+void Device::writeDescriptors(const QVector<WriteDescriptorSet> &writeOps)
+{
+    if(writeOps.size() > 0) {
+        vkUpdateDescriptorSets(m_device, uint32_t(writeOps.size()), writeOps.data(), 0, nullptr);
     }
 }
 

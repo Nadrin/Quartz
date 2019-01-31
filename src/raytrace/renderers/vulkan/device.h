@@ -64,7 +64,9 @@ public:
     void destroyDescriptorPool(DescriptorPool &descriptorPool);
 
     QVector<DescriptorSet> allocateDescriptorSets(const DescriptorSetAllocateInfo &allocInfo);
-    void writeDescriptorSets(const QVector<WriteDescriptorSet> &writeOperations);
+    void writeDescriptor(const WriteDescriptorSet &writeOp);
+    void writeDescriptor(const WriteDescriptorSet &writeOp, const AccelerationStructure &as);
+    void writeDescriptors(const QVector<WriteDescriptorSet> &writeOps);
 
     QueryPool createQueryPool(const QueryPoolCreateInfo &createInfo);
     void destroyQueryPool(QueryPool &queryPool);

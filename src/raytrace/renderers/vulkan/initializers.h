@@ -215,7 +215,7 @@ struct ImageMemoryBarrier : Initializer<VkImageMemoryBarrier>
 
 struct WriteDescriptorSet : Initializer<VkWriteDescriptorSet>
 {
-    WriteDescriptorSet(VkDescriptorSet dstSet_, uint32_t dstBinding_, uint32_t dstArrayElement_, uint32_t descriptorCount_, VkDescriptorType descriptorType_)
+    WriteDescriptorSet(VkDescriptorSet dstSet_, uint32_t dstBinding_, uint32_t dstArrayElement_, VkDescriptorType descriptorType_, uint32_t descriptorCount_=1)
         : Initializer(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET)
     {
         dstSet = dstSet_;
@@ -225,32 +225,32 @@ struct WriteDescriptorSet : Initializer<VkWriteDescriptorSet>
         descriptorCount = descriptorCount_;
     }
     WriteDescriptorSet(VkDescriptorSet dstSet_, uint32_t dstBinding_, uint32_t dstArrayElement_, VkDescriptorType descriptorType_, const DescriptorImageInfo &imageInfo_)
-        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, 1, descriptorType_)
+        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, descriptorType_)
     {
         pImageInfo = &imageInfo_;
     }
     WriteDescriptorSet(VkDescriptorSet dstSet_, uint32_t dstBinding_, uint32_t dstArrayElement_, VkDescriptorType descriptorType_, const QVector<DescriptorImageInfo> &imageInfos_)
-        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, uint32_t(imageInfos_.size()), descriptorType_)
+        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, descriptorType_, uint32_t(imageInfos_.size()))
     {
         pImageInfo = imageInfos_.data();
     }
     WriteDescriptorSet(VkDescriptorSet dstSet_, uint32_t dstBinding_, uint32_t dstArrayElement_, VkDescriptorType descriptorType_, const DescriptorBufferInfo &bufferInfo_)
-        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, 1, descriptorType_)
+        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, descriptorType_)
     {
         pBufferInfo = &bufferInfo_;
     }
     WriteDescriptorSet(VkDescriptorSet dstSet_, uint32_t dstBinding_, uint32_t dstArrayElement_, VkDescriptorType descriptorType_, const QVector<DescriptorBufferInfo> &bufferInfos_)
-        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, uint32_t(bufferInfos_.size()), descriptorType_)
+        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, descriptorType_, uint32_t(bufferInfos_.size()))
     {
         pBufferInfo = bufferInfos_.data();
     }
     WriteDescriptorSet(VkDescriptorSet dstSet_, uint32_t dstBinding_, uint32_t dstArrayElement_, VkDescriptorType descriptorType_, VkBufferView texelBufferView_)
-        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, 1, descriptorType_)
+        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, descriptorType_)
     {
         pTexelBufferView = &texelBufferView_;
     }
     WriteDescriptorSet(VkDescriptorSet dstSet_, uint32_t dstBinding_, uint32_t dstArrayElement_, VkDescriptorType descriptorType_, const QVector<VkBufferView> &texelBufferViews_)
-        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, uint32_t(texelBufferViews_.size()), descriptorType_)
+        : WriteDescriptorSet(dstSet_, dstBinding_, dstArrayElement_, descriptorType_, uint32_t(texelBufferViews_.size()))
     {
         pTexelBufferView = texelBufferViews_.data();
     }
