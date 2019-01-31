@@ -193,6 +193,9 @@ bool RayTracingPipelineBuilder::buildShaderGroups(QVector<VkRayTracingShaderGrou
             break;
         }
     }
+    if(pendingClosestHitShaderIndex != VK_SHADER_UNUSED_NV) {
+        hitGroups.append(createTrianglesHitShaderGroup(pendingClosestHitShaderIndex, VK_SHADER_UNUSED_NV));
+    }
 
     Q_ASSERT(hasRaygenShader);
 
