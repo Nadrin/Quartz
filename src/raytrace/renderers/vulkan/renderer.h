@@ -110,17 +110,11 @@ private:
 
     RenderPass m_displayRenderPass;
     Pipeline m_displayPipeline;
-
-    CommandPool m_staticCommandPool;
-    DescriptorPool m_staticDescriptorPool;
-    QueryPool m_queryPool;
+    RayTracingPipeline m_rayTracingPipeline;
 
     Sampler m_defaultSampler;
 
-    Pipeline m_testPipeline;
-
     Swapchain m_swapchain;
-    DescriptorPool m_swapchainDescriptorPool;
     VkSurfaceFormatKHR m_swapchainFormat;
     QSize m_swapchainSize;
 
@@ -134,10 +128,12 @@ private:
         CommandBuffer commandBuffer;
         Fence commandBuffersExecutedFence;
         Image renderBuffer;
-        DescriptorSet renderBufferSampleDS;
-        DescriptorSet renderBufferStorageDS;
+        DescriptorSet renderDescriptorSet;
+        DescriptorSet displayDescriptorSet;
     };
     QVector<FrameResources> m_frameResources;
+    CommandPool m_frameCommandPool;
+    DescriptorPool m_frameDescriptorPool;
     int m_frameIndex = 0;
 
     struct SceneResources {

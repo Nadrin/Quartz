@@ -11,6 +11,7 @@
 #include <renderers/vulkan/shadermodule.h>
 #include <renderers/vulkan/pipeline/graphicspipeline.h>
 #include <renderers/vulkan/pipeline/computepipeline.h>
+#include <renderers/vulkan/pipeline/raytracingpipeline.h>
 
 #include <renderers/vulkan/jobs/buildscenetlasjob.h>
 #include <renderers/vulkan/jobs/buildgeometryjob.h>
@@ -139,15 +140,9 @@ bool Renderer::createResources()
     m_renderingFinishedSemaphore = m_device->createSemaphore();
     m_presentationFinishedSemaphore = m_device->createSemaphore();
 
-    m_displayRenderPass = createDisplayRenderPass(m_swapchainFormat.format);
-
-    m_staticCommandPool = m_device->createCommandPool(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-    m_queryPool = m_device->createQueryPool({VK_QUERY_TYPE_TIMESTAMP, 2 * numConcurrentFrames()});
-
-    m_defaultSampler = m_device->createSampler({VK_FILTER_NEAREST});
-
+    m_frameCommandPool = m_device->createCommandPool(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
     {
-        QVector<CommandBuffer> frameCommandBuffers = m_device->allocateCommandBuffers({m_staticCommandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, uint32_t(numConcurrentFrames())});
+        QVector<CommandBuffer> frameCommandBuffers = m_device->allocateCommandBuffers({m_frameCommandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, uint32_t(numConcurrentFrames())});
         for(int i=0; i<int(numConcurrentFrames()); ++i) {
             m_frameResources[i].commandBuffer = frameCommandBuffers[i];
             m_frameResources[i].commandBuffersExecutedFence = m_device->createFence(VK_FENCE_CREATE_SIGNALED_BIT);
@@ -156,20 +151,36 @@ bool Renderer::createResources()
 
     {
         const QVector<VkDescriptorPoolSize> descriptorPoolSizes = {
+            { VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV, numConcurrentFrames() },
             { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, numConcurrentFrames() },
             { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, numConcurrentFrames() },
         };
-        m_swapchainDescriptorPool = m_device->createDescriptorPool({ 2 * numConcurrentFrames(), descriptorPoolSizes});
+        const uint32_t descriptorPoolCapacity = uint32_t(descriptorPoolSizes.size()) * numConcurrentFrames();
+        m_frameDescriptorPool = m_device->createDescriptorPool({ descriptorPoolCapacity, descriptorPoolSizes});
     }
 
+    m_defaultSampler = m_device->createSampler({VK_FILTER_NEAREST});
+
+    m_displayRenderPass = createDisplayRenderPass(m_swapchainFormat.format);
     m_displayPipeline = GraphicsPipelineBuilder(m_device.get(), m_displayRenderPass)
             .shaders({"display.vert", "display.frag"})
             .defaultSampler(m_defaultSampler)
             .build();
 
-    m_testPipeline = ComputePipelineBuilder(m_device.get())
-            .shaders({"test.comp"})
+    m_rayTracingPipeline = RayTracingPipelineBuilder(m_device.get())
+            .shaders({"test.rgen", "test.rmiss", "test.rchit"})
+            .maxRecursionDepth(1)
             .build();
+
+    for(auto &frame : m_frameResources) {
+        const QVector<VkDescriptorSetLayout> descriptorSetLayouts = {
+            m_displayPipeline.descriptorSetLayouts[0],
+            m_rayTracingPipeline.descriptorSetLayouts[0],
+        };
+        auto descriptorSets = m_device->allocateDescriptorSets({m_frameDescriptorPool, descriptorSetLayouts});
+        frame.displayDescriptorSet = descriptorSets[0];
+        frame.renderDescriptorSet = descriptorSets[1];
+    }
 
     return true;
 }
@@ -179,17 +190,14 @@ void Renderer::releaseResources()
     m_device->destroySemaphore(m_renderingFinishedSemaphore);
     m_device->destroySemaphore(m_presentationFinishedSemaphore);
 
-    m_device->destroyRenderPass(m_displayRenderPass);
-
-    m_device->destroyCommandPool(m_staticCommandPool);
-    m_device->destroyQueryPool(m_queryPool);
+    m_device->destroyCommandPool(m_frameCommandPool);
+    m_device->destroyDescriptorPool(m_frameDescriptorPool);
 
     m_device->destroySampler(m_defaultSampler);
 
-    m_device->destroyDescriptorPool(m_swapchainDescriptorPool);
-
+    m_device->destroyRenderPass(m_displayRenderPass);
     m_device->destroyPipeline(m_displayPipeline);
-    m_device->destroyPipeline(m_testPipeline);
+    m_device->destroyPipeline(m_rayTracingPipeline);
 
     for(auto &frame : m_frameResources) {
         m_device->destroyFence(frame.commandBuffersExecutedFence);
@@ -209,6 +217,8 @@ void Renderer::releaseResources()
 
 void Renderer::createSwapchainResources()
 {
+    constexpr VkFormat RenderBufferFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+
     Result result;
 
     const uint32_t swapchainWidth = uint32_t(m_swapchainSize.width());
@@ -231,7 +241,6 @@ void Renderer::createSwapchainResources()
         attachment.framebuffer = m_device->createFramebuffer({m_displayRenderPass, { attachment.image.view }, swapchainWidth, swapchainHeight});
     }
 
-    constexpr VkFormat RenderBufferFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
     for(auto &frame : m_frameResources) {
         ImageCreateInfo renderBufferCreateInfo{VK_IMAGE_TYPE_2D, RenderBufferFormat, m_swapchainSize};
         renderBufferCreateInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
@@ -239,20 +248,17 @@ void Renderer::createSwapchainResources()
             qCCritical(logVulkan) << "Failed to create render buffer";
             return;
         }
+    }
 
-        const QVector<VkDescriptorSetLayout> descriptorSetLayouts = {
-            m_displayPipeline.descriptorSetLayouts[0],
-            m_testPipeline.descriptorSetLayouts[0],
-        };
-        const auto descriptorSets = m_device->allocateDescriptorSets({m_swapchainDescriptorPool, descriptorSetLayouts});
-        frame.renderBufferSampleDS = descriptorSets[0];
-        frame.renderBufferStorageDS = descriptorSets[1];
-
+    auto *previousFrame = &m_frameResources[int(numConcurrentFrames()-1)];
+    for(auto &frame : m_frameResources) {
         const QVector<WriteDescriptorSet> descriptorWrites = {
-            { frame.renderBufferSampleDS, 0, 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, DescriptorImageInfo(frame.renderBuffer.view, ImageState::ShaderRead) },
-            { frame.renderBufferStorageDS, 0, 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, DescriptorImageInfo(frame.renderBuffer.view, ImageState::ShaderReadWrite) },
+            { frame.displayDescriptorSet, 0, 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, DescriptorImageInfo(frame.renderBuffer.view, ImageState::ShaderRead) },
+            { frame.renderDescriptorSet, 1, 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, DescriptorImageInfo(frame.renderBuffer.view, ImageState::ShaderReadWrite) },
+            { frame.renderDescriptorSet, 2, 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, DescriptorImageInfo(previousFrame->renderBuffer.view, ImageState::ShaderReadWrite) },
         };
-        m_device->writeDescriptorSets(descriptorWrites);
+        m_device->writeDescriptors(descriptorWrites);
+        previousFrame = &frame;
     }
 
     m_clearPreviousRenderBuffer = true;
@@ -269,8 +275,6 @@ void Renderer::releaseSwapchainResources()
     for(auto &frame : m_frameResources) {
         m_device->destroyImage(frame.renderBuffer);
     }
-
-    m_device->resetDescriptorPool(m_swapchainDescriptorPool);
     m_renderBuffersReady = false;
 }
 
@@ -390,6 +394,9 @@ void Renderer::renderFrame()
 
     updateRetiredResources();
 
+    if(m_sceneResources.sceneTLAS) {
+        m_device->writeDescriptor({currentFrame.renderDescriptorSet, 0, 0, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV}, m_sceneResources.sceneTLAS);
+    }
     m_commandBufferManager->submitCommandBuffers(m_graphicsQueue);
 
     uint32_t swapchainImageIndex = 0;
@@ -410,15 +417,11 @@ void Renderer::renderFrame()
             m_clearPreviousRenderBuffer = false;
         }
 
-        const QVector<VkDescriptorSet> renderDescriptorSets = {
-            currentFrame.renderBufferStorageDS,
-            previousFrame.renderBufferStorageDS,
-        };
-        uint32_t dispatchGroupsX = uint32_t(qCeil(renderRect.width() / 8.0f));
-        uint32_t dispatchGroupsY = uint32_t(qCeil(renderRect.height() / 8.0f));
-        commandBuffer.bindPipeline(m_testPipeline);
-        commandBuffer.bindDescriptorSets(m_testPipeline, 0, renderDescriptorSets);
-        commandBuffer.dispatch(dispatchGroupsX, dispatchGroupsY);
+        if(m_sceneResources.sceneTLAS) {
+            commandBuffer.bindPipeline(m_rayTracingPipeline);
+            commandBuffer.bindDescriptorSets(m_rayTracingPipeline, 0, {currentFrame.renderDescriptorSet});
+            commandBuffer.traceRays(m_rayTracingPipeline, uint32_t(renderRect.width()), uint32_t(renderRect.height()));
+        }
 
         commandBuffer.resourceBarrier({currentFrame.renderBuffer, ImageState::ShaderReadWrite, ImageState::ShaderRead});
 
@@ -426,7 +429,7 @@ void Renderer::renderFrame()
             const auto &attachment = m_swapchainAttachments[int(swapchainImageIndex)];
             commandBuffer.beginRenderPass({m_displayRenderPass, attachment.framebuffer, renderRect}, VK_SUBPASS_CONTENTS_INLINE);
             commandBuffer.bindPipeline(m_displayPipeline);
-            commandBuffer.bindDescriptorSets(m_displayPipeline, 0, {currentFrame.renderBufferSampleDS});
+            commandBuffer.bindDescriptorSets(m_displayPipeline, 0, {currentFrame.displayDescriptorSet});
             commandBuffer.setViewport(renderRect);
             commandBuffer.setScissor(renderRect);
             commandBuffer.draw(3, 1);
