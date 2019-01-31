@@ -13,6 +13,7 @@ namespace Vulkan {
 PipelineBuilder::PipelineBuilder(Device *device)
     : m_device(device)
     , m_defaultSampler(VK_NULL_HANDLE)
+    , m_needsDescriptorBindingFlags(false)
 {
     Q_ASSERT(m_device);
 }
@@ -23,6 +24,7 @@ QVector<VkDescriptorSetLayout> PipelineBuilder::buildDescriptorSetLayouts() cons
         VkDescriptorType type = VK_DESCRIPTOR_TYPE_MAX_ENUM;
         VkShaderStageFlags stageFlags = 0;
         uint32_t count = 0;
+        VkDescriptorBindingFlagsEXT flags = 0;
         QVector<VkSampler> samplers;
     };
     using DescriptorSetLayout = QVector<DescriptorSetLayoutBinding>;
@@ -60,6 +62,13 @@ QVector<VkDescriptorSetLayout> PipelineBuilder::buildDescriptorSetLayouts() cons
                 else {
                     binding.stageFlags |= shader->stage();
                     bindingsByName.insert(shaderBinding.name, &binding);
+
+                    const auto &bindingInfo = m_descriptorBindingInfoByID.value(qMakePair(setNumber, bindingNumber));
+                    if(bindingInfo.count > 0) {
+                        binding.count = bindingInfo.count;
+                    }
+                    binding.flags = bindingInfo.flags;
+
                     if(binding.type == VK_DESCRIPTOR_TYPE_SAMPLER || binding.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
                         VkSampler sampler = m_samplersByID.value(qMakePair(setNumber, bindingNumber), VK_NULL_HANDLE);
                         if(sampler != VK_NULL_HANDLE) {
@@ -71,6 +80,20 @@ QVector<VkDescriptorSetLayout> PipelineBuilder::buildDescriptorSetLayouts() cons
         }
     }
 
+    for(auto it = m_descriptorBindingInfoByName.begin(); it != m_descriptorBindingInfoByName.end(); ++it) {
+        auto bindings = bindingsByName.values(it.key());
+        if(bindings.size() == 0) {
+            qCWarning(logVulkan) << "PipelineBuilder: No such descriptor set binding:" << it.key();
+            continue;
+        }
+        const auto &bindingInfo = it.value();
+        for(DescriptorSetLayoutBinding *binding : bindings) {
+            if(bindingInfo.count > 0) {
+                binding->count = bindingInfo.count;
+            }
+            binding->flags |= bindingInfo.flags;
+        }
+    }
     for(auto it = m_samplersByName.begin(); it != m_samplersByName.end(); ++it) {
         auto bindings = bindingsByName.values(it.key());
         for(DescriptorSetLayoutBinding *binding : bindings) {
@@ -95,9 +118,17 @@ QVector<VkDescriptorSetLayout> PipelineBuilder::buildDescriptorSetLayouts() cons
     }
 
     QVector<VkDescriptorSetLayout> vulkanLayouts;
-    for(const DescriptorSetLayout &setLayout : layouts) {
+    for(int index=0; index < layouts.size(); ++index) {
+        const DescriptorSetLayout &setLayout = layouts[index];
+
         QVector<VkDescriptorSetLayoutBinding> vulkanBindings;
+        QVector<VkDescriptorBindingFlagsEXT> vulkanBindingFlags;
+
+        VkDescriptorSetLayoutBindingFlagsCreateInfoEXT layoutBindingFlagsCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT };
         VkDescriptorSetLayoutCreateInfo layoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
+
+        layoutCreateInfo.pNext = &layoutBindingFlagsCreateInfo;
+        layoutCreateInfo.flags = m_descriptorSetLayoutFlags.value(uint32_t(index), 0);
 
         if(setLayout.size() > 0) {
             for(uint32_t bindingNumber=0; bindingNumber < uint32_t(setLayout.size()); ++bindingNumber) {
@@ -112,11 +143,15 @@ QVector<VkDescriptorSetLayout> PipelineBuilder::buildDescriptorSetLayouts() cons
                         vulkanBinding.pImmutableSamplers = binding.samplers.data();
                     }
                     vulkanBindings.append(vulkanBinding);
+                    vulkanBindingFlags.append(binding.flags);
                 }
             }
             if(vulkanBindings.size() > 0) {
+                Q_ASSERT(vulkanBindingFlags.size() == vulkanBindings.size());
                 layoutCreateInfo.bindingCount = uint32_t(vulkanBindings.size());
                 layoutCreateInfo.pBindings = vulkanBindings.data();
+                layoutBindingFlagsCreateInfo.bindingCount = uint32_t(vulkanBindingFlags.size());
+                layoutBindingFlagsCreateInfo.pBindingFlags = vulkanBindingFlags.data();
             }
         }
 
@@ -214,6 +249,36 @@ PipelineBuilder &PipelineBuilder::sampler(uint32_t set, uint32_t binding, VkSamp
 PipelineBuilder &PipelineBuilder::sampler(const QString &name, VkSampler sampler)
 {
     m_samplersByName.insert(name, sampler);
+    return *this;
+}
+
+PipelineBuilder &PipelineBuilder::descriptorSetLayoutFlags(uint32_t set, VkDescriptorSetLayoutCreateFlags flags)
+{
+    m_descriptorSetLayoutFlags.insert(set, flags);
+    return *this;
+}
+
+PipelineBuilder &PipelineBuilder::descriptorBindingFlags(uint32_t set, uint32_t descriptorBinding, VkDescriptorBindingFlagsEXT flags)
+{
+    m_descriptorBindingInfoByID[{set, descriptorBinding}].flags = flags;
+    return *this;
+}
+
+PipelineBuilder &PipelineBuilder::descriptorBindingFlags(const QString &name, VkDescriptorBindingFlagsEXT flags)
+{
+    m_descriptorBindingInfoByName[name].flags = flags;
+    return *this;
+}
+
+PipelineBuilder &PipelineBuilder::descriptorBindingCount(uint32_t set, uint32_t descriptorBinding, uint32_t count)
+{
+    m_descriptorBindingInfoByID[{set, descriptorBinding}].count = count;
+    return *this;
+}
+
+PipelineBuilder &PipelineBuilder::descriptorBindingCount(const QString &name, uint32_t count)
+{
+    m_descriptorBindingInfoByName[name].count = count;
     return *this;
 }
 

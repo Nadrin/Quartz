@@ -39,6 +39,13 @@ public:
     PipelineBuilder &sampler(uint32_t set, uint32_t binding, VkSampler sampler);
     PipelineBuilder &sampler(const QString &name, VkSampler sampler);
 
+    PipelineBuilder &descriptorSetLayoutFlags(uint32_t set, VkDescriptorSetLayoutCreateFlags flags);
+
+    PipelineBuilder &descriptorBindingFlags(uint32_t set, uint32_t binding, VkDescriptorBindingFlagsEXT flags);
+    PipelineBuilder &descriptorBindingFlags(const QString &name, VkDescriptorBindingFlagsEXT flags);
+    PipelineBuilder &descriptorBindingCount(uint32_t set, uint32_t binding, uint32_t count);
+    PipelineBuilder &descriptorBindingCount(const QString &name, uint32_t count);
+
 protected:
     explicit PipelineBuilder(Device *device);
 
@@ -54,8 +61,18 @@ protected:
     QMap<BindingID, VkSampler> m_samplersByID;
     QMap<QString, VkSampler> m_samplersByName;
 
+    struct DescriptorBindingInfo {
+        VkDescriptorBindingFlagsEXT flags = 0;
+        uint32_t count = 0;
+    };
+    QMap<BindingID, DescriptorBindingInfo> m_descriptorBindingInfoByID;
+    QMap<QString, DescriptorBindingInfo> m_descriptorBindingInfoByName;
+
+    QMap<uint32_t, VkDescriptorSetLayoutCreateFlags> m_descriptorSetLayoutFlags;
+
 private:
     QVector<ShaderModule*> m_ownedModules;
+    bool m_needsDescriptorBindingFlags;
 };
 
 template<typename T>
@@ -85,6 +102,26 @@ public:
     T &sampler(const QString &name, VkSampler sampler)
     {
         return static_cast<T&>(PipelineBuilder::sampler(name, sampler));
+    }
+    T &descriptorSetLayoutFlags(uint32_t set, VkDescriptorSetLayoutCreateFlags flags)
+    {
+        return static_cast<T&>(PipelineBuilder::descriptorSetLayoutFlags(set, flags));
+    }
+    T &descriptorBindingFlags(uint32_t set, uint32_t binding, VkDescriptorBindingFlagsEXT flags)
+    {
+        return static_cast<T&>(PipelineBuilder::descriptorBindingFlags(set, binding, flags));
+    }
+    T &descriptorBindingFlags(const QString &name, VkDescriptorBindingFlagsEXT flags)
+    {
+        return static_cast<T&>(PipelineBuilder::descriptorBindingFlags(name, flags));
+    }
+    T &descriptorBindingCount(uint32_t set, uint32_t binding, uint32_t count)
+    {
+        return static_cast<T&>(PipelineBuilder::descriptorBindingCount(set, binding, count));
+    }
+    T &descriptorBindingCount(const QString &name, uint32_t count)
+    {
+        return static_cast<T&>(PipelineBuilder::descriptorBindingCount(name, count));
     }
 
 protected:
