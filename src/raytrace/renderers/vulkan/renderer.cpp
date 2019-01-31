@@ -529,7 +529,9 @@ VkPhysicalDevice Renderer::choosePhysicalDevice(const QByteArrayList &requiredEx
         selectedPhysicalDevice = physicalDevice;
         break;
     }
-    Q_ASSERT(selectedPhysicalDevice != VK_NULL_HANDLE);
+    if(selectedPhysicalDevice == VK_NULL_HANDLE) {
+        return VK_NULL_HANDLE;
+    }
 
     VkPhysicalDeviceProperties selectedDeviceProperties;
     vkGetPhysicalDeviceProperties(selectedPhysicalDevice, &selectedDeviceProperties);
