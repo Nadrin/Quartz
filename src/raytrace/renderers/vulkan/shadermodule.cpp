@@ -6,6 +6,7 @@
 
 #include <renderers/vulkan/shadermodule.h>
 #include <renderers/vulkan/device.h>
+
 #include <spirv_reflect.h>
 
 #include <QFile>
@@ -61,8 +62,10 @@ bool ShaderModule::loadFromBytecode(VkDevice device, const QByteArray &bytecode,
     VkShaderModuleCreateInfo createInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
     createInfo.codeSize = static_cast<unsigned long>(bytecode.size());
     createInfo.pCode = reinterpret_cast<const uint32_t*>(bytecode.data());
-    if(VKFAILED(vkCreateShaderModule(m_device, &createInfo, nullptr, &m_module))) {
-        qCCritical(logVulkan) << "Failed to create Vulkan shader module";
+
+    Result result;
+    if(VKFAILED(result = vkCreateShaderModule(m_device, &createInfo, nullptr, &m_module))) {
+        qCCritical(logVulkan) << "Failed to create Vulkan shader module from SPIR-V binary:" << result.toString();
         return false;
     }
 
