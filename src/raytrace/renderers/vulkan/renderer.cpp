@@ -187,6 +187,8 @@ bool Renderer::createResources()
 
     m_rayTracingPipeline = RayTracingPipelineBuilder(m_device.get())
             .shaders({"test.rgen", "test.rmiss", "test.rchit"})
+            .descriptorBindingManager(1, 0, m_descriptorManager.get(), ResourceClass::AttributeBuffer)
+            .descriptorBindingManager(2, 0, m_descriptorManager.get(), ResourceClass::IndexBuffer)
             .maxRecursionDepth(1)
             .build();
 
@@ -436,8 +438,14 @@ void Renderer::renderFrame()
         }
 
         if(m_sceneResources.sceneTLAS) {
+            const QVector<VkDescriptorSet> descriptorSets = {
+                currentFrame.renderDescriptorSet,
+                m_descriptorManager->descriptorSet(ResourceClass::AttributeBuffer),
+                m_descriptorManager->descriptorSet(ResourceClass::IndexBuffer),
+            };
+
             commandBuffer.bindPipeline(m_rayTracingPipeline);
-            commandBuffer.bindDescriptorSets(m_rayTracingPipeline, 0, {currentFrame.renderDescriptorSet});
+            commandBuffer.bindDescriptorSets(m_rayTracingPipeline, 0, descriptorSets);
             commandBuffer.traceRays(m_rayTracingPipeline, uint32_t(renderRect.width()), uint32_t(renderRect.height()));
         }
 

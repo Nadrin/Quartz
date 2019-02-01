@@ -8,6 +8,7 @@
 
 #include <renderers/vulkan/vkcommon.h>
 #include <renderers/vulkan/vkresources.h>
+#include <renderers/vulkan/descriptors.h>
 #include <renderers/vulkan/shadermodule.h>
 
 #include <initializer_list>
@@ -18,6 +19,8 @@
 
 namespace Qt3DRaytrace {
 namespace Vulkan {
+
+class DescriptorManager;
 
 struct Pipeline : Resource<VkPipeline>
 {
@@ -45,6 +48,8 @@ public:
     PipelineBuilder &descriptorBindingFlags(const QString &name, VkDescriptorBindingFlagsEXT flags);
     PipelineBuilder &descriptorBindingCount(uint32_t set, uint32_t binding, uint32_t count);
     PipelineBuilder &descriptorBindingCount(const QString &name, uint32_t count);
+    PipelineBuilder &descriptorBindingManager(uint32_t set, uint32_t binding, const DescriptorManager *manager, ResourceClass rclass);
+    PipelineBuilder &descriptorBindingManager(const QString &name, const DescriptorManager *manager, ResourceClass rclass);
 
 protected:
     explicit PipelineBuilder(Device *device);
@@ -63,6 +68,7 @@ protected:
 
     struct DescriptorBindingInfo {
         VkDescriptorBindingFlagsEXT flags = 0;
+        VkShaderStageFlags stageFlags = 0;
         uint32_t count = 0;
     };
     QMap<BindingID, DescriptorBindingInfo> m_descriptorBindingInfoByID;
@@ -122,6 +128,14 @@ public:
     T &descriptorBindingCount(const QString &name, uint32_t count)
     {
         return static_cast<T&>(PipelineBuilder::descriptorBindingCount(name, count));
+    }
+    T &descriptorBindingManager(uint32_t set, uint32_t binding, DescriptorManager *manager, ResourceClass rclass)
+    {
+        return static_cast<T&>(PipelineBuilder::descriptorBindingManager(set, binding, manager, rclass));
+    }
+    T &descriptorBindingManager(const QString &name, DescriptorManager *manager, ResourceClass rclass)
+    {
+        return static_cast<T&>(PipelineBuilder::descriptorBindingManager(name, manager, rclass));
     }
 
 protected:

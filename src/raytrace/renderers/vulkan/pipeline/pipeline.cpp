@@ -6,6 +6,7 @@
 
 #include <renderers/vulkan/pipeline/pipeline.h>
 #include <renderers/vulkan/device.h>
+#include <renderers/vulkan/managers/descriptormanager.h>
 
 namespace Qt3DRaytrace {
 namespace Vulkan {
@@ -47,6 +48,8 @@ QVector<VkDescriptorSetLayout> PipelineBuilder::buildDescriptorSetLayouts() cons
                 }
 
                 DescriptorSetLayoutBinding &binding = setLayout[bindingNumber];
+                const auto &bindingInfo = m_descriptorBindingInfoByID.value(qMakePair(setNumber, bindingNumber));
+
                 if(binding.type == VK_DESCRIPTOR_TYPE_MAX_ENUM) {
                     binding.type = shaderBinding.type;
                 }
@@ -54,20 +57,22 @@ QVector<VkDescriptorSetLayout> PipelineBuilder::buildDescriptorSetLayouts() cons
                     binding.count = shaderBinding.count;
                 }
 
-                bool bindingConflict = (binding.type != shaderBinding.type) || (binding.count != shaderBinding.count);
+                bool bindingConflict = false;
+                if(binding.type != shaderBinding.type || (bindingInfo.count == 0 && binding.count != shaderBinding.count)) {
+                    bindingConflict = true;
+                }
                 if(bindingConflict) {
                     qCWarning(logVulkan) << "PipelineBuilder: Conflicting descriptor set layout binding detected at (set ="
                                          << setNumber << ", binding =" << bindingNumber << ")";
                 }
                 else {
-                    binding.stageFlags |= shader->stage();
                     bindingsByName.insert(shaderBinding.name, &binding);
 
-                    const auto &bindingInfo = m_descriptorBindingInfoByID.value(qMakePair(setNumber, bindingNumber));
+                    binding.stageFlags |= shader->stage() | bindingInfo.stageFlags;
+                    binding.flags = bindingInfo.flags;
                     if(bindingInfo.count > 0) {
                         binding.count = bindingInfo.count;
                     }
-                    binding.flags = bindingInfo.flags;
 
                     if(binding.type == VK_DESCRIPTOR_TYPE_SAMPLER || binding.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
                         VkSampler sampler = m_samplersByID.value(qMakePair(setNumber, bindingNumber), VK_NULL_HANDLE);
@@ -91,9 +96,11 @@ QVector<VkDescriptorSetLayout> PipelineBuilder::buildDescriptorSetLayouts() cons
             if(bindingInfo.count > 0) {
                 binding->count = bindingInfo.count;
             }
+            binding->stageFlags |= bindingInfo.stageFlags;
             binding->flags |= bindingInfo.flags;
         }
     }
+
     for(auto it = m_samplersByName.begin(); it != m_samplersByName.end(); ++it) {
         auto bindings = bindingsByName.values(it.key());
         for(DescriptorSetLayoutBinding *binding : bindings) {
@@ -141,6 +148,9 @@ QVector<VkDescriptorSetLayout> PipelineBuilder::buildDescriptorSetLayouts() cons
                     vulkanBinding.descriptorCount = binding.count;
                     if(binding.samplers.size() > 0) {
                         vulkanBinding.pImmutableSamplers = binding.samplers.data();
+                    }
+                    if(binding.flags & VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT_EXT) {
+                        layoutCreateInfo.flags |= VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT;
                     }
                     vulkanBindings.append(vulkanBinding);
                     vulkanBindingFlags.append(binding.flags);
@@ -258,9 +268,9 @@ PipelineBuilder &PipelineBuilder::descriptorSetLayoutFlags(uint32_t set, VkDescr
     return *this;
 }
 
-PipelineBuilder &PipelineBuilder::descriptorBindingFlags(uint32_t set, uint32_t descriptorBinding, VkDescriptorBindingFlagsEXT flags)
+PipelineBuilder &PipelineBuilder::descriptorBindingFlags(uint32_t set, uint32_t binding, VkDescriptorBindingFlagsEXT flags)
 {
-    m_descriptorBindingInfoByID[{set, descriptorBinding}].flags = flags;
+    m_descriptorBindingInfoByID[{set, binding}].flags = flags;
     return *this;
 }
 
@@ -270,15 +280,35 @@ PipelineBuilder &PipelineBuilder::descriptorBindingFlags(const QString &name, Vk
     return *this;
 }
 
-PipelineBuilder &PipelineBuilder::descriptorBindingCount(uint32_t set, uint32_t descriptorBinding, uint32_t count)
+PipelineBuilder &PipelineBuilder::descriptorBindingCount(uint32_t set, uint32_t binding, uint32_t count)
 {
-    m_descriptorBindingInfoByID[{set, descriptorBinding}].count = count;
+    m_descriptorBindingInfoByID[{set, binding}].count = count;
     return *this;
 }
 
 PipelineBuilder &PipelineBuilder::descriptorBindingCount(const QString &name, uint32_t count)
 {
     m_descriptorBindingInfoByName[name].count = count;
+    return *this;
+}
+
+PipelineBuilder &PipelineBuilder::descriptorBindingManager(uint32_t set, uint32_t binding, const DescriptorManager *manager, ResourceClass rclass)
+{
+    Q_ASSERT(manager);
+    auto &info = m_descriptorBindingInfoByID[{set, binding}];
+    info.count = manager->descriptorPoolCapacity(rclass);
+    info.flags = manager->descriptorBindingFlags(rclass);
+    info.stageFlags = VK_SHADER_STAGE_ALL;
+    return *this;
+}
+
+PipelineBuilder &PipelineBuilder::descriptorBindingManager(const QString &name, const DescriptorManager *manager, ResourceClass rclass)
+{
+    Q_ASSERT(manager);
+    auto &info = m_descriptorBindingInfoByName[name];
+    info.count = manager->descriptorPoolCapacity(rclass);
+    info.flags = manager->descriptorBindingFlags(rclass);
+    info.stageFlags = VK_SHADER_STAGE_ALL;
     return *this;
 }
 
