@@ -6,6 +6,7 @@ option(BUILD_EXAMPLES "Build example programs" ON)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DQUARTZ_DEBUG")
 
@@ -15,3 +16,5 @@ add_subdirectory(src)
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
+
+set(QML_IMPORT_PATH "${PROJECT_BINARY_DIR}/qml")
