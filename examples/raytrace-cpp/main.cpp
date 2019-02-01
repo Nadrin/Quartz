@@ -9,6 +9,8 @@
 #include <Qt3DRaytraceExtras/qt3dwindow.h>
 
 #include <Qt3DCore/QEntity>
+#include <Qt3DCore/QTransform>
+#include <Qt3DRaytrace/qmesh.h>
 
 #if QUARTZ_DEBUG
 #include <QLoggingCategory>
@@ -16,6 +18,7 @@
 static const char *logFilterRules = R"(
         qt.vulkan=true
         raytrace.aspect=true
+        raytrace.import=true
         raytrace.vulkan=true
 )";
 #endif
@@ -23,6 +26,17 @@ static const char *logFilterRules = R"(
 static Qt3DCore::QEntity *createScene()
 {
     Qt3DCore::QEntity *rootEntity = new Qt3DCore::QEntity;
+
+    Qt3DCore::QEntity *monkeyEntity = new Qt3DCore::QEntity(rootEntity);
+
+    Qt3DCore::QTransform *monkeyTransform = new Qt3DCore::QTransform;
+    monkeyTransform->setTranslation({0.0f, 0.0f, -2.0f});
+
+    Qt3DRaytrace::QMesh *monkeyMesh = new Qt3DRaytrace::QMesh;
+    monkeyMesh->setSource(QUrl::fromLocalFile("data/monkey.obj"));
+
+    monkeyEntity->addComponent(monkeyTransform);
+    monkeyEntity->addComponent(monkeyMesh);
 
     return rootEntity;
 }
