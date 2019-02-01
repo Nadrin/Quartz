@@ -1653,7 +1653,7 @@ static SpvReflectResult ParseDescriptorBindings(Parser* p_parser, SpvReflectShad
       }
     }
     // If the type is an array, resolve it
-    if (p_type->op == SpvOpTypeArray) {
+    if (p_type->op == SpvOpTypeArray || p_type->op == SpvOpTypeRuntimeArray) {
       SpvReflectTypeDescription* p_array_type = p_type;
       // Find the type's node
       Node* p_type_node = FindNode(p_parser, p_type->id);
