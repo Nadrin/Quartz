@@ -697,7 +697,7 @@ void Renderer::destroyRetiredResources()
         QMutexLocker lock(&m_sceneMutex);
         QMutableVectorIterator<RetiredResource<AccelerationStructure>> it(m_sceneResources.retiredTLAS);
         while(it.hasNext()) {
-            const auto &tlas = it.value();
+            const auto &tlas = it.next();
             if(tlas.ttl == 0) {
                 retiredTLAS.append(tlas.resource);
                 it.remove();

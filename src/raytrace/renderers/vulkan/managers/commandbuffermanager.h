@@ -56,6 +56,8 @@ public:
     void destroyRetiredResources();
     void proceedToNextFrame();
 
+    Q_DISABLE_COPY(CommandBufferManager)
+
 private:
     void cleanup(bool freeCommandBuffers=true);
 
