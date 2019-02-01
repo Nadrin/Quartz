@@ -27,12 +27,13 @@
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
-namespace {
+namespace Config {
 
+constexpr bool     EnableVsync = false;
 constexpr VkFormat RenderBufferFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
 constexpr uint32_t DescriptorPoolCapacity = 128;
 
-}
+} // Config
 
 Q_LOGGING_CATEGORY(logVulkan, "raytrace.vulkan")
 
@@ -86,6 +87,9 @@ bool Renderer::initialize()
 
     int numConcurrentFrames;
     if(!querySwapchainProperties(physicalDevice, m_swapchainFormat, numConcurrentFrames)) {
+        return false;
+    }
+    if(!querySwapchainPresentModes(physicalDevice, Config::EnableVsync, m_swapchainPresentMode)) {
         return false;
     }
     m_frameResources.resize(numConcurrentFrames);
@@ -146,11 +150,11 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::createGeometryJobs()
 
 bool Renderer::createResources()
 {
-    if(!m_descriptorManager->createDescriptorPool(ResourceClass::AttributeBuffer, DescriptorPoolCapacity)) {
+    if(!m_descriptorManager->createDescriptorPool(ResourceClass::AttributeBuffer, Config::DescriptorPoolCapacity)) {
         qCCritical(logVulkan) << "Failed to create attribute buffer descriptor pool";
         return false;
     }
-    if(!m_descriptorManager->createDescriptorPool(ResourceClass::IndexBuffer, DescriptorPoolCapacity)) {
+    if(!m_descriptorManager->createDescriptorPool(ResourceClass::IndexBuffer, Config::DescriptorPoolCapacity)) {
         qCCritical(logVulkan) << "Failed to create index buffer descriptor pool";
         return false;
     }
@@ -262,7 +266,7 @@ void Renderer::createSwapchainResources()
     }
 
     for(auto &frame : m_frameResources) {
-        ImageCreateInfo renderBufferCreateInfo{VK_IMAGE_TYPE_2D, RenderBufferFormat, m_swapchainSize};
+        ImageCreateInfo renderBufferCreateInfo{VK_IMAGE_TYPE_2D, Config::RenderBufferFormat, m_swapchainSize};
         renderBufferCreateInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
         if(!(frame.renderBuffer = m_device->createImage(renderBufferCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY))) {
             qCCritical(logVulkan) << "Failed to create render buffer";
@@ -300,9 +304,8 @@ void Renderer::releaseSwapchainResources()
 
 bool Renderer::querySwapchainProperties(VkPhysicalDevice physicalDevice, VkSurfaceFormatKHR &surfaceFormat, int &minImageCount) const
 {
-    VkSurfaceKHR surface = QVulkanInstance::surfaceForWindow(m_window);
-
     Result result;
+    VkSurfaceKHR surface = QVulkanInstance::surfaceForWindow(m_window);
 
     VkSurfaceCapabilitiesKHR surfaceCaps;
     if(VKFAILED(result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCaps))) {
@@ -315,12 +318,47 @@ bool Renderer::querySwapchainProperties(VkPhysicalDevice physicalDevice, VkSurfa
     vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &surfaceFormatCount, nullptr);
     surfaceFormats.resize(int(surfaceFormatCount));
     if(VKFAILED(result = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &surfaceFormatCount, surfaceFormats.data()))) {
-        qCCritical(logVulkan) << "Failed to enumerate physical device surface formats" << result.toString();
+        qCCritical(logVulkan) << "Failed to enumerate physical device surface formats:" << result.toString();
         return false;
     }
 
     surfaceFormat = surfaceFormats[0];
     minImageCount = int(surfaceCaps.minImageCount);
+    return true;
+}
+
+bool Renderer::querySwapchainPresentModes(VkPhysicalDevice physicalDevice, bool vsync, VkPresentModeKHR &presentMode) const
+{
+    if(vsync) {
+        // This mode is guaranteed to be supported.
+        presentMode = VK_PRESENT_MODE_FIFO_KHR;
+        return true;
+    }
+
+    Result result;
+    VkSurfaceKHR surface = QVulkanInstance::surfaceForWindow(m_window);
+
+    QVector<VkPresentModeKHR> presentModes;
+    uint32_t presentModeCount = 0;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr);
+    presentModes.resize(int(presentModeCount));
+    if(VKFAILED(result = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, presentModes.data()))) {
+        qCCritical(logVulkan) << "Failed to enumerate physical device surface present modes:" << result.toString();
+        return false;
+    }
+
+    VkPresentModeKHR selectedPresentMode = VK_PRESENT_MODE_FIFO_KHR;
+    for(VkPresentModeKHR mode : presentModes) {
+        if(mode == VK_PRESENT_MODE_MAILBOX_KHR) {
+            selectedPresentMode = mode;
+            break;
+        }
+        if(mode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+            selectedPresentMode = mode;
+        }
+    }
+
+    presentMode = selectedPresentMode;
     return true;
 }
 
@@ -334,7 +372,7 @@ void Renderer::resizeSwapchain()
         if(m_swapchain) {
             releaseSwapchainResources();
         }
-        Swapchain newSwapchain = m_device->createSwapchain(m_window, m_swapchainFormat, uint32_t(numConcurrentFrames()), m_swapchain);
+        Swapchain newSwapchain = m_device->createSwapchain(m_window, m_swapchainFormat, m_swapchainPresentMode, uint32_t(numConcurrentFrames()), m_swapchain);
         if(newSwapchain) {
             m_device->destroySwapchain(m_swapchain);
             m_swapchain = newSwapchain;

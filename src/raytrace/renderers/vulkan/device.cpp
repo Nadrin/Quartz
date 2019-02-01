@@ -171,7 +171,7 @@ void Device::freeCommandBuffers(const CommandPool &commandPool, const QVector<Co
     }
 }
 
-Swapchain Device::createSwapchain(QWindow *window, VkSurfaceFormatKHR format, uint32_t minImageCount, Swapchain oldSwapchain)
+Swapchain Device::createSwapchain(QWindow *window, VkSurfaceFormatKHR format, VkPresentModeKHR presentMode, uint32_t minImageCount, Swapchain oldSwapchain)
 {
     VkSurfaceKHR surface = QVulkanInstance::surfaceForWindow(window);
 
@@ -194,7 +194,7 @@ Swapchain Device::createSwapchain(QWindow *window, VkSurfaceFormatKHR format, ui
     swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     swapchainCreateInfo.preTransform = surfaceCaps.currentTransform;
     swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    swapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+    swapchainCreateInfo.presentMode = presentMode;
     swapchainCreateInfo.clipped = VK_TRUE;
     swapchainCreateInfo.oldSwapchain = oldSwapchain;
     if(VKFAILED(result = vkCreateSwapchainKHR(m_device, &swapchainCreateInfo, nullptr, &swapchain.handle))) {

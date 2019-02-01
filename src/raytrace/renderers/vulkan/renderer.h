@@ -87,6 +87,7 @@ private:
     void releaseSwapchainResources();
 
     bool querySwapchainProperties(VkPhysicalDevice physicalDevice, VkSurfaceFormatKHR &surfaceFormat, int &minImageCount) const;
+    bool querySwapchainPresentModes(VkPhysicalDevice physicalDevice, bool vsync, VkPresentModeKHR &presentMode) const;
     void resizeSwapchain();
 
     bool acquireNextSwapchainImage(uint32_t &imageIndex) const;
@@ -119,6 +120,7 @@ private:
 
     Swapchain m_swapchain;
     VkSurfaceFormatKHR m_swapchainFormat;
+    VkPresentModeKHR m_swapchainPresentMode;
     QSize m_swapchainSize;
 
     struct SwapchainAttachment {
