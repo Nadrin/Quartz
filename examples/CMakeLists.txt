@@ -1,2 +1,3 @@
 cmake_minimum_required(VERSION 3.8)
 add_subdirectory(raytrace-cpp)
+add_subdirectory(raytrace-qml)
