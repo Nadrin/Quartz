@@ -40,6 +40,13 @@ Device *Device::create(VkPhysicalDevice physicalDevice, uint32_t queueFamilyInde
         extensions.append(extensionName.data());
     }
 
+    VkPhysicalDeviceFeatures2 features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+    VkPhysicalDeviceDescriptorIndexingFeaturesEXT descriptorIndexingFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT };
+    if(enabledExtensions.contains(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME)) {
+        features.pNext = &descriptorIndexingFeatures;
+    }
+    vkGetPhysicalDeviceFeatures2(physicalDevice, &features);
+
     const float queuePriority = 1.0f;
     VkDeviceQueueCreateInfo queueCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
     queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
@@ -47,6 +54,7 @@ Device *Device::create(VkPhysicalDevice physicalDevice, uint32_t queueFamilyInde
     queueCreateInfo.pQueuePriorities = &queuePriority;
 
     VkDeviceCreateInfo createInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+    createInfo.pNext = &features;
     createInfo.queueCreateInfoCount = 1;
     createInfo.pQueueCreateInfos = &queueCreateInfo;
     createInfo.enabledExtensionCount = uint32_t(extensions.size());
