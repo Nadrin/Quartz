@@ -14,6 +14,7 @@
 #include <renderers/vulkan/commandbuffer.h>
 #include <renderers/vulkan/frameadvanceservice.h>
 #include <renderers/vulkan/managers/commandbuffermanager.h>
+#include <renderers/vulkan/managers/descriptormanager.h>
 
 #include <jobs/updateworldtransformjob_p.h>
 #include <renderers/vulkan/jobs/destroyretiredresourcesjob.h>
@@ -54,8 +55,8 @@ public:
     AccelerationStructure sceneTLAS() const;
 
     void addGeometry(Qt3DCore::QNodeId geometryNodeId, const Geometry &geometry);
+    uint32_t lookupGeometryBLAS(Qt3DCore::QNodeId geometryNodeId, uint64_t &blasHandle) const;
     void updateSceneTLAS(const AccelerationStructure &tlas);
-    uint64_t lookupBLAS(Qt3DCore::QNodeId geometryNodeId) const;
 
     void updateRetiredResources();
     void destroyRetiredResources();
@@ -66,6 +67,7 @@ public:
 
     Qt3DCore::QAbstractFrameAdvanceService *frameAdvanceService() const override;
     CommandBufferManager *commandBufferManager() const;
+    DescriptorManager *descriptorManager() const;
 
     QVector<Qt3DCore::QAspectJobPtr> renderJobs() override;
 
@@ -102,6 +104,7 @@ private:
     QSharedPointer<Device> m_device;
     QSharedPointer<FrameAdvanceService> m_frameAdvanceService;
     QSharedPointer<CommandBufferManager> m_commandBufferManager;
+    QSharedPointer<DescriptorManager> m_descriptorManager;
 
     VkQueue m_graphicsQueue = VK_NULL_HANDLE;
 
@@ -139,7 +142,7 @@ private:
     struct SceneResources {
         AccelerationStructure sceneTLAS;
         QVector<Geometry> geometry;
-        QHash<Qt3DCore::QNodeId, uint64_t> blasHandles;
+        QHash<Qt3DCore::QNodeId, uint32_t> geometryIndexLookup;
         QVector<RetiredResource<AccelerationStructure>> retiredTLAS;
     };
     SceneResources m_sceneResources;

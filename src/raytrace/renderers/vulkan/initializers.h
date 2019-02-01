@@ -37,7 +37,7 @@ struct SamplerCreateInfo : Initializer<VkSamplerCreateInfo>
 
 struct DescriptorPoolCreateInfo : Initializer<VkDescriptorPoolCreateInfo>
 {
-    DescriptorPoolCreateInfo(uint32_t maxSets_, VkDescriptorPoolCreateFlags flags_=0)
+    DescriptorPoolCreateInfo(uint32_t maxSets_=0, VkDescriptorPoolCreateFlags flags_=0)
         : Initializer(VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO)
     {
         maxSets = maxSets_;

@@ -12,6 +12,23 @@
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
+enum class ResourceClass
+{
+    AttributeBuffer,
+    IndexBuffer,
+};
+
+struct DescriptorHandle
+{
+    uint32_t index = 0;
+    ResourceClass rclass;
+
+    operator bool() const
+    {
+        return index != 0;
+    }
+};
+
 struct DescriptorImageInfo : VkDescriptorImageInfo
 {
     explicit DescriptorImageInfo(VkSampler sampler_)

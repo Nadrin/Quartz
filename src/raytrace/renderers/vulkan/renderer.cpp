@@ -27,6 +27,13 @@
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
+namespace {
+
+constexpr VkFormat RenderBufferFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+constexpr uint32_t DescriptorPoolCapacity = 128;
+
+}
+
 Q_LOGGING_CATEGORY(logVulkan, "raytrace.vulkan")
 
 Renderer::Renderer(QObject *parent)
@@ -84,6 +91,7 @@ bool Renderer::initialize()
     m_frameResources.resize(numConcurrentFrames);
 
     m_commandBufferManager.reset(new CommandBufferManager(m_device.get()));
+    m_descriptorManager.reset(new DescriptorManager(m_device.get()));
 
     if(!createResources()) {
         return false;
@@ -102,6 +110,7 @@ void Renderer::shutdown()
         m_device->waitIdle();
 
         m_commandBufferManager.reset();
+        m_descriptorManager.reset();
 
         releaseSwapchainResources();
         m_device->destroySwapchain(m_swapchain);
@@ -137,6 +146,15 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::createGeometryJobs()
 
 bool Renderer::createResources()
 {
+    if(!m_descriptorManager->createDescriptorPool(ResourceClass::AttributeBuffer, DescriptorPoolCapacity)) {
+        qCCritical(logVulkan) << "Failed to create attribute buffer descriptor pool";
+        return false;
+    }
+    if(!m_descriptorManager->createDescriptorPool(ResourceClass::IndexBuffer, DescriptorPoolCapacity)) {
+        qCCritical(logVulkan) << "Failed to create index buffer descriptor pool";
+        return false;
+    }
+
     m_renderingFinishedSemaphore = m_device->createSemaphore();
     m_presentationFinishedSemaphore = m_device->createSemaphore();
 
@@ -213,12 +231,12 @@ void Renderer::releaseResources()
         m_device->destroyGeometry(geometry);
     }
     m_sceneResources = {};
+
+    m_descriptorManager->destroyAllDescriptorPools();
 }
 
 void Renderer::createSwapchainResources()
 {
-    constexpr VkFormat RenderBufferFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
-
     Result result;
 
     const uint32_t swapchainWidth = uint32_t(m_swapchainSize.width());
@@ -631,8 +649,15 @@ AccelerationStructure Renderer::sceneTLAS() const
 void Renderer::addGeometry(Qt3DCore::QNodeId geometryNodeId, const Geometry &geometry)
 {
     QMutexLocker lock(&m_sceneMutex);
+
+    DescriptorHandle geometryAttributesDescriptor = m_descriptorManager->allocateDescriptor(ResourceClass::AttributeBuffer);
+    DescriptorHandle geometryIndicesDescriptor = m_descriptorManager->allocateDescriptor(ResourceClass::IndexBuffer);
+    m_descriptorManager->updateBufferDescriptor(geometryAttributesDescriptor, DescriptorBufferInfo(geometry.attributes));
+    m_descriptorManager->updateBufferDescriptor(geometryIndicesDescriptor, DescriptorBufferInfo(geometry.indices));
+
+    uint32_t geometryIndex = uint32_t(m_sceneResources.geometry.size());
     m_sceneResources.geometry.append(geometry);
-    m_sceneResources.blasHandles.insert(geometryNodeId, geometry.blasHandle);
+    m_sceneResources.geometryIndexLookup.insert(geometryNodeId, geometryIndex);
 }
 
 void Renderer::updateSceneTLAS(const AccelerationStructure &tlas)
@@ -647,10 +672,14 @@ void Renderer::updateSceneTLAS(const AccelerationStructure &tlas)
     m_sceneResources.sceneTLAS = tlas;
 }
 
-uint64_t Renderer::lookupBLAS(Qt3DCore::QNodeId geometryNodeId) const
+uint32_t Renderer::lookupGeometryBLAS(Qt3DCore::QNodeId geometryNodeId, uint64_t &blasHandle) const
 {
     QMutexLocker lock(&m_sceneMutex);
-    return m_sceneResources.blasHandles.value(geometryNodeId, 0);
+    uint32_t index = m_sceneResources.geometryIndexLookup.value(geometryNodeId, ~0u);
+    if(index != ~0u) {
+        blasHandle = m_sceneResources.geometry[int(index)].blasHandle;
+    }
+    return index;
 }
 
 void Renderer::updateRetiredResources()
@@ -704,6 +733,11 @@ Qt3DCore::QAbstractFrameAdvanceService *Renderer::frameAdvanceService() const
 CommandBufferManager *Renderer::commandBufferManager() const
 {
     return m_commandBufferManager.get();
+}
+
+DescriptorManager *Renderer::descriptorManager() const
+{
+    return m_descriptorManager.get();
 }
 
 QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()

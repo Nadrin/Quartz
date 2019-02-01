@@ -33,6 +33,8 @@ target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/jobs/destroyretiredresourcesjob.h
     renderers/vulkan/managers/commandbuffermanager.cpp
     renderers/vulkan/managers/commandbuffermanager.h
+    renderers/vulkan/managers/descriptormanager.cpp
+    renderers/vulkan/managers/descriptormanager.h
 )
 
 add_subdirectory(shaders)

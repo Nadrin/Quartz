@@ -97,7 +97,8 @@ QVector<GeometryInstance> BuildSceneTopLevelAccelerationStructureJob::gatherGeom
     for(const auto &entity : m_nodeManagers->entityManager.activeHandles()) {
         const Raytrace::GeometryRenderer *geometryRenderer = entity->geometryRendererComponent();
         if(geometryRenderer && !geometryRenderer->geometryId().isNull()) {
-            uint64_t blasHandle = m_renderer->lookupBLAS(geometryRenderer->geometryId());
+            uint64_t blasHandle;
+            uint32_t geometryIndex = m_renderer->lookupGeometryBLAS(geometryRenderer->geometryId(), blasHandle);
             if(blasHandle != 0) {
                 const QMatrix4x4 worldTransformRowMajor = entity->worldTransformMatrix.transposed().toQMatrix4x4();
                 GeometryInstance geometryInstance = {};
@@ -105,6 +106,7 @@ QVector<GeometryInstance> BuildSceneTopLevelAccelerationStructureJob::gatherGeom
                 geometryInstance.mask = 0xFF;
                 geometryInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_CULL_DISABLE_BIT_NV; // Temp!
                 geometryInstance.blasHandle = blasHandle;
+                geometryInstance.instanceCustomIndex = geometryIndex;
                 instances.append(geometryInstance);
             }
         }
