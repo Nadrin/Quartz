@@ -18,6 +18,26 @@ using namespace Qt3DCore;
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
+static void copyAttributes(Attributes *dest, const QVertex *src, size_t count)
+{
+    for(size_t i=0; i<count; ++i) {
+        for(int j=0; j<3; ++j) {
+            dest[i].position[j]  = src[i].position[j];
+            dest[i].normal[j]    = src[i].normal[j];
+            dest[i].tangent[j]   = src[i].tangent[j];
+            dest[i].bitangent[j] = src[i].bitangent[j];
+        }
+        for(int j=0; j<2; ++j) {
+            dest[i].texcoord[j]  = src[i].texcoord[j];
+        }
+    }
+}
+
+static void copyIndices(uint32_t *dest, const QTriangle *src, size_t count)
+{
+    std::memcpy(dest, src, sizeof(uint32_t) * count);
+}
+
 BuildGeometryJob::BuildGeometryJob(Renderer *renderer, Raytrace::NodeManagers *managers, const Raytrace::HGeometry &handle)
     : m_renderer(renderer)
     , m_nodeManagers(managers)
@@ -41,7 +61,7 @@ void BuildGeometryJob::run()
     geometry.numVertices = uint32_t(geometryNode->vertices().size());
     geometry.numIndices = uint32_t(geometryNode->faces().size()) * 3;
 
-    const VkDeviceSize attributeBufferSize = sizeof(QVertex) * geometry.numVertices;
+    const VkDeviceSize attributeBufferSize = sizeof(Attributes) * geometry.numVertices;
     const VkDeviceSize indexBufferSize = sizeof(uint32_t) * geometry.numIndices;
 
     BufferCreateInfo attributeBufferCreateInfo;
@@ -55,7 +75,7 @@ void BuildGeometryJob::run()
 
     BufferCreateInfo indexBufferCreateInfo;
     indexBufferCreateInfo.size = indexBufferSize;
-    indexBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_RAY_TRACING_BIT_NV;
+    indexBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_RAY_TRACING_BIT_NV;
     geometry.indices = device->createBuffer(indexBufferCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY);
     if(!geometry.indices) {
         qCCritical(logVulkan) << "Failed to create geometry index buffer";
@@ -69,7 +89,7 @@ void BuildGeometryJob::run()
         VkGeometryTrianglesNV blasGeometryTriangles = { VK_STRUCTURE_TYPE_GEOMETRY_TRIANGLES_NV };
         blasGeometryTriangles.vertexData = geometry.attributes;
         blasGeometryTriangles.vertexCount = geometry.numVertices;
-        blasGeometryTriangles.vertexStride = sizeof(QVertex);
+        blasGeometryTriangles.vertexStride = sizeof(Attributes);
         blasGeometryTriangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
         blasGeometryTriangles.indexData = geometry.indices;
         blasGeometryTriangles.indexCount = geometry.numIndices;
@@ -116,8 +136,8 @@ void BuildGeometryJob::run()
         return;
     }
 
-    std::memcpy(stagingAttributes.memory(), geometryNode->vertices().data(), attributeBufferSize);
-    std::memcpy(stagingIndices.memory(), geometryNode->faces().data(), indexBufferSize);
+    copyAttributes(stagingAttributes.memory<Attributes>(), geometryNode->vertices().data(), geometry.numVertices);
+    copyIndices(stagingIndices.memory<uint32_t>(), geometryNode->faces().data(), geometry.numIndices);
 
     TransientCommandBuffer commandBuffer = commandBufferManager->acquireCommandBuffer();
     {
