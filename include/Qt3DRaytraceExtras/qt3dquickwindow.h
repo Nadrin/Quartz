@@ -10,35 +10,45 @@
 
 #include <QWindow>
 #include <QString>
+#include <QUrl>
 
 class QVulkanInstance;
 
 namespace Qt3DCore {
 class QEntity;
 class QAbstractAspect;
+namespace Quick {
+class QQmlAspectEngine;
+} // Quick
 } // Qt3DCore
 
 namespace Qt3DRaytraceExtras {
+namespace Quick {
 
-class Qt3DWindowPrivate;
+class Qt3DQuickWindowPrivate;
 
-class QT3DRAYTRACEEXTRASSHARED_EXPORT Qt3DWindow : public QWindow
+class QT3DRAYTRACEEXTRASSHARED_EXPORT Qt3DQuickWindow : public QWindow
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(Qt3DWindow)
+    Q_DECLARE_PRIVATE(Qt3DQuickWindow)
 public:
-    explicit Qt3DWindow(QWindow *parent = nullptr);
+    explicit Qt3DQuickWindow(QWindow *parent = nullptr);
 
     void registerAspect(Qt3DCore::QAbstractAspect *aspect);
     void registerAspect(const QString &name);
 
-    void setRootEntity(Qt3DCore::QEntity *root);
+    void setSource(const QUrl &source);
+    Qt3DCore::Quick::QQmlAspectEngine *engine() const;
 
 protected:
-    Qt3DWindow(Qt3DWindowPrivate &dd, QWindow *parent);
+    Qt3DQuickWindow(Qt3DQuickWindowPrivate &dd, QWindow *parent);
 
     bool event(QEvent *event) override;
     void showEvent(QShowEvent *event) override;
+
+private slots:
+    void sceneCreated(QObject *root);
 };
 
+} // Quick
 } // Qt3DRaytraceExtras

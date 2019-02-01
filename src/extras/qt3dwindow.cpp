@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Michał Siejak
+ * Copyright (C) 2018-2019 Michał Siejak
  * This file is part of Quartz - a raytracing aspect for Qt3D.
  * See LICENSE file for licensing information.
  */
@@ -37,6 +37,7 @@ Qt3DWindow::Qt3DWindow(QWindow *parent)
 
     resize(1024, 768);
     setSurfaceType(SurfaceType::VulkanSurface);
+    setTitle("Quartz Viewport");
 
     d->m_aspectEngine->registerAspect(d->m_raytraceAspect);
     d->m_aspectEngine->registerAspect(d->m_inputAspect);
