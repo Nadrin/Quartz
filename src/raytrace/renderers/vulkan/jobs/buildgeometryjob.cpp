@@ -141,6 +141,10 @@ void BuildGeometryJob::run()
 
     TransientCommandBuffer commandBuffer = commandBufferManager->acquireCommandBuffer();
     {
+        // HACK: Workaround for possible driver bug resulting in random chance of display hang when vkCmdBuildAccelerationStructureNV
+        // is called simultaneously by multiple threads (despite meeting Vulkan spec synchronization requirements).
+        QMutexLocker lock(&m_mutex);
+
         commandBuffer->copyBuffer(stagingAttributes, 0, geometry.attributes, 0, attributeBufferSize);
         commandBuffer->copyBuffer(stagingIndices, 0, geometry.indices, 0, indexBufferSize);
         commandBuffer->pipelineBarrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,

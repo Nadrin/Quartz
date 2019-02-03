@@ -8,6 +8,7 @@
 
 #include <renderers/vulkan/vkcommon.h>
 #include <Qt3DCore/QAspectJob>
+#include <QMutex>
 
 #include <backend/handles_p.h>
 
@@ -32,6 +33,7 @@ private:
     Renderer *m_renderer;
     Raytrace::NodeManagers *m_nodeManagers;
     Raytrace::HGeometry m_handle;
+    QMutex m_mutex;
 };
 
 using BuildGeometryJobPtr = QSharedPointer<BuildGeometryJob>;
