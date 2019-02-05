@@ -16,6 +16,7 @@ using HEntity = Qt3DCore::QHandle<class Entity>;
 using HTransform = Qt3DCore::QHandle<class Transform>;
 using HGeometry = Qt3DCore::QHandle<class Geometry>;
 using HGeometryRenderer = Qt3DCore::QHandle<class GeometryRenderer>;
+using HMaterial = Qt3DCore::QHandle<class Material>;
 
 } // Raytrace
 } // Qt3DRaytrace

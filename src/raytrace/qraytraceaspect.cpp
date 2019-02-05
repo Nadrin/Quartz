@@ -13,6 +13,7 @@
 
 #include <Qt3DRaytrace/qgeometry.h>
 #include <Qt3DRaytrace/qgeometryrenderer.h>
+#include <Qt3DRaytrace/qmaterial.h>
 
 #include <renderers/vulkan/renderer.h>
 
@@ -42,6 +43,7 @@ void QRaytraceAspectPrivate::registerBackendTypes()
 
     q->registerBackendType<QGeometry>(QSharedPointer<Raytrace::GeometryNodeMapper>::create(&m_nodeManagers->geometryManager, m_renderer.get()));
     q->registerBackendType<QGeometryRenderer>(QSharedPointer<Raytrace::GeometryRendererNodeMapper>::create(&m_nodeManagers->geometryRendererManager, m_renderer.get()));
+    q->registerBackendType<QMaterial>(QSharedPointer<Raytrace::MaterialNodeMapper>::create(&m_nodeManagers->materialManager, m_renderer.get()));
 }
 
 void QRaytraceAspectPrivate::updateServiceProviders()

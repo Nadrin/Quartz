@@ -22,8 +22,10 @@ namespace Raytrace {
 struct NodeManagers;
 
 class AbstractRenderer;
+
 class Transform;
 class GeometryRenderer;
+class Material;
 
 class Entity : public BackendNode
 {
@@ -50,6 +52,11 @@ public:
 
     Transform *transformComponent() const;
     GeometryRenderer *geometryRendererComponent() const;
+    Material *materialComponent() const;
+
+    Qt3DCore::QNodeId transformComponentId() const { return m_transformComponent; }
+    Qt3DCore::QNodeId geometryRendererComponentId() const { return m_geometryRendererComponent; }
+    Qt3DCore::QNodeId materialComponentId() const { return m_materialComponent; }
 
     // TODO: Store via manager.
     Matrix4x4 worldTransformMatrix;
@@ -67,6 +74,7 @@ private:
 
     Qt3DCore::QNodeId m_transformComponent;
     Qt3DCore::QNodeId m_geometryRendererComponent;
+    Qt3DCore::QNodeId m_materialComponent;
 };
 
 class EntityMapper : public Qt3DCore::QBackendNodeMapper

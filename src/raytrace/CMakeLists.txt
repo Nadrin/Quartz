@@ -20,7 +20,10 @@ set(SOURCES_PRIVATE
     frontend/qgeometry_p.h
     frontend/qmesh.cpp
     frontend/qmesh_p.h
+    frontend/qmaterial.cpp
+    frontend/qmaterial_p.h
     backend/handles_p.h
+    backend/types_p.h
     backend/abstractrenderer_p.h
     backend/managers_p.h
     backend/backendnode.cpp
@@ -33,6 +36,8 @@ set(SOURCES_PRIVATE
     backend/geometryrenderer_p.h
     backend/geometry.cpp
     backend/geometry_p.h
+    backend/material.cpp
+    backend/material_p.h
     jobs/updateworldtransformjob.cpp
     jobs/updateworldtransformjob_p.h
     jobs/loadgeometryjob.cpp
@@ -51,6 +56,7 @@ set(SOURCES_PUBLIC
     ${MODULE_API}/qgeometrydata.h
     ${MODULE_API}/qgeometryfactory.h
     ${MODULE_API}/qmesh.h
+    ${MODULE_API}/qmaterial.h
 )
 
 add_library(${MODULE_NAME} ${SOURCES_PRIVATE} ${SOURCES_PUBLIC})
