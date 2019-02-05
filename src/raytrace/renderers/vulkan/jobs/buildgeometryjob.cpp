@@ -12,11 +12,14 @@
 #include <backend/geometry_p.h>
 
 #include <cstring>
+#include <QMutex>
 
 using namespace Qt3DCore;
 
 namespace Qt3DRaytrace {
 namespace Vulkan {
+
+static QMutex g_jobMutex;
 
 static void copyAttributes(Attributes *dest, const QVertex *src, size_t count)
 {
@@ -143,7 +146,7 @@ void BuildGeometryJob::run()
     {
         // HACK: Workaround for possible driver bug resulting in random chance of display hang when vkCmdBuildAccelerationStructureNV
         // is called simultaneously by multiple threads (despite meeting Vulkan spec synchronization requirements).
-        QMutexLocker lock(&m_mutex);
+        QMutexLocker lock(&g_jobMutex);
 
         commandBuffer->copyBuffer(stagingAttributes, 0, geometry.attributes, 0, attributeBufferSize);
         commandBuffer->copyBuffer(stagingIndices, 0, geometry.indices, 0, indexBufferSize);
