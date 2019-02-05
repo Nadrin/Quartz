@@ -58,6 +58,8 @@ public:
     Qt3DCore::QNodeId geometryRendererComponentId() const { return m_geometryRendererComponent; }
     Qt3DCore::QNodeId materialComponentId() const { return m_materialComponent; }
 
+    bool isRenderable() const;
+
     // TODO: Store via manager.
     Matrix4x4 worldTransformMatrix;
 

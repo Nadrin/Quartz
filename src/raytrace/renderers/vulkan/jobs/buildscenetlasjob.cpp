@@ -31,6 +31,7 @@ void BuildSceneTopLevelAccelerationStructureJob::run()
 {
     auto *device = m_renderer->device();
     auto *commandBufferManager = m_renderer->commandBufferManager();
+    auto *sceneManager = m_renderer->sceneManager();
 
     Buffer instanceBuffer;
     uint32_t numInstances;
@@ -65,7 +66,7 @@ void BuildSceneTopLevelAccelerationStructureJob::run()
     }
 
     Device::ScratchBufferType scratchBufferType = Device::ScratchBufferType::Build;
-    AccelerationStructure previousTLAS = m_renderer->sceneTLAS();
+    AccelerationStructure previousTLAS = sceneManager->sceneTLAS();
     if(previousTLAS) {
         scratchBufferType = Device::ScratchBufferType::Update;
     }
@@ -86,29 +87,32 @@ void BuildSceneTopLevelAccelerationStructureJob::run()
     }
     commandBufferManager->releaseCommandBuffer(commandBuffer, {instanceBuffer, scratchBuffer});
 
-    m_renderer->updateSceneTLAS(tlas);
+    sceneManager->updateSceneTLAS(tlas);
 }
 
 QVector<GeometryInstance> BuildSceneTopLevelAccelerationStructureJob::gatherGeometryInstances() const
 {
     QVector<GeometryInstance> instances;
 
-    // TODO: Prefilter elligible entities in a dedicated job.
-    for(const auto &entity : m_nodeManagers->entityManager.activeHandles()) {
-        const Raytrace::GeometryRenderer *geometryRenderer = entity->geometryRendererComponent();
-        if(geometryRenderer && !geometryRenderer->geometryId().isNull()) {
-            uint64_t blasHandle;
-            uint32_t geometryIndex = m_renderer->lookupGeometryBLAS(geometryRenderer->geometryId(), blasHandle);
-            if(blasHandle != 0) {
-                const QMatrix4x4 worldTransformRowMajor = entity->worldTransformMatrix.transposed().toQMatrix4x4();
-                GeometryInstance geometryInstance = {};
-                std::memcpy(geometryInstance.transform, worldTransformRowMajor.constData(), sizeof(geometryInstance.transform));
-                geometryInstance.mask = 0xFF;
-                geometryInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_CULL_DISABLE_BIT_NV; // Temp!
-                geometryInstance.blasHandle = blasHandle;
-                geometryInstance.instanceCustomIndex = geometryIndex;
-                instances.append(geometryInstance);
-            }
+    auto *sceneManager = m_renderer->sceneManager();
+    Q_ASSERT(sceneManager);
+
+    const auto &renderables = sceneManager->renderables();
+    for(int instanceIndex = 0; instanceIndex < renderables.size(); ++instanceIndex) {
+        const auto &renderable = renderables[instanceIndex];
+        const Raytrace::GeometryRenderer *geometryRenderer = renderable->geometryRendererComponent();
+        Q_ASSERT(geometryRenderer);
+
+        uint64_t blasHandle;
+        uint32_t geometryIndex = sceneManager->lookupGeometryBLAS(geometryRenderer->geometryId(), blasHandle);
+        if(geometryIndex != ~0u) {
+            const QMatrix4x4 worldTransformRowMajor = renderable->worldTransformMatrix.transposed().toQMatrix4x4();
+            GeometryInstance geometryInstance = {};
+            std::memcpy(geometryInstance.transform, worldTransformRowMajor.constData(), sizeof(geometryInstance.transform));
+            geometryInstance.mask = 0xFF;
+            geometryInstance.blasHandle = blasHandle;
+            geometryInstance.instanceCustomIndex = geometryIndex;
+            instances.append(geometryInstance);
         }
     }
     return instances;

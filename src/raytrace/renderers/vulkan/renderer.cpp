@@ -15,6 +15,10 @@
 
 #include <renderers/vulkan/jobs/buildscenetlasjob.h>
 #include <renderers/vulkan/jobs/buildgeometryjob.h>
+#include <renderers/vulkan/jobs/updateinstancebufferjob.h>
+#include <renderers/vulkan/jobs/updatematerialsjob.h>
+
+#include <renderers/vulkan/shaders/bindings.glsl.h>
 
 #include <backend/managers_p.h>
 
@@ -96,6 +100,7 @@ bool Renderer::initialize()
 
     m_commandBufferManager.reset(new CommandBufferManager(m_device.get()));
     m_descriptorManager.reset(new DescriptorManager(m_device.get()));
+    m_sceneManager.reset(new SceneManager(this));
 
     if(!createResources()) {
         return false;
@@ -113,13 +118,13 @@ void Renderer::shutdown()
     if(m_device) {
         m_device->waitIdle();
 
-        m_commandBufferManager.reset();
-        m_descriptorManager.reset();
-
         releaseSwapchainResources();
         m_device->destroySwapchain(m_swapchain);
         releaseResources();
 
+        m_sceneManager.reset();
+        m_descriptorManager.reset();
+        m_commandBufferManager.reset();
         m_device.reset();
     }
 
@@ -148,6 +153,25 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::createGeometryJobs()
     return geometryJobs;
 }
 
+QVector<Qt3DCore::QAspectJobPtr> Renderer::createMaterialJobs()
+{
+    auto *materialManager = &m_nodeManagers->materialManager;
+    auto dirtyMaterials = materialManager->acquireDirtyComponents();
+
+    QVector<Raytrace::HMaterial> dirtyMaterialHandles;
+    dirtyMaterialHandles.reserve(dirtyMaterials.size());
+    for(const Qt3DCore::QNodeId &materialId : dirtyMaterials) {
+        Raytrace::HMaterial handle = materialManager->lookupHandle(materialId);
+        if(!handle.isNull()) {
+            dirtyMaterialHandles.append(handle);
+        }
+    }
+
+    auto updateMaterialsJob = UpdateMaterialsJobPtr::create(this);
+    updateMaterialsJob->setDirtyMaterialHandles(dirtyMaterialHandles);
+    return { updateMaterialsJob };
+}
+
 bool Renderer::createResources()
 {
     if(!m_descriptorManager->createDescriptorPool(ResourceClass::AttributeBuffer, Config::DescriptorPoolCapacity)) {
@@ -173,9 +197,11 @@ bool Renderer::createResources()
 
     {
         const QVector<VkDescriptorPoolSize> descriptorPoolSizes = {
-            { VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV, numConcurrentFrames() },
-            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, numConcurrentFrames() },
-            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, numConcurrentFrames() },
+            { VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV, numConcurrentFrames() }, // Scene TLAS
+            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, numConcurrentFrames() }, // Display buffer
+            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, numConcurrentFrames() }, // Render buffer
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, numConcurrentFrames() }, // Instance buffer
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, numConcurrentFrames() }, // Material buffer
         };
         const uint32_t descriptorPoolCapacity = uint32_t(descriptorPoolSizes.size()) * numConcurrentFrames();
         m_frameDescriptorPool = m_device->createDescriptorPool({ descriptorPoolCapacity, descriptorPoolSizes});
@@ -198,8 +224,8 @@ bool Renderer::createResources()
 
     for(auto &frame : m_frameResources) {
         const QVector<VkDescriptorSetLayout> descriptorSetLayouts = {
-            m_displayPipeline.descriptorSetLayouts[0],
-            m_rayTracingPipeline.descriptorSetLayouts[0],
+            m_displayPipeline.descriptorSetLayouts[DS_Display],
+            m_rayTracingPipeline.descriptorSetLayouts[DS_Render],
         };
         auto descriptorSets = m_device->allocateDescriptorSets({m_frameDescriptorPool, descriptorSetLayouts});
         frame.displayDescriptorSet = descriptorSets[0];
@@ -227,17 +253,7 @@ void Renderer::releaseResources()
         m_device->destroyFence(frame.commandBuffersExecutedFence);
     }
 
-    if(m_sceneResources.sceneTLAS) {
-        m_device->destroyAccelerationStructure(m_sceneResources.sceneTLAS);
-    }
-    for(auto &retiredTLAS : m_sceneResources.retiredTLAS) {
-        m_device->destroyAccelerationStructure(retiredTLAS.resource);
-    }
-    for(auto &geometry : m_sceneResources.geometry) {
-        m_device->destroyGeometry(geometry);
-    }
-    m_sceneResources = {};
-
+    m_sceneManager->destroyResources();
     m_descriptorManager->destroyAllDescriptorPools();
 }
 
@@ -276,12 +292,11 @@ void Renderer::createSwapchainResources()
 
     auto *previousFrame = &m_frameResources[int(numConcurrentFrames()-1)];
     for(auto &frame : m_frameResources) {
-        const QVector<WriteDescriptorSet> descriptorWrites = {
-            { frame.displayDescriptorSet, 0, 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, DescriptorImageInfo(frame.renderBuffer.view, ImageState::ShaderRead) },
-            { frame.renderDescriptorSet, 1, 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, DescriptorImageInfo(frame.renderBuffer.view, ImageState::ShaderReadWrite) },
-            { frame.renderDescriptorSet, 2, 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, DescriptorImageInfo(previousFrame->renderBuffer.view, ImageState::ShaderReadWrite) },
-        };
-        m_device->writeDescriptors(descriptorWrites);
+        m_device->writeDescriptors({
+            { frame.displayDescriptorSet, Binding_DisplayBuffer, 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, DescriptorImageInfo(frame.renderBuffer.view, ImageState::ShaderRead) },
+            { frame.renderDescriptorSet, Binding_RenderBuffer, 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, DescriptorImageInfo(frame.renderBuffer.view, ImageState::ShaderReadWrite) },
+            { frame.renderDescriptorSet, Binding_PrevRenderBuffer, 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, DescriptorImageInfo(previousFrame->renderBuffer.view, ImageState::ShaderReadWrite) },
+        });
         previousFrame = &frame;
     }
 
@@ -450,11 +465,17 @@ void Renderer::renderFrame()
     m_device->waitForFence(currentFrame.commandBuffersExecutedFence);
     m_device->resetFence(currentFrame.commandBuffersExecutedFence);
 
-    updateRetiredResources();
+    m_sceneManager->updateRetiredResources();
 
-    if(m_sceneResources.sceneTLAS) {
-        m_device->writeDescriptor({currentFrame.renderDescriptorSet, 0, 0, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV}, m_sceneResources.sceneTLAS);
+    const bool readyToRender = m_sceneManager->isReadyToRender();
+    if(readyToRender) {
+        m_device->writeDescriptor({ currentFrame.renderDescriptorSet, Binding_TLAS, 0, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV }, m_sceneManager->sceneTLAS());
+        m_device->writeDescriptors({
+            { currentFrame.renderDescriptorSet, Binding_Instances, 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, DescriptorBufferInfo(m_sceneManager->instanceBuffer()) },
+            { currentFrame.renderDescriptorSet, Binding_Materials, 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, DescriptorBufferInfo(m_sceneManager->materialBuffer()) },
+        });
     }
+
     m_commandBufferManager->submitCommandBuffers(m_graphicsQueue);
 
     uint32_t swapchainImageIndex = 0;
@@ -475,7 +496,7 @@ void Renderer::renderFrame()
             m_clearPreviousRenderBuffer = false;
         }
 
-        if(m_sceneResources.sceneTLAS) {
+        if(readyToRender) {
             const QVector<VkDescriptorSet> descriptorSets = {
                 currentFrame.renderDescriptorSet,
                 m_descriptorManager->descriptorSet(ResourceClass::AttributeBuffer),
@@ -680,81 +701,6 @@ void Renderer::markDirty(DirtySet changes, Raytrace::BackendNode *node)
     m_dirtySet |= changes;
 }
 
-QVector<Geometry> Renderer::geometry() const
-{
-    QMutexLocker lock(&m_sceneMutex);
-    return m_sceneResources.geometry;
-}
-
-AccelerationStructure Renderer::sceneTLAS() const
-{
-    QMutexLocker lock(&m_sceneMutex);
-    return m_sceneResources.sceneTLAS;
-}
-
-void Renderer::addGeometry(Qt3DCore::QNodeId geometryNodeId, const Geometry &geometry)
-{
-    QMutexLocker lock(&m_sceneMutex);
-
-    DescriptorHandle geometryAttributesDescriptor = m_descriptorManager->allocateDescriptor(ResourceClass::AttributeBuffer);
-    DescriptorHandle geometryIndicesDescriptor = m_descriptorManager->allocateDescriptor(ResourceClass::IndexBuffer);
-    m_descriptorManager->updateBufferDescriptor(geometryAttributesDescriptor, DescriptorBufferInfo(geometry.attributes));
-    m_descriptorManager->updateBufferDescriptor(geometryIndicesDescriptor, DescriptorBufferInfo(geometry.indices));
-
-    uint32_t geometryIndex = uint32_t(m_sceneResources.geometry.size());
-    m_sceneResources.geometry.append(geometry);
-    m_sceneResources.geometryIndexLookup.insert(geometryNodeId, geometryIndex);
-}
-
-void Renderer::updateSceneTLAS(const AccelerationStructure &tlas)
-{
-    QMutexLocker lock(&m_sceneMutex);
-    if(m_sceneResources.sceneTLAS) {
-        RetiredResource<AccelerationStructure> retiredTLAS;
-        retiredTLAS.resource = m_sceneResources.sceneTLAS;
-        retiredTLAS.ttl = numConcurrentFrames();
-        m_sceneResources.retiredTLAS.append(retiredTLAS);
-    }
-    m_sceneResources.sceneTLAS = tlas;
-}
-
-uint32_t Renderer::lookupGeometryBLAS(Qt3DCore::QNodeId geometryNodeId, uint64_t &blasHandle) const
-{
-    QMutexLocker lock(&m_sceneMutex);
-    uint32_t index = m_sceneResources.geometryIndexLookup.value(geometryNodeId, ~0u);
-    if(index != ~0u) {
-        blasHandle = m_sceneResources.geometry[int(index)].blasHandle;
-    }
-    return index;
-}
-
-void Renderer::updateRetiredResources()
-{
-    QMutexLocker lock(&m_sceneMutex);
-    for(auto &retiredTLAS : m_sceneResources.retiredTLAS) {
-        retiredTLAS.updateTTL();
-    }
-}
-
-void Renderer::destroyRetiredResources()
-{
-    QVector<AccelerationStructure> retiredTLAS;
-    {
-        QMutexLocker lock(&m_sceneMutex);
-        QMutableVectorIterator<RetiredResource<AccelerationStructure>> it(m_sceneResources.retiredTLAS);
-        while(it.hasNext()) {
-            const auto &tlas = it.next();
-            if(tlas.ttl == 0) {
-                retiredTLAS.append(tlas.resource);
-                it.remove();
-            }
-        }
-    }
-    for(auto &tlas : retiredTLAS) {
-        m_device->destroyAccelerationStructure(tlas);
-    }
-}
-
 Raytrace::Entity *Renderer::sceneRoot() const
 {
     return m_sceneRoot;
@@ -786,10 +732,25 @@ DescriptorManager *Renderer::descriptorManager() const
     return m_descriptorManager.get();
 }
 
+SceneManager *Renderer::sceneManager() const
+{
+    return m_sceneManager.get();
+}
+
 QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()
 {
     QVector<Qt3DCore::QAspectJobPtr> jobs;
+
+    bool shouldUpdateInstanceBuffer = false;
     bool shouldUpdateTLAS = false;
+
+    jobs.append(m_destroyRetiredResourcesJob);
+
+    if(m_dirtySet & DirtyFlag::EntityDirty || m_dirtySet & DirtyFlag::GeometryDirty) {
+        m_sceneManager->updateRenderables(&m_nodeManagers->entityManager);
+        shouldUpdateInstanceBuffer = true;
+        shouldUpdateTLAS = true;
+    }
 
     if(m_dirtySet & DirtyFlag::TransformDirty) {
         jobs.append(m_updateWorldTransformJob);
@@ -801,6 +762,20 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()
         geometryJobs = createGeometryJobs();
         jobs.append(geometryJobs);
         shouldUpdateTLAS = true;
+        shouldUpdateInstanceBuffer = true;
+    }
+
+    QVector<Qt3DCore::QAspectJobPtr> materialJobs;
+    if(m_dirtySet & DirtyFlag::MaterialDirty) {
+        materialJobs = createMaterialJobs();
+        jobs.append(materialJobs);
+        shouldUpdateInstanceBuffer = true;
+    }
+
+    m_dirtySet = DirtyFlag::NoneDirty;
+
+    if(m_sceneManager->renderables().size() == 0) {
+        return jobs;
     }
 
     if(shouldUpdateTLAS) {
@@ -811,10 +786,17 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()
         }
         jobs.append(buildSceneTLASJob);
     }
+    if(shouldUpdateInstanceBuffer) {
+        Qt3DCore::QAspectJobPtr updateInstanceBufferJob = UpdateInstanceBufferJobPtr::create(this);
+        for(const auto &job : geometryJobs) {
+            updateInstanceBufferJob->addDependency(job);
+        }
+        for(const auto &job : materialJobs) {
+            updateInstanceBufferJob->addDependency(job);
+        }
+        jobs.append(updateInstanceBufferJob);
+    }
 
-    jobs.append(m_destroyRetiredResourcesJob);
-
-    m_dirtySet = DirtyFlag::NoneDirty;
     return jobs;
 }
 

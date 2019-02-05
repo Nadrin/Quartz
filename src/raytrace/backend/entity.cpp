@@ -165,6 +165,14 @@ Material *Entity::materialComponent() const
     return m_nodeManagers->materialManager.lookupResource(m_materialComponent);
 }
 
+bool Entity::isRenderable() const
+{
+    if(m_geometryRendererComponent.isNull() || m_materialComponent.isNull()) {
+        return false;
+    }
+    return !geometryRendererComponent()->geometryId().isNull();
+}
+
 void Entity::sceneChangeEvent(const QSceneChangePtr &changeEvent)
 {
     switch(changeEvent->type()) {

@@ -6,7 +6,6 @@
 
 #include <renderers/vulkan/jobs/destroyretiredresourcesjob.h>
 #include <renderers/vulkan/renderer.h>
-#include <renderers/vulkan/managers/commandbuffermanager.h>
 
 using namespace Qt3DCore;
 
@@ -25,7 +24,11 @@ void DestroyRetiredResourcesJob::run()
     if(commandBufferManager) {
         commandBufferManager->destroyRetiredResources();
     }
-    m_renderer->destroyRetiredResources();
+
+    auto *sceneManager = m_renderer->sceneManager();
+    if(sceneManager) {
+        sceneManager->destroyExpiredResources();
+    }
 }
 
 } // Vulkan

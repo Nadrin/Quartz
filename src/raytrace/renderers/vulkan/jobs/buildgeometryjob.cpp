@@ -7,6 +7,7 @@
 #include <renderers/vulkan/jobs/buildgeometryjob.h>
 #include <renderers/vulkan/renderer.h>
 #include <renderers/vulkan/geometry.h>
+#include <renderers/vulkan/shaders/types.glsl.h>
 
 #include <backend/managers_p.h>
 #include <backend/geometry_p.h>
@@ -59,6 +60,7 @@ void BuildGeometryJob::run()
 
     auto *device = m_renderer->device();
     auto *commandBufferManager = m_renderer->commandBufferManager();
+    auto *sceneManager = m_renderer->sceneManager();
 
     Geometry geometry;
     geometry.numVertices = uint32_t(geometryNode->vertices().size());
@@ -158,7 +160,7 @@ void BuildGeometryJob::run()
     }
     commandBufferManager->releaseCommandBuffer(commandBuffer, {stagingAttributes, stagingIndices, scratchBuffer});
 
-    m_renderer->addGeometry(geometryNode->peerId(), geometry);
+    sceneManager->addOrUpdateGeometry(geometryNode->peerId(), geometry);
 }
 
 } // Vulkan

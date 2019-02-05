@@ -12,15 +12,6 @@
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
-struct Attributes // std430 layout
-{
-    float position[4];
-    float normal[4];
-    float tangent[4];
-    float bitangent[4];
-    float texcoord[4];
-};
-
 struct Geometry
 {
     Buffer attributes;

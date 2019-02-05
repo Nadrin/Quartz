@@ -7,6 +7,7 @@
 #pragma once
 
 #include <renderers/vulkan/vkcommon.h>
+#include <QVarLengthArray>
 
 namespace Qt3DRaytrace {
 namespace Vulkan {
@@ -63,22 +64,66 @@ struct MemoryResource : Resource<T>
 };
 
 template<typename T>
-struct RetiredResource
+class ManagedResource
 {
-    explicit RetiredResource(T resource=T(), uint32_t initialTTL=0)
-        : resource(resource)
-        , ttl(initialTTL)
-    {}
-
-    bool updateTTL()
+public:
+    void update(const T &newResource, uint32_t retireTTL)
     {
-        Q_ASSERT(ttl > 0);
-        --ttl;
-        return ttl > 0;
+        if(resource) {
+            RetiredResource retiredResouce;
+            retiredResouce.resource = resource;
+            retiredResouce.ttl = retireTTL;
+            m_retired.append(retiredResouce);
+        }
+        resource = newResource;
+    }
+
+    void updateRetiredTTL()
+    {
+        for(auto &retired : m_retired) {
+            --retired.ttl;
+        }
+    }
+
+    QVarLengthArray<T> retired() const
+    {
+        QVarLengthArray<T> result;
+        result.reserve(m_retired.size());
+        for(const auto &retiredResource : m_retired) {
+            result.append(retiredResource.resource);
+        }
+        return result;
+    }
+
+    QVarLengthArray<T> takeExpired()
+    {
+        QVarLengthArray<T> expired;
+        for(int i=0; i<m_retired.size();) {
+            if(m_retired[i].ttl <= 0) {
+                expired.append(m_retired[i].resource);
+                m_retired.remove(i);
+            }
+            else {
+                ++i;
+            }
+        }
+        return expired;
+    }
+
+    void reset(const T &newResource={})
+    {
+        resource = newResource;
+        m_retired.clear();
     }
 
     T resource;
-    uint32_t ttl;
+
+private:
+    struct RetiredResource {
+        T resource;
+        int ttl;
+    };
+    QVarLengthArray<RetiredResource> m_retired;
 };
 
 struct Image : MemoryResource<VkImage>
