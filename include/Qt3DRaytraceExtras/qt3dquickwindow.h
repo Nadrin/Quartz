@@ -31,6 +31,7 @@ class QT3DRAYTRACEEXTRASSHARED_EXPORT Qt3DQuickWindow : public QWindow
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(Qt3DQuickWindow)
+    Q_PROPERTY(CameraAspectRatioMode cameraAspectRatioMode READ cameraAspectRatioMode WRITE setCameraAspectRatioMode NOTIFY cameraAspectRatioModeChanged)
 public:
     explicit Qt3DQuickWindow(QWindow *parent = nullptr);
 
@@ -40,6 +41,18 @@ public:
     void setSource(const QUrl &source);
     Qt3DCore::Quick::QQmlAspectEngine *engine() const;
 
+    enum CameraAspectRatioMode {
+        AutomaticAspectRatio,
+        UserAspectRatio,
+    };
+    Q_ENUM(CameraAspectRatioMode)
+
+    CameraAspectRatioMode cameraAspectRatioMode() const;
+    void setCameraAspectRatioMode(CameraAspectRatioMode mode);
+
+signals:
+    void cameraAspectRatioModeChanged(CameraAspectRatioMode mode);
+
 protected:
     Qt3DQuickWindow(Qt3DQuickWindowPrivate &dd, QWindow *parent);
 
@@ -48,6 +61,7 @@ protected:
 
 private slots:
     void sceneCreated(QObject *root);
+    void updateCameraAspectRatio();
 };
 
 } // Quick

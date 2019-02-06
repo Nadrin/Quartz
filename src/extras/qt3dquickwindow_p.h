@@ -15,7 +15,9 @@
 #include <Qt3DInput/QInputSettings>
 
 #include <Qt3DRaytrace/qraytraceaspect.h>
+#include <Qt3DRaytrace/qcamera.h>
 
+#include <QPointer>
 #include <QScopedPointer>
 
 namespace Qt3DRaytraceExtras {
@@ -33,8 +35,11 @@ public:
     Qt3DInput::QInputAspect *m_inputAspect;
     Qt3DLogic::QLogicAspect *m_logicAspect;
 
+    QPointer<Qt3DRaytrace::QCamera> m_camera;
+    Qt3DQuickWindow::CameraAspectRatioMode m_cameraAspectRatioMode;
+
     QUrl m_source;
-    bool m_initialized = false;
+    bool m_initialized;
 };
 
 } // Quick
