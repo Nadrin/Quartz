@@ -46,15 +46,15 @@ public:
     virtual void markDirty(DirtySet changes, BackendNode *node) = 0;
 
     virtual Entity *sceneRoot() const = 0;
-    virtual void setSceneRoot(Entity *rootEntity) = 0;
-
     virtual Entity *activeCamera() const = 0;
-    virtual void setActiveCamera(Entity *cameraEntity) = 0;
 
+    virtual void setSceneRoot(Entity *rootEntity) = 0;
+    virtual void setActiveCamera(Entity *cameraEntity) = 0;
     virtual void setNodeManagers(NodeManagers *nodeManagers) = 0;
 
     virtual Qt3DCore::QAbstractFrameAdvanceService *frameAdvanceService() const = 0;
-    virtual QVector<Qt3DCore::QAspectJobPtr> renderJobs() = 0;
+
+    virtual QVector<Qt3DCore::QAspectJobPtr> jobsToExecute(qint64 time) = 0;
 };
 
 } // Raytrace

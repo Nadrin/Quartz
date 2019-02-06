@@ -769,7 +769,7 @@ CameraManager *Renderer::cameraManager() const
     return m_cameraManager.get();
 }
 
-QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()
+QVector<Qt3DCore::QAspectJobPtr> Renderer::jobsToExecute(qint64 time)
 {
     QVector<Qt3DCore::QAspectJobPtr> jobs;
 

@@ -67,7 +67,7 @@ public:
     SceneManager *sceneManager() const;
     CameraManager *cameraManager() const;
 
-    QVector<Qt3DCore::QAspectJobPtr> renderJobs() override;
+    QVector<Qt3DCore::QAspectJobPtr> jobsToExecute(qint64 time) override;
 
     int currentFrameIndex() const;
     int previousFrameIndex() const;

@@ -104,7 +104,7 @@ QVector<QAspectJobPtr> QRaytraceAspect::jobsToExecute(qint64 time)
     QVector<QAspectJobPtr> jobs;
     jobs.append(d->createGeometryRendererJobs());
     if(d->m_renderer) {
-        jobs.append(d->m_renderer->renderJobs());
+        jobs.append(d->m_renderer->jobsToExecute(time));
     }
     return jobs;
 }
