@@ -19,12 +19,10 @@ using namespace Qt3DCore;
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
-BuildSceneTopLevelAccelerationStructureJob::BuildSceneTopLevelAccelerationStructureJob(Renderer *renderer, Raytrace::NodeManagers *managers)
+BuildSceneTopLevelAccelerationStructureJob::BuildSceneTopLevelAccelerationStructureJob(Renderer *renderer)
     : m_renderer(renderer)
-    , m_nodeManagers(managers)
 {
     Q_ASSERT(m_renderer);
-    Q_ASSERT(m_nodeManagers);
 }
 
 void BuildSceneTopLevelAccelerationStructureJob::run()

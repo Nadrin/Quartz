@@ -16,10 +16,13 @@
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
+class Renderer;
+class Device;
+
 class DescriptorManager
 {
 public:
-    explicit DescriptorManager(Device *device);
+    explicit DescriptorManager(Renderer *renderer);
     ~DescriptorManager();
 
     bool createDescriptorPool(ResourceClass rclass, uint32_t capacity);

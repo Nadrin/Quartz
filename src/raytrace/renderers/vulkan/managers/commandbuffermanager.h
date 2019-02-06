@@ -46,14 +46,14 @@ struct TransientCommandBuffer
 class CommandBufferManager
 {
 public:
-    explicit CommandBufferManager(Device *device);
+    explicit CommandBufferManager(Renderer *renderer);
     ~CommandBufferManager();
 
     TransientCommandBuffer acquireCommandBuffer();
     bool releaseCommandBuffer(TransientCommandBuffer &commandBuffer, const QVector<Buffer> &transientBuffers={});
 
     bool submitCommandBuffers(VkQueue queue);
-    void destroyRetiredResources();
+    void destroyExpiredResources();
     void proceedToNextFrame();
 
     Q_DISABLE_COPY(CommandBufferManager)

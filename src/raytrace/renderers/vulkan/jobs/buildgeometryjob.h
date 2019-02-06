@@ -12,11 +12,6 @@
 #include <backend/handles_p.h>
 
 namespace Qt3DRaytrace {
-
-namespace Raytrace {
-struct NodeManagers;
-} // Raytrace
-
 namespace Vulkan {
 
 class Renderer;
@@ -24,13 +19,12 @@ class Renderer;
 class BuildGeometryJob final : public Qt3DCore::QAspectJob
 {
 public:
-    BuildGeometryJob(Renderer *renderer, Raytrace::NodeManagers *managers, const Raytrace::HGeometry &handle);
+    BuildGeometryJob(Renderer *renderer, const Raytrace::HGeometry &handle);
 
     void run() override;
 
 private:
     Renderer *m_renderer;
-    Raytrace::NodeManagers *m_nodeManagers;
     Raytrace::HGeometry m_handle;
 };
 

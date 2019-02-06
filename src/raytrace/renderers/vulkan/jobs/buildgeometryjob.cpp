@@ -42,18 +42,16 @@ static void copyIndices(uint32_t *dest, const QTriangle *src, size_t count)
     std::memcpy(dest, src, sizeof(uint32_t) * count);
 }
 
-BuildGeometryJob::BuildGeometryJob(Renderer *renderer, Raytrace::NodeManagers *managers, const Raytrace::HGeometry &handle)
+BuildGeometryJob::BuildGeometryJob(Renderer *renderer, const Raytrace::HGeometry &handle)
     : m_renderer(renderer)
-    , m_nodeManagers(managers)
     , m_handle(handle)
 {
     Q_ASSERT(m_renderer);
-    Q_ASSERT(m_nodeManagers);
 }
 
 void BuildGeometryJob::run()
 {
-    Raytrace::Geometry *geometryNode = m_nodeManagers->geometryManager.data(m_handle);
+    Raytrace::Geometry *geometryNode = m_handle.data();
     if(!geometryNode) {
         return;
     }

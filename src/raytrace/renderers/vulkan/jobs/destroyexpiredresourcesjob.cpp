@@ -4,7 +4,7 @@
  * See LICENSE file for licensing information.
  */
 
-#include <renderers/vulkan/jobs/destroyretiredresourcesjob.h>
+#include <renderers/vulkan/jobs/destroyexpiredresourcesjob.h>
 #include <renderers/vulkan/renderer.h>
 
 using namespace Qt3DCore;
@@ -12,17 +12,17 @@ using namespace Qt3DCore;
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
-DestroyRetiredResourcesJob::DestroyRetiredResourcesJob(Renderer *renderer)
+DestroyExpiredResourcesJob::DestroyExpiredResourcesJob(Renderer *renderer)
     : m_renderer(renderer)
 {
     Q_ASSERT(m_renderer);
 }
 
-void DestroyRetiredResourcesJob::run()
+void DestroyExpiredResourcesJob::run()
 {
     auto *commandBufferManager = m_renderer->commandBufferManager();
     if(commandBufferManager) {
-        commandBufferManager->destroyRetiredResources();
+        commandBufferManager->destroyExpiredResources();
     }
 
     auto *sceneManager = m_renderer->sceneManager();

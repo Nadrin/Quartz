@@ -5,8 +5,8 @@
  */
 
 #include <renderers/vulkan/managers/commandbuffermanager.h>
-#include <renderers/vulkan/device.h>
 #include <renderers/vulkan/renderer.h>
+#include <renderers/vulkan/device.h>
 
 #include <QMutexLocker>
 #include <QMutableVectorIterator>
@@ -14,8 +14,8 @@
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
-CommandBufferManager::CommandBufferManager(Device *device)
-    : m_device(device)
+CommandBufferManager::CommandBufferManager(Renderer *renderer)
+    : m_device(renderer->device())
 {
     Q_ASSERT(m_device);
 }
@@ -23,7 +23,7 @@ CommandBufferManager::CommandBufferManager(Device *device)
 CommandBufferManager::~CommandBufferManager()
 {
     cleanup(false);
-    destroyRetiredResources();
+    destroyExpiredResources();
 
     if(m_pendingCommandBuffers.size() > 0) {
         qCWarning(logVulkan) << "CommandBufferManager:" << m_pendingCommandBuffers.size() << "orphaned pending batches";
@@ -114,7 +114,7 @@ bool CommandBufferManager::submitCommandBuffers(VkQueue queue)
     return true;
 }
 
-void CommandBufferManager::destroyRetiredResources()
+void CommandBufferManager::destroyExpiredResources()
 {
     QVector<Buffer> expiredBuffers;
     {

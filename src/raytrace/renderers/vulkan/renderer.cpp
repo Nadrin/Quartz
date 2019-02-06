@@ -47,7 +47,7 @@ Renderer::Renderer(QObject *parent)
     , m_cameraManager(new CameraManager)
     , m_frameAdvanceService(new FrameAdvanceService)
     , m_updateWorldTransformJob(new Raytrace::UpdateWorldTransformJob)
-    , m_destroyRetiredResourcesJob(new DestroyRetiredResourcesJob(this))
+    , m_destroyExpiredResourcesJob(new DestroyExpiredResourcesJob(this))
     , m_updateRenderParametersJob(new UpdateRenderParametersJob(this))
 {
     QObject::connect(m_renderTimer, &QTimer::timeout, this, &Renderer::renderFrame);
@@ -100,8 +100,8 @@ bool Renderer::initialize()
     }
     m_frameResources.resize(numConcurrentFrames);
 
-    m_commandBufferManager.reset(new CommandBufferManager(m_device.get()));
-    m_descriptorManager.reset(new DescriptorManager(m_device.get()));
+    m_commandBufferManager.reset(new CommandBufferManager(this));
+    m_descriptorManager.reset(new DescriptorManager(this));
     m_sceneManager.reset(new SceneManager(this));
 
     if(!createResources()) {
@@ -147,7 +147,7 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::createGeometryJobs()
     for(const Qt3DCore::QNodeId &geometryId : dirtyGeometry) {
         Raytrace::HGeometry handle = geometryManager->lookupHandle(geometryId);
         if(!handle.isNull()) {
-            auto job = BuildGeometryJobPtr::create(this, m_nodeManagers, handle);
+            auto job = BuildGeometryJobPtr::create(this, handle);
             buildGeometryJobs.append(job);
         }
     }
@@ -770,7 +770,7 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()
 
     m_updateRenderParametersJob->removeDependency(m_updateWorldTransformJob);
 
-    jobs.append(m_destroyRetiredResourcesJob);
+    jobs.append(m_destroyExpiredResourcesJob);
 
     if(m_dirtySet & DirtyFlag::EntityDirty || m_dirtySet & DirtyFlag::GeometryDirty) {
         m_sceneManager->updateRenderables(&m_nodeManagers->entityManager);
@@ -815,7 +815,7 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()
     }
 
     if(shouldUpdateTLAS) {
-        Qt3DCore::QAspectJobPtr buildSceneTLASJob = BuildSceneTopLevelAccelerationStructureJobPtr::create(this, m_nodeManagers);
+        Qt3DCore::QAspectJobPtr buildSceneTLASJob = BuildSceneTopLevelAccelerationStructureJobPtr::create(this);
         buildSceneTLASJob->addDependency(m_updateWorldTransformJob);
         for(const auto &job : geometryJobs) {
             buildSceneTLASJob->addDependency(job);

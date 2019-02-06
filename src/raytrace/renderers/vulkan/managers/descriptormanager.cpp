@@ -5,6 +5,7 @@
  */
 
 #include <renderers/vulkan/managers/descriptormanager.h>
+#include <renderers/vulkan/renderer.h>
 #include <renderers/vulkan/device.h>
 
 #include <QMutexLocker>
@@ -21,8 +22,8 @@ static VkDescriptorType resourceClassToDescriptorType(ResourceClass rclass)
     }
 }
 
-DescriptorManager::DescriptorManager(Device *device)
-    : m_device(device)
+DescriptorManager::DescriptorManager(Renderer *renderer)
+    : m_device(renderer->device())
 {
     Q_ASSERT(m_device);
 }

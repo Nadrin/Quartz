@@ -19,7 +19,7 @@
 #include <renderers/vulkan/managers/cameramanager.h>
 
 #include <jobs/updateworldtransformjob_p.h>
-#include <renderers/vulkan/jobs/destroyretiredresourcesjob.h>
+#include <renderers/vulkan/jobs/destroyexpiredresourcesjob.h>
 #include <renderers/vulkan/jobs/updaterenderparametersjob.h>
 
 #include <Qt3DCore/QNodeId>
@@ -148,7 +148,7 @@ private:
     bool m_clearPreviousRenderBuffer = false;
 
     Raytrace::UpdateWorldTransformJobPtr m_updateWorldTransformJob;
-    DestroyRetiredResourcesJobPtr m_destroyRetiredResourcesJob;
+    DestroyExpiredResourcesJobPtr m_destroyExpiredResourcesJob;
     UpdateRenderParametersJobPtr m_updateRenderParametersJob;
 
     Raytrace::Entity *m_sceneRoot = nullptr;

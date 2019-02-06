@@ -11,11 +11,6 @@
 #include <Qt3DCore/QAspectJob>
 
 namespace Qt3DRaytrace {
-
-namespace Raytrace {
-struct NodeManagers;
-} // Raytrace
-
 namespace Vulkan {
 
 class Renderer;
@@ -23,7 +18,7 @@ class Renderer;
 class BuildSceneTopLevelAccelerationStructureJob final : public Qt3DCore::QAspectJob
 {
 public:
-    BuildSceneTopLevelAccelerationStructureJob(Renderer *renderer, Raytrace::NodeManagers *managers);
+    BuildSceneTopLevelAccelerationStructureJob(Renderer *renderer);
 
     void run() override;
 
@@ -31,7 +26,6 @@ private:
     QVector<GeometryInstance> gatherGeometryInstances() const;
 
     Renderer *m_renderer;
-    Raytrace::NodeManagers *m_nodeManagers;
 };
 
 using BuildSceneTopLevelAccelerationStructureJobPtr = QSharedPointer<BuildSceneTopLevelAccelerationStructureJob>;
