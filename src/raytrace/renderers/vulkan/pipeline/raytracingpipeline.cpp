@@ -53,20 +53,13 @@ RayTracingPipeline RayTracingPipelineBuilder::build() const
     RayTracingPipeline pipeline;
     pipeline.bindPoint = VK_PIPELINE_BIND_POINT_RAY_TRACING_NV;
 
-    if(!validate()) {
+    if(!validate() || !buildBasePipeline(pipeline)) {
         return pipeline;
     }
 
     QVector<VkRayTracingShaderGroupCreateInfoNV> shaderGroups;
     uint32_t firstHitGroupIndex;
     if(!buildShaderGroups(shaderGroups, firstHitGroupIndex)) {
-        return pipeline;
-    }
-
-    pipeline.descriptorSetLayouts = buildDescriptorSetLayouts();
-    pipeline.pipelineLayout = buildPipelineLayout(pipeline.descriptorSetLayouts);
-    if(pipeline.pipelineLayout == VK_NULL_HANDLE) {
-        m_device->destroyPipeline(pipeline);
         return pipeline;
     }
 

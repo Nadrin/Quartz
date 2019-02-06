@@ -59,14 +59,7 @@ Pipeline GraphicsPipelineBuilder::build() const
     Pipeline pipeline;
     pipeline.bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 
-    if(!validate()) {
-        return pipeline;
-    }
-
-    pipeline.descriptorSetLayouts = buildDescriptorSetLayouts();
-    pipeline.pipelineLayout = buildPipelineLayout(pipeline.descriptorSetLayouts);
-    if(pipeline.pipelineLayout == VK_NULL_HANDLE) {
-        m_device->destroyPipeline(pipeline);
+    if(!validate() || !buildBasePipeline(pipeline)) {
         return pipeline;
     }
 

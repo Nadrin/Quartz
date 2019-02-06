@@ -19,6 +19,36 @@ PipelineBuilder::PipelineBuilder(Device *device)
     Q_ASSERT(m_device);
 }
 
+PipelineBuilder::~PipelineBuilder()
+{
+    qDeleteAll(m_ownedModules);
+}
+
+bool PipelineBuilder::buildBasePipeline(Pipeline &pipeline) const
+{
+    pipeline.descriptorSetLayouts = buildDescriptorSetLayouts();
+    pipeline.pushConstantRanges = buildPushConstantRanges();
+
+    VkPipelineLayoutCreateInfo createInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+    createInfo.setLayoutCount = uint32_t(pipeline.descriptorSetLayouts.size());
+    if(createInfo.setLayoutCount > 0) {
+        createInfo.pSetLayouts = pipeline.descriptorSetLayouts.data();
+    }
+    createInfo.pushConstantRangeCount = uint32_t(pipeline.pushConstantRanges.size());
+    if(createInfo.pushConstantRangeCount > 0) {
+        createInfo.pPushConstantRanges = pipeline.pushConstantRanges.data();
+    }
+
+    Result result;
+    if(VKFAILED(result = vkCreatePipelineLayout(*m_device, &createInfo, nullptr, &pipeline.pipelineLayout))) {
+        qCCritical(logVulkan) << "PipelineBuilder: Failed to create pipeline layout" << result.toString();
+        m_device->destroyPipeline(pipeline);
+        return false;
+    }
+
+    return true;
+}
+
 QVector<VkDescriptorSetLayout> PipelineBuilder::buildDescriptorSetLayouts() const
 {
     struct DescriptorSetLayoutBinding {
@@ -175,27 +205,29 @@ QVector<VkDescriptorSetLayout> PipelineBuilder::buildDescriptorSetLayouts() cons
     return vulkanLayouts;
 }
 
-VkPipelineLayout PipelineBuilder::buildPipelineLayout(const QVector<VkDescriptorSetLayout> &descriptorSetLayouts) const
+QVector<VkPushConstantRange> PipelineBuilder::buildPushConstantRanges() const
 {
-    // TODO: Add support for push constants.
-    VkPipelineLayoutCreateInfo createInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-    createInfo.setLayoutCount = uint32_t(descriptorSetLayouts.size());
-    if(createInfo.setLayoutCount > 0) {
-        createInfo.pSetLayouts = descriptorSetLayouts.data();
+    QMap<uint64_t, VkPushConstantRange> rangesMap;
+    for(const ShaderModule *shader : m_shaders) {
+        for(const auto &pushConstantRange : shader->pushConstants()) {
+            const uint64_t hash = (uint64_t(pushConstantRange.size) << 32) | pushConstantRange.offset;
+            auto it = rangesMap.find(hash);
+            if(it == rangesMap.end()) {
+                rangesMap.insert(hash, VkPushConstantRange{shader->stage(), pushConstantRange.offset, pushConstantRange.size});
+            }
+            else {
+                auto &range = *it;
+                range.stageFlags |= shader->stage();
+            }
+        }
     }
 
-    VkPipelineLayout pipelineLayout;
-    Result result;
-    if(VKFAILED(result = vkCreatePipelineLayout(*m_device, &createInfo, nullptr, &pipelineLayout))) {
-        qCCritical(logVulkan) << "PipelineBuilder: Failed to create pipeline layout" << result.toString();
-        return VK_NULL_HANDLE;
+    QVector<VkPushConstantRange> ranges;
+    ranges.reserve(rangesMap.size());
+    for(const VkPushConstantRange &pushConstantRange : rangesMap) {
+        ranges.append(pushConstantRange);
     }
-    return pipelineLayout;
-}
-
-PipelineBuilder::~PipelineBuilder()
-{
-    qDeleteAll(m_ownedModules);
+    return ranges;
 }
 
 PipelineBuilder &PipelineBuilder::shaders(const QVector<const ShaderModule*> &modules)

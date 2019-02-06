@@ -101,6 +101,12 @@ public:
     {
         vkCmdExecuteCommands(handle, uint32_t(commandBuffers.size()), commandBuffers.data());
     }
+    void pushConstants(const Pipeline &pipeline, int pushConstantRangeIndex, const void *values) const
+    {
+        Q_ASSERT(pushConstantRangeIndex >= 0 && pushConstantRangeIndex < pipeline.pushConstantRanges.size());
+        const VkPushConstantRange &range = pipeline.pushConstantRanges[pushConstantRangeIndex];
+        vkCmdPushConstants(handle, pipeline.pipelineLayout, range.stageFlags, range.offset, range.size, values);
+    }
     void traceRays(const RayTracingPipeline &rayTracingPipeline, uint32_t width, uint32_t height) const
     {
         traceRays(rayTracingPipeline, width, height, 0, 0);

@@ -27,6 +27,7 @@ struct Pipeline : Resource<VkPipeline>
     VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     QVector<VkDescriptorSetLayout> descriptorSetLayouts;
+    QVector<VkPushConstantRange> pushConstantRanges;
 };
 
 class PipelineBuilder
@@ -54,8 +55,7 @@ public:
 protected:
     explicit PipelineBuilder(Device *device);
 
-    QVector<VkDescriptorSetLayout> buildDescriptorSetLayouts() const;
-    VkPipelineLayout buildPipelineLayout(const QVector<VkDescriptorSetLayout> &descriptorSetLayouts) const;
+    bool buildBasePipeline(Pipeline &pipeline) const;
 
     Device *m_device;
     Sampler m_defaultSampler;
@@ -77,6 +77,9 @@ protected:
     QMap<uint32_t, VkDescriptorSetLayoutCreateFlags> m_descriptorSetLayoutFlags;
 
 private:
+    QVector<VkDescriptorSetLayout> buildDescriptorSetLayouts() const;
+    QVector<VkPushConstantRange> buildPushConstantRanges() const;
+
     QVector<ShaderModule*> m_ownedModules;
     bool m_needsDescriptorBindingFlags;
 };
