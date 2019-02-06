@@ -115,7 +115,7 @@ private:
 
     RenderPass m_displayRenderPass;
     Pipeline m_displayPipeline;
-    RayTracingPipeline m_rayTracingPipeline;
+    RayTracingPipeline m_renderPipeline;
 
     Sampler m_defaultSampler;
 

@@ -218,7 +218,7 @@ bool Renderer::createResources()
             .defaultSampler(m_defaultSampler)
             .build();
 
-    m_rayTracingPipeline = RayTracingPipelineBuilder(m_device.get())
+    m_renderPipeline = RayTracingPipelineBuilder(m_device.get())
             .shaders({"test.rgen", "test.rmiss", "test.rchit"})
             .descriptorBindingManager(1, 0, m_descriptorManager.get(), ResourceClass::AttributeBuffer)
             .descriptorBindingManager(2, 0, m_descriptorManager.get(), ResourceClass::IndexBuffer)
@@ -228,7 +228,7 @@ bool Renderer::createResources()
     for(auto &frame : m_frameResources) {
         const QVector<VkDescriptorSetLayout> descriptorSetLayouts = {
             m_displayPipeline.descriptorSetLayouts[DS_Display],
-            m_rayTracingPipeline.descriptorSetLayouts[DS_Render],
+            m_renderPipeline.descriptorSetLayouts[DS_Render],
         };
         auto descriptorSets = m_device->allocateDescriptorSets({m_frameDescriptorPool, descriptorSetLayouts});
         frame.displayDescriptorSet = descriptorSets[0];
@@ -250,7 +250,7 @@ void Renderer::releaseResources()
 
     m_device->destroyRenderPass(m_displayRenderPass);
     m_device->destroyPipeline(m_displayPipeline);
-    m_device->destroyPipeline(m_rayTracingPipeline);
+    m_device->destroyPipeline(m_renderPipeline);
 
     for(auto &frame : m_frameResources) {
         m_device->destroyFence(frame.commandBuffersExecutedFence);
@@ -507,10 +507,10 @@ void Renderer::renderFrame()
                 m_descriptorManager->descriptorSet(ResourceClass::IndexBuffer),
             };
 
-            commandBuffer.bindPipeline(m_rayTracingPipeline);
-            commandBuffer.bindDescriptorSets(m_rayTracingPipeline, 0, descriptorSets);
-            commandBuffer.pushConstants(m_rayTracingPipeline, 0, &m_renderParams);
-            commandBuffer.traceRays(m_rayTracingPipeline, uint32_t(renderRect.width()), uint32_t(renderRect.height()));
+            commandBuffer.bindPipeline(m_renderPipeline);
+            commandBuffer.bindDescriptorSets(m_renderPipeline, 0, descriptorSets);
+            commandBuffer.pushConstants(m_renderPipeline, 0, &m_renderParams);
+            commandBuffer.traceRays(m_renderPipeline, uint32_t(renderRect.width()), uint32_t(renderRect.height()));
         }
 
         commandBuffer.resourceBarrier({currentFrame.renderBuffer, ImageState::ShaderReadWrite, ImageState::ShaderRead});
