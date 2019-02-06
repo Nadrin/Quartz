@@ -488,17 +488,26 @@ void Renderer::renderFrame()
     commandBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
     {
         if(!m_renderBuffersReady) {
-            QVector<ImageTransition> transitions(static_cast<int>(numConcurrentFrames()));
-            for(int i=0; i<int(numConcurrentFrames()); ++i) {
-                transitions[i] = { m_frameResources[i].renderBuffer, ImageState::Undefined, ImageState::ShaderReadWrite, VK_IMAGE_ASPECT_COLOR_BIT };
+            QVector<ImageTransition> transitions{int(numConcurrentFrames())};
+            for(int index=0; index < transitions.size(); ++index) {
+                if(m_clearPreviousRenderBuffer && index == previousFrameIndex()) {
+                    transitions[index] = { m_frameResources[index].renderBuffer, ImageState::Undefined, ImageState::CopyDest };
+                }
+                else {
+                    transitions[index] = { m_frameResources[index].renderBuffer, ImageState::Undefined, ImageState::ShaderReadWrite };
+                }
             }
             commandBuffer.resourceBarrier(transitions);
-            m_renderBuffersReady = true;
         }
         if(m_clearPreviousRenderBuffer) {
-            commandBuffer.clearColorImage(previousFrame.renderBuffer, ImageState::ShaderReadWrite);
-            m_clearPreviousRenderBuffer = false;
+            if(m_renderBuffersReady) {
+                commandBuffer.resourceBarrier({previousFrame.renderBuffer, ImageState::Undefined, ImageState::CopyDest});
+            }
+            commandBuffer.clearColorImage(previousFrame.renderBuffer, ImageState::CopyDest);
+            commandBuffer.resourceBarrier({previousFrame.renderBuffer, ImageState::CopyDest, ImageState::ShaderReadWrite});
         }
+        m_renderBuffersReady = true;
+        m_clearPreviousRenderBuffer = false;
 
         if(readyToRender) {
             const QVector<VkDescriptorSet> descriptorSets = {
@@ -771,6 +780,10 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()
     m_updateRenderParametersJob->removeDependency(m_updateWorldTransformJob);
 
     jobs.append(m_destroyExpiredResourcesJob);
+
+    if(m_dirtySet != DirtyFlag::NoneDirty) {
+        m_clearPreviousRenderBuffer = true;
+    }
 
     if(m_dirtySet & DirtyFlag::EntityDirty || m_dirtySet & DirtyFlag::GeometryDirty) {
         m_sceneManager->updateRenderables(&m_nodeManagers->entityManager);
