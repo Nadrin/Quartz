@@ -11,6 +11,8 @@
 #include <Qt3DRaytrace/qgeometryrenderer.h>
 #include <Qt3DRaytrace/qmesh.h>
 #include <Qt3DRaytrace/qmaterial.h>
+#include <Qt3DRaytrace/qcamera.h>
+#include <Qt3DRaytrace/qcameralens.h>
 
 void Qt3DQuick3DRaytracePlugin::registerTypes(const char *uri)
 {
@@ -21,6 +23,10 @@ void Qt3DQuick3DRaytracePlugin::registerTypes(const char *uri)
 
     // Material
     qmlRegisterType<Qt3DRaytrace::QMaterial>(uri, 1, 0, "Material");
+
+    // Camera
+    qmlRegisterType<Qt3DRaytrace::QCamera>(uri, 1, 0, "Camera");
+    qmlRegisterType<Qt3DRaytrace::QCameraLens>(uri, 1, 0, "CameraLens");
 
     // Module
     qmlRegisterModule(uri, 1, 0);

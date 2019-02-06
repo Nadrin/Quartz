@@ -16,6 +16,7 @@
 
 #include <Qt3DRaytrace/qgeometryrenderer.h>
 #include <Qt3DRaytrace/qmaterial.h>
+#include <Qt3DRaytrace/qcameralens.h>
 
 using namespace Qt3DCore;
 
@@ -132,6 +133,15 @@ void Entity::addComponent(QNodeIdTypePair idAndType)
     else if(type->inherits(&Qt3DRaytrace::QMaterial::staticMetaObject)) {
         m_materialComponent = id;
     }
+    else if(type->inherits(&Qt3DRaytrace::QCameraLens::staticMetaObject)) {
+        m_cameraLensComponent = id;
+    }
+
+    // TODO: Support multiple cameras.
+    Q_ASSERT(m_renderer);
+    if(isCamera() && !m_renderer->activeCamera()) {
+        m_renderer->setActiveCamera(this);
+    }
 }
 
 void Entity::removeComponent(QNodeId nodeId)
@@ -144,6 +154,15 @@ void Entity::removeComponent(QNodeId nodeId)
     }
     else if(nodeId == m_materialComponent) {
         m_materialComponent = QNodeId{};
+    }
+    else if(nodeId == m_cameraLensComponent) {
+        m_cameraLensComponent = QNodeId{};
+    }
+
+    // TODO: Support multiple cameras.
+    Q_ASSERT(m_renderer);
+    if(!isCamera() && m_renderer->activeCamera() == this) {
+        m_renderer->setActiveCamera(nullptr);
     }
 }
 
@@ -165,12 +184,23 @@ Material *Entity::materialComponent() const
     return m_nodeManagers->materialManager.lookupResource(m_materialComponent);
 }
 
+CameraLens *Entity::cameraLensComponent() const
+{
+    Q_ASSERT(m_nodeManagers);
+    return m_nodeManagers->cameraManager.lookupResource(m_cameraLensComponent);
+}
+
 bool Entity::isRenderable() const
 {
     if(m_geometryRendererComponent.isNull() || m_materialComponent.isNull()) {
         return false;
     }
     return !geometryRendererComponent()->geometryId().isNull();
+}
+
+bool Entity::isCamera() const
+{
+    return !m_transformComponent.isNull() && !m_cameraLensComponent.isNull();
 }
 
 void Entity::sceneChangeEvent(const QSceneChangePtr &changeEvent)
@@ -219,6 +249,7 @@ void Entity::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
     m_transformComponent = QNodeId{};
     m_geometryRendererComponent = QNodeId{};
     m_materialComponent = QNodeId{};
+    m_cameraLensComponent = QNodeId{};
 
     for(const auto &idAndType : qAsConst(data.componentIdsAndTypes)) {
         addComponent(idAndType);

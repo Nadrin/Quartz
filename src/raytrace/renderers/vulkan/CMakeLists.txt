@@ -35,6 +35,8 @@ target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/jobs/updatematerialsjob.h
     renderers/vulkan/jobs/updateinstancebufferjob.cpp
     renderers/vulkan/jobs/updateinstancebufferjob.h
+    renderers/vulkan/jobs/updaterenderparametersjob.cpp
+    renderers/vulkan/jobs/updaterenderparametersjob.h
     renderers/vulkan/jobs/destroyretiredresourcesjob.cpp
     renderers/vulkan/jobs/destroyretiredresourcesjob.h
     renderers/vulkan/managers/commandbuffermanager.cpp
@@ -44,6 +46,8 @@ target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/managers/scenemanager.cpp
     renderers/vulkan/managers/scenemanager.h
     renderers/vulkan/managers/sceneresourceset.h
+    renderers/vulkan/managers/cameramanager.cpp
+    renderers/vulkan/managers/cameramanager.h
 )
 
 add_subdirectory(shaders)

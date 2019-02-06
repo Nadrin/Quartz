@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <qt3draytrace_global_p.h>
 #include <Qt3DCore/QAspectJob>
 
 namespace Qt3DRaytrace {

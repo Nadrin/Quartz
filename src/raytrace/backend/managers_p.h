@@ -13,6 +13,7 @@
 #include <backend/geometry_p.h>
 #include <backend/geometryrenderer_p.h>
 #include <backend/material_p.h>
+#include <backend/cameralens_p.h>
 
 #include <QVector>
 
@@ -53,9 +54,10 @@ private:
 };
 
 class TransformManager : public Qt3DCore::QResourceManager<Transform, Qt3DCore::QNodeId> {};
-class GeometryManager : public ComponentManager<Geometry, Qt3DCore::ObjectLevelLockingPolicy> {};
-class GeometryRendererManager : public ComponentManager<GeometryRenderer, Qt3DCore::ObjectLevelLockingPolicy> {};
-class MaterialManager : public ComponentManager<Material, Qt3DCore::ObjectLevelLockingPolicy> {};
+class GeometryManager : public ComponentManager<Geometry> {};
+class GeometryRendererManager : public ComponentManager<GeometryRenderer> {};
+class MaterialManager : public ComponentManager<Material> {};
+class CameraManager : public ComponentManager<CameraLens> {};
 
 struct NodeManagers
 {
@@ -64,6 +66,7 @@ struct NodeManagers
     GeometryManager geometryManager;
     GeometryRendererManager geometryRendererManager;
     MaterialManager materialManager;
+    CameraManager cameraManager;
 };
 
 } // Raytrace

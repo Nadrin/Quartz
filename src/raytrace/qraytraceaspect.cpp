@@ -14,6 +14,8 @@
 #include <Qt3DRaytrace/qgeometry.h>
 #include <Qt3DRaytrace/qgeometryrenderer.h>
 #include <Qt3DRaytrace/qmaterial.h>
+#include <Qt3DRaytrace/qcamera.h>
+#include <Qt3DRaytrace/qcameralens.h>
 
 #include <renderers/vulkan/renderer.h>
 
@@ -40,6 +42,9 @@ void QRaytraceAspectPrivate::registerBackendTypes()
 
     using TransformNodeMapper = Raytrace::BackendNodeMapper<Raytrace::Transform, Raytrace::TransformManager>;
     q->registerBackendType<Qt3DCore::QTransform>(QSharedPointer<TransformNodeMapper>::create(&m_nodeManagers->transformManager, m_renderer.get()));
+
+    using CameraLensNodeMapper = Raytrace::BackendNodeMapper<Raytrace::CameraLens, Raytrace::CameraManager>;
+    q->registerBackendType<QCameraLens>(QSharedPointer<CameraLensNodeMapper>::create(&m_nodeManagers->cameraManager, m_renderer.get()));
 
     q->registerBackendType<QGeometry>(QSharedPointer<Raytrace::GeometryNodeMapper>::create(&m_nodeManagers->geometryManager, m_renderer.get()));
     q->registerBackendType<QGeometryRenderer>(QSharedPointer<Raytrace::GeometryRendererNodeMapper>::create(&m_nodeManagers->geometryRendererManager, m_renderer.get()));

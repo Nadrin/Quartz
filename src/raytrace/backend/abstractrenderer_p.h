@@ -32,6 +32,7 @@ public:
         TransformDirty = 1 << 1,
         GeometryDirty  = 1 << 2,
         MaterialDirty  = 1 << 3,
+        CameraDirty    = 1 << 4,
         NoneDirty      = 0,
         AllDirty       = 0xffffff,
     };
@@ -46,6 +47,9 @@ public:
 
     virtual Entity *sceneRoot() const = 0;
     virtual void setSceneRoot(Entity *rootEntity) = 0;
+
+    virtual Entity *activeCamera() const = 0;
+    virtual void setActiveCamera(Entity *cameraEntity) = 0;
 
     virtual void setNodeManagers(NodeManagers *nodeManagers) = 0;
 

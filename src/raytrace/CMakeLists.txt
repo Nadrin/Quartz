@@ -22,6 +22,10 @@ set(SOURCES_PRIVATE
     frontend/qmesh_p.h
     frontend/qmaterial.cpp
     frontend/qmaterial_p.h
+    frontend/qcamera.cpp
+    frontend/qcamera_p.h
+    frontend/qcameralens.cpp
+    frontend/qcameralens_p.h
     backend/handles_p.h
     backend/types_p.h
     backend/abstractrenderer_p.h
@@ -38,6 +42,8 @@ set(SOURCES_PRIVATE
     backend/geometry_p.h
     backend/material.cpp
     backend/material_p.h
+    backend/cameralens.cpp
+    backend/cameralens_p.h
     jobs/updateworldtransformjob.cpp
     jobs/updateworldtransformjob_p.h
     jobs/loadgeometryjob.cpp
@@ -57,6 +63,8 @@ set(SOURCES_PUBLIC
     ${MODULE_API}/qgeometryfactory.h
     ${MODULE_API}/qmesh.h
     ${MODULE_API}/qmaterial.h
+    ${MODULE_API}/qcamera.h
+    ${MODULE_API}/qcameralens.h
 )
 
 add_library(${MODULE_NAME} ${SOURCES_PRIVATE} ${SOURCES_PUBLIC})

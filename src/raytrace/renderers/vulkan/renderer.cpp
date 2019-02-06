@@ -44,9 +44,11 @@ Q_LOGGING_CATEGORY(logVulkan, "raytrace.vulkan")
 Renderer::Renderer(QObject *parent)
     : QObject(parent)
     , m_renderTimer(new QTimer(this))
+    , m_cameraManager(new CameraManager)
     , m_frameAdvanceService(new FrameAdvanceService)
     , m_updateWorldTransformJob(new Raytrace::UpdateWorldTransformJob)
     , m_destroyRetiredResourcesJob(new DestroyRetiredResourcesJob(this))
+    , m_updateRenderParametersJob(new UpdateRenderParametersJob(this))
 {
     QObject::connect(m_renderTimer, &QTimer::timeout, this, &Renderer::renderFrame);
 }
@@ -125,6 +127,7 @@ void Renderer::shutdown()
         m_sceneManager.reset();
         m_descriptorManager.reset();
         m_commandBufferManager.reset();
+
         m_device.reset();
     }
 
@@ -466,6 +469,7 @@ void Renderer::renderFrame()
     m_device->resetFence(currentFrame.commandBuffersExecutedFence);
 
     m_sceneManager->updateRetiredResources();
+    m_cameraManager->writeParameters(m_renderParams);
 
     const bool readyToRender = m_sceneManager->isReadyToRender();
     if(readyToRender) {
@@ -505,6 +509,7 @@ void Renderer::renderFrame()
 
             commandBuffer.bindPipeline(m_rayTracingPipeline);
             commandBuffer.bindDescriptorSets(m_rayTracingPipeline, 0, descriptorSets);
+            commandBuffer.pushConstants(m_rayTracingPipeline, 0, &m_renderParams);
             commandBuffer.traceRays(m_rayTracingPipeline, uint32_t(renderRect.width()), uint32_t(renderRect.height()));
         }
 
@@ -712,6 +717,19 @@ void Renderer::setSceneRoot(Raytrace::Entity *rootEntity)
     m_updateWorldTransformJob->setRoot(m_sceneRoot);
 }
 
+Raytrace::Entity *Renderer::activeCamera() const
+{
+    return m_cameraManager->activeCamera();
+}
+
+void Renderer::setActiveCamera(Raytrace::Entity *cameraEntity)
+{
+    if(cameraEntity) {
+        Q_ASSERT(cameraEntity->isCamera());
+    }
+    m_cameraManager->setActiveCamera(cameraEntity);
+}
+
 void Renderer::setNodeManagers(Raytrace::NodeManagers *nodeManagers)
 {
     m_nodeManagers = nodeManagers;
@@ -737,12 +755,20 @@ SceneManager *Renderer::sceneManager() const
     return m_sceneManager.get();
 }
 
+CameraManager *Renderer::cameraManager() const
+{
+    return m_cameraManager.get();
+}
+
 QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()
 {
     QVector<Qt3DCore::QAspectJobPtr> jobs;
 
+    bool shouldUpdateRenderParameters = false;
     bool shouldUpdateInstanceBuffer = false;
     bool shouldUpdateTLAS = false;
+
+    m_updateRenderParametersJob->removeDependency(m_updateWorldTransformJob);
 
     jobs.append(m_destroyRetiredResourcesJob);
 
@@ -754,7 +780,9 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()
 
     if(m_dirtySet & DirtyFlag::TransformDirty) {
         jobs.append(m_updateWorldTransformJob);
+        m_updateRenderParametersJob->addDependency(m_updateWorldTransformJob);
         shouldUpdateTLAS = true;
+        shouldUpdateRenderParameters = true;
     }
 
     QVector<Qt3DCore::QAspectJobPtr> geometryJobs;
@@ -772,7 +800,15 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::renderJobs()
         shouldUpdateInstanceBuffer = true;
     }
 
+    if(m_dirtySet & DirtyFlag::CameraDirty) {
+        shouldUpdateRenderParameters = true;
+    }
+
     m_dirtySet = DirtyFlag::NoneDirty;
+
+    if(shouldUpdateRenderParameters) {
+        jobs.append(m_updateRenderParametersJob);
+    }
 
     if(m_sceneManager->renderables().size() == 0) {
         return jobs;

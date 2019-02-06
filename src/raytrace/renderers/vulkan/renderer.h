@@ -16,9 +16,11 @@
 #include <renderers/vulkan/managers/commandbuffermanager.h>
 #include <renderers/vulkan/managers/descriptormanager.h>
 #include <renderers/vulkan/managers/scenemanager.h>
+#include <renderers/vulkan/managers/cameramanager.h>
 
 #include <jobs/updateworldtransformjob_p.h>
 #include <renderers/vulkan/jobs/destroyretiredresourcesjob.h>
+#include <renderers/vulkan/jobs/updaterenderparametersjob.h>
 
 #include <Qt3DCore/QNodeId>
 #include <QObject>
@@ -53,13 +55,17 @@ public:
     void markDirty(DirtySet changes, Raytrace::BackendNode *node) override;
 
     Raytrace::Entity *sceneRoot() const override;
+    Raytrace::Entity *activeCamera() const override;
+
     void setSceneRoot(Raytrace::Entity *rootEntity) override;
+    void setActiveCamera(Raytrace::Entity *cameraEntity) override;
     void setNodeManagers(Raytrace::NodeManagers *nodeManagers) override;
 
     Qt3DCore::QAbstractFrameAdvanceService *frameAdvanceService() const override;
     CommandBufferManager *commandBufferManager() const;
     DescriptorManager *descriptorManager() const;
     SceneManager *sceneManager() const;
+    CameraManager *cameraManager() const;
 
     QVector<Qt3DCore::QAspectJobPtr> renderJobs() override;
 
@@ -100,6 +106,7 @@ private:
     QSharedPointer<CommandBufferManager> m_commandBufferManager;
     QSharedPointer<DescriptorManager> m_descriptorManager;
     QSharedPointer<SceneManager> m_sceneManager;
+    QSharedPointer<CameraManager> m_cameraManager;
 
     VkQueue m_graphicsQueue = VK_NULL_HANDLE;
 
@@ -135,11 +142,14 @@ private:
     DescriptorPool m_frameDescriptorPool;
     int m_frameIndex = 0;
 
+    RenderParameters m_renderParams = {};
+
     bool m_renderBuffersReady = false;
     bool m_clearPreviousRenderBuffer = false;
 
     Raytrace::UpdateWorldTransformJobPtr m_updateWorldTransformJob;
     DestroyRetiredResourcesJobPtr m_destroyRetiredResourcesJob;
+    UpdateRenderParametersJobPtr m_updateRenderParametersJob;
 
     Raytrace::Entity *m_sceneRoot = nullptr;
     DirtySet m_dirtySet = DirtyFlag::AllDirty;

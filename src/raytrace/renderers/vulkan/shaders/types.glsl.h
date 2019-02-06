@@ -67,6 +67,16 @@ struct EntityInstance // std430 layout
     uint geometryIndex;
 };
 
+struct RenderParameters // std430 layout
+{
+    vec4 cameraPositionAndAspect;
+    vec4 cameraUpVectorAndTanHalfFOV;
+    vec4 cameraRightVector;
+    vec4 cameraForwardVector;
+    vec4 skyColor;
+    uint params[4];
+};
+
 #ifdef __cplusplus
 } // Vulkan
 } // Qt3DRaytrace
