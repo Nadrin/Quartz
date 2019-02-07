@@ -26,6 +26,7 @@
 #include <QVulkanInstance>
 #include <QWindow>
 #include <QTimer>
+#include <QElapsedTimer>
 
 #include <QtMath>
 
@@ -37,6 +38,7 @@ namespace Config {
 constexpr bool     EnableVsync = false;
 constexpr VkFormat RenderBufferFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
 constexpr uint32_t DescriptorPoolCapacity = 128;
+constexpr int      StatisticsDisplayInterval = 1000;
 
 } // Config
 
@@ -45,6 +47,7 @@ Q_LOGGING_CATEGORY(logVulkan, "raytrace.vulkan")
 Renderer::Renderer(QObject *parent)
     : QObject(parent)
     , m_renderTimer(new QTimer(this))
+    , m_statisticsTimer(new QTimer(this))
     , m_cameraManager(new CameraManager)
     , m_frameAdvanceService(new FrameAdvanceService)
     , m_updateWorldTransformJob(new Raytrace::UpdateWorldTransformJob)
@@ -52,6 +55,7 @@ Renderer::Renderer(QObject *parent)
     , m_updateRenderParametersJob(new UpdateRenderParametersJob(this))
 {
     QObject::connect(m_renderTimer, &QTimer::timeout, this, &Renderer::renderFrame);
+    QObject::connect(m_statisticsTimer, &QTimer::timeout, this, &Renderer::displayStatistics);
 }
 
 bool Renderer::initialize()
@@ -109,6 +113,9 @@ bool Renderer::initialize()
         return false;
     }
 
+    m_statisticsTimer->setInterval(Config::StatisticsDisplayInterval);
+    m_statisticsTimer->start();
+
     m_renderTimer->start();
     m_frameAdvanceService->proceedToNextFrame();
     return true;
@@ -116,6 +123,7 @@ bool Renderer::initialize()
 
 void Renderer::shutdown()
 {
+    m_statisticsTimer->stop();
     m_renderTimer->stop();
 
     if(m_device) {
@@ -212,6 +220,7 @@ bool Renderer::createResources()
     }
 
     m_defaultSampler = m_device->createSampler({VK_FILTER_NEAREST});
+    m_defaultQueryPool = m_device->createQueryPool({VK_QUERY_TYPE_TIMESTAMP, 2 * numConcurrentFrames()});
 
     m_displayRenderPass = createDisplayRenderPass(m_swapchainFormat.format);
     m_displayPipeline = GraphicsPipelineBuilder(m_device.get(), m_displayRenderPass)
@@ -248,6 +257,7 @@ void Renderer::releaseResources()
     m_device->destroyDescriptorPool(m_frameDescriptorPool);
 
     m_device->destroySampler(m_defaultSampler);
+    m_device->destroyQueryPool(m_defaultQueryPool);
 
     m_device->destroyRenderPass(m_displayRenderPass);
     m_device->destroyPipeline(m_displayPipeline);
@@ -480,7 +490,13 @@ bool Renderer::submitFrameCommandsAndPresent(uint32_t imageIndex)
 void Renderer::renderFrame()
 {
     resizeSwapchain();
+
+    QElapsedTimer frameTimer;
+    frameTimer.start();
+
     const QRect renderRect = { {0, 0}, m_swapchainSize };
+    const uint32_t currentFrameQueryIndex = uint32_t(currentFrameIndex() * 2);
+    const uint32_t previousFrameQueryIndex = uint32_t(previousFrameIndex() * 2);
 
     FrameResources &currentFrame = m_frameResources[currentFrameIndex()];
     FrameResources &previousFrame = m_frameResources[previousFrameIndex()];
@@ -509,6 +525,9 @@ void Renderer::renderFrame()
     CommandBuffer &commandBuffer = currentFrame.commandBuffer;
     commandBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
     {
+        commandBuffer.resetQueryPool(m_defaultQueryPool, currentFrameQueryIndex, 2);
+        commandBuffer.writeTimestamp(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, m_defaultQueryPool, currentFrameQueryIndex);
+
         if(!m_renderBuffersReady) {
             QVector<ImageTransition> transitions{int(numConcurrentFrames())};
             for(int index=0; index < transitions.size(); ++index) {
@@ -558,6 +577,7 @@ void Renderer::renderFrame()
         }
 
         commandBuffer.resourceBarrier({currentFrame.renderBuffer, ImageState::ShaderRead, ImageState::ShaderReadWrite});
+        commandBuffer.writeTimestamp(VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, m_defaultQueryPool, currentFrameQueryIndex+1);
     }
     commandBuffer.end();
 
@@ -565,6 +585,30 @@ void Renderer::renderFrame()
 
     m_commandBufferManager->proceedToNextFrame();
     m_frameAdvanceService->proceedToNextFrame();
+
+    double previousDeviceTime;
+    if(m_device->queryTimeElapsed(m_defaultQueryPool, previousFrameQueryIndex, previousDeviceTime)) {
+        m_deviceTimeAverage.add(previousDeviceTime);
+    }
+    m_hostTimeAverage.add(frameTimer.nsecsElapsed() * 1e-6);
+}
+
+void Renderer::displayStatistics()
+{
+    if(!m_window) {
+        return;
+    }
+
+    const double cpuTime = m_hostTimeAverage.average();
+    const double gpuTime = m_deviceTimeAverage.average();
+    const double fps = (cpuTime > 0.0) ? 1000.0 / cpuTime : 0.0;
+
+    const QString statistics = QString("%1 [ CPU time: %2 ms | GPU time: %3 ms | FPS: %4 ]")
+            .arg(m_windowTitle)
+            .arg(cpuTime, 0, 'f', 2)
+            .arg(gpuTime, 0, 'f', 2)
+            .arg(fps, 0, 'f', 0);
+    m_window->setTitle(statistics);
 }
 
 VkPhysicalDevice Renderer::choosePhysicalDevice(const QByteArrayList &requiredExtensions, uint32_t &queueFamilyIndex) const
@@ -715,6 +759,7 @@ void Renderer::setSurface(QObject *surfaceObject)
     if(surfaceObject) {
         if(QWindow *window = qobject_cast<QWindow*>(surfaceObject)) {
             m_window = window;
+            m_windowTitle = window->title();
         }
         else {
             qCWarning(logVulkan) << "Incompatible surface object: expected QWindow instance";

@@ -55,6 +55,7 @@ set(SOURCES_PRIVATE
     io/meshimporter_p.h
     io/defaultmeshimporter.cpp
     io/defaultmeshimporter_p.h
+    utility/movingaverage.h
 )
 
 set(SOURCES_PUBLIC

@@ -22,6 +22,8 @@
 #include <renderers/vulkan/jobs/destroyexpiredresourcesjob.h>
 #include <renderers/vulkan/jobs/updaterenderparametersjob.h>
 
+#include <utility/movingaverage.h>
+
 #include <Qt3DCore/QNodeId>
 #include <QObject>
 #include <QSharedPointer>
@@ -31,6 +33,7 @@
 
 class QWindow;
 class QTimer;
+class QElapsedTimer;
 
 namespace Qt3DRaytrace {
 namespace Vulkan {
@@ -77,6 +80,7 @@ public:
 
 private slots:
     void renderFrame();
+    void displayStatistics();
 
 private:
     QVector<Qt3DCore::QAspectJobPtr> createGeometryJobs();
@@ -100,9 +104,12 @@ private:
     VkPhysicalDevice choosePhysicalDevice(const QByteArrayList &requiredExtensions, uint32_t &queueFamilyIndex) const;
     RenderPass createDisplayRenderPass(VkFormat swapchainFormat) const;
 
-    QWindow *m_window = nullptr;
     QVulkanInstance *m_instance = nullptr;
+    QWindow *m_window = nullptr;
+    QString m_windowTitle;
+
     QTimer *m_renderTimer = nullptr;
+    QTimer *m_statisticsTimer = nullptr;
 
     Raytrace::NodeManagers *m_nodeManagers = nullptr;
     Raytrace::RenderSettings *m_settings = nullptr;
@@ -124,6 +131,7 @@ private:
     RayTracingPipeline m_renderPipeline;
 
     Sampler m_defaultSampler;
+    QueryPool m_defaultQueryPool;
 
     Swapchain m_swapchain;
     VkSurfaceFormatKHR m_swapchainFormat;
@@ -161,6 +169,9 @@ private:
 
     Raytrace::Entity *m_sceneRoot = nullptr;
     DirtySet m_dirtySet = DirtyFlag::AllDirty;
+
+    Utility::MovingAverage<double> m_deviceTimeAverage;
+    Utility::MovingAverage<double> m_hostTimeAverage;
 };
 
 } // Vulkan

@@ -107,6 +107,10 @@ public:
         const VkPushConstantRange &range = pipeline.pushConstantRanges[pushConstantRangeIndex];
         vkCmdPushConstants(handle, pipeline.pipelineLayout, range.stageFlags, range.offset, range.size, values);
     }
+    void resetQueryPool(QueryPool queryPool, uint32_t firstQuery, uint32_t queryCount) const
+    {
+        vkCmdResetQueryPool(handle, queryPool, firstQuery, queryCount);
+    }
     void traceRays(const RayTracingPipeline &rayTracingPipeline, uint32_t width, uint32_t height) const
     {
         traceRays(rayTracingPipeline, width, height, 0, 0);
@@ -148,6 +152,10 @@ public:
     void setEvent(VkEvent event, VkPipelineStageFlags stageMask) const
     {
         vkCmdSetEvent(handle, event, stageMask);
+    }
+    void writeTimestamp(VkPipelineStageFlagBits pipelineStage, QueryPool queryPool, uint32_t query) const
+    {
+        vkCmdWriteTimestamp(handle, pipelineStage, queryPool, query);
     }
 };
 

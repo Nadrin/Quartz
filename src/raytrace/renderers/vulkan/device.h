@@ -99,6 +99,8 @@ public:
     void *mapMemory(const VmaAllocation &allocation) const;
     void unmapMemory(const VmaAllocation &allocation) const;
 
+    bool queryTimeElapsed(const QueryPool &queryPool, uint32_t firstTimestampQueryIndex, double &msElapsed) const;
+
     void waitIdle() const;
 
     VkDevice device() const { return m_device; }
