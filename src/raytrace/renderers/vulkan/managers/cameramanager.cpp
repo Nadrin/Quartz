@@ -49,6 +49,8 @@ void CameraManager::setDefaultParameters()
     m_forwardVector = IdentityForwardVector;
     m_aspectRatio = 1.0f;
     m_tanHalfFOV = std::tan(0.5f * qDegreesToRadians(DefaultFOV));
+    m_invGamma = 1.0f / 2.2f;
+    m_exposure = 1.0f;
 }
 
 void CameraManager::updateParameters()
@@ -69,9 +71,11 @@ void CameraManager::updateParameters()
     Q_ASSERT(lens);
     m_aspectRatio = lens->aspectRatio();
     m_tanHalfFOV = std::tan(0.5f * qDegreesToRadians(lens->fieldOfView()));
+    m_invGamma = 1.0f / lens->gamma();
+    m_exposure = lens->exposure();
 }
 
-void CameraManager::applyParameters(RenderParameters &params) const
+void CameraManager::applyRenderParameters(RenderParameters &params) const
 {
     params.cameraPositionAndAspect.data[0] = m_position.x();
     params.cameraPositionAndAspect.data[1] = m_position.y();
@@ -90,6 +94,12 @@ void CameraManager::applyParameters(RenderParameters &params) const
     params.cameraForwardVector[0] = m_forwardVector.x();
     params.cameraForwardVector[1] = m_forwardVector.y();
     params.cameraForwardVector[2] = m_forwardVector.z();
+}
+
+void CameraManager::applyDisplayPrameters(DisplayParameters &params) const
+{
+    params.invGamma = m_invGamma;
+    params.exposure = m_exposure;
 }
 
 } // Vulkan

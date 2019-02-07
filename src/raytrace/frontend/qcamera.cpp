@@ -63,6 +63,8 @@ QCamera::QCamera(QCameraPrivate &dd, QNode *parent)
 
     QObject::connect(d->m_lens, SIGNAL(aspectRatioChanged(float)), this, SIGNAL(aspectRatioChanged(float)));
     QObject::connect(d->m_lens, SIGNAL(fieldOfViewChanged(float)), this, SIGNAL(fieldOfViewChanged(float)));
+    QObject::connect(d->m_lens, SIGNAL(exposureChanged(float)), this, SIGNAL(exposureChanged(float)));
+    QObject::connect(d->m_lens, SIGNAL(gammaChanged(float)), this, SIGNAL(gammaChanged(float)));
 
     addComponent(d->m_lens);
     addComponent(d->m_transform);
@@ -132,6 +134,18 @@ float QCamera::fieldOfView() const
 {
     Q_D(const QCamera);
     return d->m_lens->fieldOfView();
+}
+
+float QCamera::gamma() const
+{
+    Q_D(const QCamera);
+    return d->m_lens->gamma();
+}
+
+float QCamera::exposure() const
+{
+    Q_D(const QCamera);
+    return d->m_lens->exposure();
 }
 
 void QCamera::setPosition(const QVector3D &position)
@@ -206,6 +220,18 @@ void QCamera::setFieldOfView(float fov)
 {
     Q_D(QCamera);
     d->m_lens->setFieldOfView(fov);
+}
+
+void QCamera::setGamma(float gamma)
+{
+    Q_D(QCamera);
+    d->m_lens->setGamma(gamma);
+}
+
+void QCamera::setExposure(float exposure)
+{
+    Q_D(QCamera);
+    d->m_lens->setExposure(exposure);
 }
 
 } // Qt3DRaytrace

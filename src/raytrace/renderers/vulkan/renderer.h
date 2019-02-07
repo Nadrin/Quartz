@@ -159,6 +159,7 @@ private:
     uint32_t m_frameNumber = 0;
 
     RenderParameters m_renderParams = {};
+    DisplayParameters m_displayParams = {};
 
     bool m_renderBuffersReady = false;
     bool m_clearPreviousRenderBuffer = false;

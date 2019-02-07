@@ -30,6 +30,18 @@ float QCameraLens::fieldOfView() const
     return d->m_data.fieldOfView;
 }
 
+float QCameraLens::gamma() const
+{
+    Q_D(const QCameraLens);
+    return d->m_data.gamma;
+}
+
+float QCameraLens::exposure() const
+{
+    Q_D(const QCameraLens);
+    return d->m_data.exposure;
+}
+
 void QCameraLens::setAspectRatio(float aspectRatio)
 {
     Q_D(QCameraLens);
@@ -45,6 +57,24 @@ void QCameraLens::setFieldOfView(float fov)
     if(!qFuzzyCompare(d->m_data.fieldOfView, fov)) {
         d->m_data.fieldOfView = fov;
         emit fieldOfViewChanged(fov);
+    }
+}
+
+void QCameraLens::setGamma(float gamma)
+{
+    Q_D(QCameraLens);
+    if(!qFuzzyCompare(d->m_data.gamma, gamma)) {
+        d->m_data.gamma = gamma;
+        emit gammaChanged(gamma);
+    }
+}
+
+void QCameraLens::setExposure(float exposure)
+{
+    Q_D(QCameraLens);
+    if(!qFuzzyCompare(d->m_data.exposure, exposure)) {
+        d->m_data.exposure = exposure;
+        emit exposureChanged(exposure);
     }
 }
 

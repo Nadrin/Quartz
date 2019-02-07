@@ -24,6 +24,7 @@ class QCameraPrivate;
 class QT3DRAYTRACESHARED_EXPORT QCamera : public Qt3DCore::QEntity
 {
     Q_OBJECT
+    // QCamera
     Q_PROPERTY(QVector3D position READ position WRITE setPosition NOTIFY positionChanged)
     Q_PROPERTY(QQuaternion rotation READ rotation WRITE setRotation NOTIFY rotationChanged)
     Q_PROPERTY(float pitch READ pitch WRITE setPitch NOTIFY pitchChanged)
@@ -31,8 +32,11 @@ class QT3DRAYTRACESHARED_EXPORT QCamera : public Qt3DCore::QEntity
     Q_PROPERTY(float roll READ roll WRITE setRoll NOTIFY rollChanged)
     Q_PROPERTY(QVector3D lookAtTarget READ lookAtTarget WRITE setLookAtTarget NOTIFY lookAtTargetChanged)
     Q_PROPERTY(QVector3D lookAtUp READ lookAtUp WRITE setLookAtUp NOTIFY lookAtUpChanged)
+    // QCameraLens
     Q_PROPERTY(float aspectRatio READ aspectRatio WRITE setAspectRatio NOTIFY aspectRatioChanged)
     Q_PROPERTY(float fieldOfView READ fieldOfView WRITE setFieldOfView NOTIFY fieldOfViewChanged)
+    Q_PROPERTY(float gamma READ gamma WRITE setGamma NOTIFY gammaChanged)
+    Q_PROPERTY(float exposure READ exposure WRITE setExposure NOTIFY exposureChanged)
 public:
     explicit QCamera(Qt3DCore::QNode *parent = nullptr);
 
@@ -51,6 +55,8 @@ public:
 
     float aspectRatio() const;
     float fieldOfView() const;
+    float gamma() const;
+    float exposure() const;
 
 public slots:
     void setPosition(const QVector3D &position);
@@ -65,6 +71,8 @@ public slots:
 
     void setAspectRatio(float aspectRatio);
     void setFieldOfView(float fov);
+    void setGamma(float gamma);
+    void setExposure(float exposure);
 
 signals:
     void positionChanged(const QVector3D &position);
@@ -79,6 +87,8 @@ signals:
 
     void aspectRatioChanged(float aspectRatio);
     void fieldOfViewChanged(float fov);
+    void gammaChanged(float gamma);
+    void exposureChanged(float exposure);
 
 protected:
     explicit QCamera(QCameraPrivate &dd, Qt3DCore::QNode *parent = nullptr);

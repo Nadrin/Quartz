@@ -28,6 +28,12 @@ void CameraLens::sceneChangeEvent(const QSceneChangePtr &change)
         else if(propertyChange->propertyName() == QByteArrayLiteral("aspectRatio")) {
             m_aspectRatio = propertyChange->value().value<float>();
         }
+        else if(propertyChange->propertyName() == QByteArrayLiteral("gamma")) {
+            m_gamma = propertyChange->value().value<float>();
+        }
+        else if(propertyChange->propertyName() == QByteArrayLiteral("exposure")) {
+            m_exposure = propertyChange->value().value<float>();
+        }
         markDirty(AbstractRenderer::CameraDirty);
     }
     BackendNode::sceneChangeEvent(change);
@@ -40,6 +46,8 @@ void CameraLens::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
 
     m_aspectRatio = data.aspectRatio;
     m_fieldOfView = data.fieldOfView;
+    m_gamma = data.gamma;
+    m_exposure = data.exposure;
 
     markDirty(AbstractRenderer::CameraDirty);
 }

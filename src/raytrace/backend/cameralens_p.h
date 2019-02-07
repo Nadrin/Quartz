@@ -19,14 +19,18 @@ public:
 
     float fieldOfView() const { return m_fieldOfView; }
     float aspectRatio() const { return m_aspectRatio; }
+    float gamma() const { return m_gamma; }
+    float exposure() const { return m_exposure; }
 
     void sceneChangeEvent(const Qt3DCore::QSceneChangePtr &change) override;
 
 private:
     void initializeFromPeer(const Qt3DCore::QNodeCreatedChangeBasePtr &change) override;
 
-    float m_fieldOfView = 0.0f;
-    float m_aspectRatio = 0.0f;
+    float m_fieldOfView;
+    float m_aspectRatio;
+    float m_gamma;
+    float m_exposure;
 };
 
 } // Raytrace

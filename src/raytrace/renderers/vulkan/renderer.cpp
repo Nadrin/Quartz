@@ -509,7 +509,9 @@ void Renderer::renderFrame()
     const bool readyToRender = m_sceneManager->isReadyToRender();
     if(readyToRender) {
         beginRenderIteration();
-        m_cameraManager->applyParameters(m_renderParams);
+
+        m_cameraManager->applyRenderParameters(m_renderParams);
+        m_cameraManager->applyDisplayPrameters(m_displayParams);
 
         m_device->writeDescriptor({ currentFrame.renderDescriptorSet, Binding_TLAS, 0, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV }, m_sceneManager->sceneTLAS());
         m_device->writeDescriptors({
@@ -570,6 +572,7 @@ void Renderer::renderFrame()
             commandBuffer.beginRenderPass({m_displayRenderPass, attachment.framebuffer, renderRect}, VK_SUBPASS_CONTENTS_INLINE);
             commandBuffer.bindPipeline(m_displayPipeline);
             commandBuffer.bindDescriptorSets(m_displayPipeline, 0, {currentFrame.displayDescriptorSet});
+            commandBuffer.pushConstants(m_displayPipeline, 0, &m_displayParams);
             commandBuffer.setViewport(renderRect);
             commandBuffer.setScissor(renderRect);
             commandBuffer.draw(3, 1);

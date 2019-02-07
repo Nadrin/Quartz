@@ -18,6 +18,7 @@ class Entity;
 namespace Vulkan {
 
 struct RenderParameters;
+struct DisplayParameters;
 
 class CameraManager
 {
@@ -29,7 +30,8 @@ public:
 
     void setDefaultParameters();
     void updateParameters();
-    void applyParameters(RenderParameters &params) const;
+    void applyRenderParameters(RenderParameters &params) const;
+    void applyDisplayPrameters(DisplayParameters &params) const;
 
 private:
     Raytrace::Entity *m_activeCamera;
@@ -40,6 +42,8 @@ private:
     QVector3D m_forwardVector;
     float m_aspectRatio;
     float m_tanHalfFOV;
+    float m_invGamma;
+    float m_exposure;
 };
 
 } // Vulkan

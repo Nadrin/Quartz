@@ -78,6 +78,13 @@ struct RenderParameters // std430 layout
     vec4 skyColor;
 };
 
+struct DisplayParameters // std430 layout
+{
+    float invGamma;
+    float exposure;
+    float padding[2];
+};
+
 #ifdef __cplusplus
 } // Vulkan
 } // Qt3DRaytrace
