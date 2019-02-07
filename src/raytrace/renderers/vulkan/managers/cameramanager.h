@@ -29,7 +29,7 @@ public:
 
     void setDefaultParameters();
     void updateParameters();
-    void writeParameters(RenderParameters &params) const;
+    void applyParameters(RenderParameters &params) const;
 
 private:
     Raytrace::Entity *m_activeCamera;

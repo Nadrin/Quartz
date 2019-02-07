@@ -28,6 +28,13 @@ const uint Binding_Materials = 2;
 const uint Binding_RenderBuffer = 3;
 const uint Binding_PrevRenderBuffer = 4;
 
+const uint FrameParam_FrameNumber = 0;
+const uint FrameParam_RandomSeed = 1;
+
+const uint RenderSetting_PrimarySamples = 0;
+const uint RenderSetting_SecondarySamples = 1;
+const uint RenderSetting_MaxDepth = 2;
+
 #ifdef __cplusplus
 } // Vulkan
 } // Qt3DRaytrace

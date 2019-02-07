@@ -26,6 +26,8 @@ set(SOURCES_PRIVATE
     frontend/qcamera_p.h
     frontend/qcameralens.cpp
     frontend/qcameralens_p.h
+    frontend/qrendersettings.cpp
+    frontend/qrendersettings_p.h
     backend/handles_p.h
     backend/types_p.h
     backend/abstractrenderer_p.h
@@ -44,6 +46,8 @@ set(SOURCES_PRIVATE
     backend/material_p.h
     backend/cameralens.cpp
     backend/cameralens_p.h
+    backend/rendersettings.cpp
+    backend/rendersettings_p.h
     jobs/updateworldtransformjob.cpp
     jobs/updateworldtransformjob_p.h
     jobs/loadgeometryjob.cpp
@@ -65,6 +69,7 @@ set(SOURCES_PUBLIC
     ${MODULE_API}/qmaterial.h
     ${MODULE_API}/qcamera.h
     ${MODULE_API}/qcameralens.h
+    ${MODULE_API}/qrendersettings.h
 )
 
 add_library(${MODULE_NAME} ${SOURCES_PRIVATE} ${SOURCES_PUBLIC})

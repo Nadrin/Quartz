@@ -21,6 +21,7 @@
 #include <renderers/vulkan/shaders/bindings.glsl.h>
 
 #include <backend/managers_p.h>
+#include <backend/rendersettings_p.h>
 
 #include <QVulkanInstance>
 #include <QWindow>
@@ -303,7 +304,7 @@ void Renderer::createSwapchainResources()
         previousFrame = &frame;
     }
 
-    m_clearPreviousRenderBuffer = true;
+    resetRenderProgress();
 }
 
 void Renderer::releaseSwapchainResources()
@@ -318,6 +319,25 @@ void Renderer::releaseSwapchainResources()
         m_device->destroyImage(frame.renderBuffer);
     }
     m_renderBuffersReady = false;
+}
+
+void Renderer::beginRenderIteration()
+{
+    if(m_settings) {
+        m_renderParams.settings[RenderSetting_PrimarySamples] = m_settings->primarySamples();
+        m_renderParams.settings[RenderSetting_SecondarySamples] = m_settings->secondarySamples();
+        m_renderParams.settings[RenderSetting_MaxDepth] = m_settings->maxDepth();
+        m_settings->skyColorAndIntensity().writeToBuffer(m_renderParams.skyColor.data);
+    }
+
+    m_renderParams.frameParams[FrameParam_FrameNumber] = ++m_frameNumber;
+    m_renderParams.frameParams[FrameParam_RandomSeed] = 0;
+}
+
+void Renderer::resetRenderProgress()
+{
+    m_clearPreviousRenderBuffer = true;
+    m_frameNumber = 0;
 }
 
 bool Renderer::querySwapchainProperties(VkPhysicalDevice physicalDevice, VkSurfaceFormatKHR &surfaceFormat, int &minImageCount) const
@@ -469,10 +489,12 @@ void Renderer::renderFrame()
     m_device->resetFence(currentFrame.commandBuffersExecutedFence);
 
     m_sceneManager->updateRetiredResources();
-    m_cameraManager->writeParameters(m_renderParams);
 
     const bool readyToRender = m_sceneManager->isReadyToRender();
     if(readyToRender) {
+        beginRenderIteration();
+        m_cameraManager->applyParameters(m_renderParams);
+
         m_device->writeDescriptor({ currentFrame.renderDescriptorSet, Binding_TLAS, 0, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV }, m_sceneManager->sceneTLAS());
         m_device->writeDescriptors({
             { currentFrame.renderDescriptorSet, Binding_Instances, 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, DescriptorBufferInfo(m_sceneManager->instanceBuffer()) },
@@ -731,12 +753,22 @@ Raytrace::Entity *Renderer::activeCamera() const
     return m_cameraManager->activeCamera();
 }
 
+Raytrace::RenderSettings *Renderer::settings() const
+{
+    return m_settings;
+}
+
 void Renderer::setActiveCamera(Raytrace::Entity *cameraEntity)
 {
     if(cameraEntity) {
         Q_ASSERT(cameraEntity->isCamera());
     }
     m_cameraManager->setActiveCamera(cameraEntity);
+}
+
+void Renderer::setSettings(Raytrace::RenderSettings *settings)
+{
+    m_settings = settings;
 }
 
 void Renderer::setNodeManagers(Raytrace::NodeManagers *nodeManagers)
@@ -782,7 +814,7 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::jobsToExecute(qint64 time)
     jobs.append(m_destroyExpiredResourcesJob);
 
     if(m_dirtySet != DirtyFlag::NoneDirty) {
-        m_clearPreviousRenderBuffer = true;
+        resetRenderProgress();
     }
 
     if(m_dirtySet & DirtyFlag::EntityDirty || m_dirtySet & DirtyFlag::GeometryDirty) {

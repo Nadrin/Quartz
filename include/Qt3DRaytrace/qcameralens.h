@@ -17,6 +17,7 @@ class QCameraLensPrivate;
 class QT3DRAYTRACESHARED_EXPORT QCameraLens : public Qt3DCore::QComponent
 {
     Q_OBJECT
+    Q_DECLARE_PRIVATE(QCameraLens)
     Q_PROPERTY(float aspectRatio READ aspectRatio WRITE setAspectRatio NOTIFY aspectRatioChanged)
     Q_PROPERTY(float fieldOfView READ fieldOfView WRITE setFieldOfView NOTIFY fieldOfViewChanged)
 public:
@@ -37,7 +38,6 @@ protected:
     explicit QCameraLens(QCameraLensPrivate &dd, QNode *parent = nullptr);
 
 private:
-    Q_DECLARE_PRIVATE(QCameraLens)
     Qt3DCore::QNodeCreatedChangeBasePtr createNodeCreationChange() const override;
 };
 

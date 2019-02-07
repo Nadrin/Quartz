@@ -56,9 +56,11 @@ public:
 
     Raytrace::Entity *sceneRoot() const override;
     Raytrace::Entity *activeCamera() const override;
+    Raytrace::RenderSettings *settings() const override;
 
     void setSceneRoot(Raytrace::Entity *rootEntity) override;
     void setActiveCamera(Raytrace::Entity *cameraEntity) override;
+    void setSettings(Raytrace::RenderSettings *settings) override;
     void setNodeManagers(Raytrace::NodeManagers *nodeManagers) override;
 
     Qt3DCore::QAbstractFrameAdvanceService *frameAdvanceService() const override;
@@ -85,6 +87,9 @@ private:
     void createSwapchainResources();
     void releaseSwapchainResources();
 
+    void beginRenderIteration();
+    void resetRenderProgress();
+
     bool querySwapchainProperties(VkPhysicalDevice physicalDevice, VkSurfaceFormatKHR &surfaceFormat, int &minImageCount) const;
     bool querySwapchainPresentModes(VkPhysicalDevice physicalDevice, bool vsync, VkPresentModeKHR &presentMode) const;
     void resizeSwapchain();
@@ -100,6 +105,7 @@ private:
     QTimer *m_renderTimer = nullptr;
 
     Raytrace::NodeManagers *m_nodeManagers = nullptr;
+    Raytrace::RenderSettings *m_settings = nullptr;
 
     QSharedPointer<Device> m_device;
     QSharedPointer<FrameAdvanceService> m_frameAdvanceService;
@@ -140,7 +146,9 @@ private:
     QVector<FrameResources> m_frameResources;
     CommandPool m_frameCommandPool;
     DescriptorPool m_frameDescriptorPool;
+
     int m_frameIndex = 0;
+    uint32_t m_frameNumber = 0;
 
     RenderParameters m_renderParams = {};
 

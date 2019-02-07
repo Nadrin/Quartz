@@ -69,12 +69,13 @@ struct EntityInstance // std430 layout
 
 struct RenderParameters // std430 layout
 {
+    uint settings[4];
+    uint frameParams[4];
     vec4 cameraPositionAndAspect;
     vec4 cameraUpVectorAndTanHalfFOV;
     vec4 cameraRightVector;
     vec4 cameraForwardVector;
     vec4 skyColor;
-    uint params[4];
 };
 
 #ifdef __cplusplus

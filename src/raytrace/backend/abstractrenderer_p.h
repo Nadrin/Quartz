@@ -21,6 +21,7 @@ namespace Raytrace {
 
 class BackendNode;
 class Entity;
+class RenderSettings;
 
 struct NodeManagers;
 
@@ -47,9 +48,11 @@ public:
 
     virtual Entity *sceneRoot() const = 0;
     virtual Entity *activeCamera() const = 0;
+    virtual RenderSettings *settings() const = 0;
 
     virtual void setSceneRoot(Entity *rootEntity) = 0;
     virtual void setActiveCamera(Entity *cameraEntity) = 0;
+    virtual void setSettings(RenderSettings *settings) = 0;
     virtual void setNodeManagers(NodeManagers *nodeManagers) = 0;
 
     virtual Qt3DCore::QAbstractFrameAdvanceService *frameAdvanceService() const = 0;

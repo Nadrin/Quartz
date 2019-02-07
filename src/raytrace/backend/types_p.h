@@ -21,10 +21,10 @@ struct LinearColor
     LinearColor(float r, float g, float b)
         : r(r), g(g), b(b)
     {}
-    LinearColor(const QColor &c)
-        : r(float(c.redF()))
-        , g(float(c.greenF()))
-        , b(float(c.blueF()))
+    LinearColor(const QColor &c, float intensity=1.0f)
+        : r(float(c.redF()) * intensity)
+        , g(float(c.greenF()) * intensity)
+        , b(float(c.blueF()) * intensity)
     {}
 
     void writeToBuffer(float *buffer) const

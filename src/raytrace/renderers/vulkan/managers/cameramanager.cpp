@@ -71,7 +71,7 @@ void CameraManager::updateParameters()
     m_tanHalfFOV = std::tan(0.5f * qDegreesToRadians(lens->fieldOfView()));
 }
 
-void CameraManager::writeParameters(RenderParameters &params) const
+void CameraManager::applyParameters(RenderParameters &params) const
 {
     params.cameraPositionAndAspect.data[0] = m_position.x();
     params.cameraPositionAndAspect.data[1] = m_position.y();
