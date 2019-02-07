@@ -58,11 +58,9 @@ public:
     void markDirty(DirtySet changes, Raytrace::BackendNode *node) override;
 
     Raytrace::Entity *sceneRoot() const override;
-    Raytrace::Entity *activeCamera() const override;
     Raytrace::RenderSettings *settings() const override;
 
     void setSceneRoot(Raytrace::Entity *rootEntity) override;
-    void setActiveCamera(Raytrace::Entity *cameraEntity) override;
     void setSettings(Raytrace::RenderSettings *settings) override;
     void setNodeManagers(Raytrace::NodeManagers *nodeManagers) override;
 
@@ -93,6 +91,7 @@ private:
 
     void beginRenderIteration();
     void resetRenderProgress();
+    void updateActiveCamera();
 
     bool querySwapchainProperties(VkPhysicalDevice physicalDevice, VkSurfaceFormatKHR &surfaceFormat, int &minImageCount) const;
     bool querySwapchainPresentModes(VkPhysicalDevice physicalDevice, bool vsync, VkPresentModeKHR &presentMode) const;

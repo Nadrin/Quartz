@@ -13,12 +13,14 @@
 
 namespace Qt3DRaytrace {
 
+class QCamera;
 class QRenderSettingsPrivate;
 
 class QT3DRAYTRACESHARED_EXPORT QRenderSettings : public Qt3DCore::QComponent
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QRenderSettings)
+    Q_PROPERTY(Qt3DRaytrace::QCamera* camera READ camera WRITE setCamera NOTIFY cameraChanged)
     Q_PROPERTY(int primarySamples READ primarySamples WRITE setPrimarySamples NOTIFY primarySamplesChanged)
     Q_PROPERTY(int secondarySamples READ secondarySamples WRITE setSecondarySamples NOTIFY secondarySamplesChanged)
     Q_PROPERTY(int maxDepth READ maxDepth WRITE setMaxDepth NOTIFY maxDepthChanged)
@@ -27,6 +29,7 @@ class QT3DRAYTRACESHARED_EXPORT QRenderSettings : public Qt3DCore::QComponent
 public:
     explicit QRenderSettings(Qt3DCore::QNode *parent = nullptr);
 
+    QCamera *camera() const;
     int primarySamples() const;
     int secondarySamples() const;
     int maxDepth() const;
@@ -34,6 +37,7 @@ public:
     float skyIntensity() const;
 
 public slots:
+    void setCamera(QCamera *camera);
     void setPrimarySamples(int primarySamples);
     void setSecondarySamples(int secondarySamples);
     void setMaxDepth(int maxDepth);
@@ -41,6 +45,7 @@ public slots:
     void setSkyIntensity(float skyIntensity);
 
 signals:
+    void cameraChanged(QCamera *camera);
     void primarySamplesChanged(int primarySamples);
     void secondarySamplesChanged(int secondarySamples);
     void maxDepthChanged(int maxDepth);

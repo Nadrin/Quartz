@@ -18,6 +18,7 @@ class RenderSettings : public BackendNode
 public:
     RenderSettings();
 
+    Qt3DCore::QNodeId cameraId() const { return m_cameraId; }
     unsigned int primarySamples() const { return m_primarySamples; }
     unsigned int secondarySamples() const { return m_secondarySamples; }
     unsigned int maxDepth() const { return m_maxDepth; }
@@ -32,6 +33,7 @@ public:
 private:
     void initializeFromPeer(const Qt3DCore::QNodeCreatedChangeBasePtr &change) override;
 
+    Qt3DCore::QNodeId m_cameraId;
     unsigned int m_primarySamples;
     unsigned int m_secondarySamples;
     unsigned int m_maxDepth;

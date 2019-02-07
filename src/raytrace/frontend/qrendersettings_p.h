@@ -7,12 +7,15 @@
 #pragma once
 
 #include <Qt3DRaytrace/qrendersettings.h>
+#include <Qt3DCore/QNodeId>
 #include <Qt3DCore/private/qcomponent_p.h>
 
 namespace Qt3DRaytrace {
 
 struct QRenderSettingsData
 {
+    Qt3DCore::QNodeId cameraId;
+
     int primarySamples = 1;
     int secondarySamples = 1;
     int maxDepth = 3;
@@ -25,7 +28,8 @@ class QRenderSettingsPrivate : public Qt3DCore::QComponentPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QRenderSettings)
-    QRenderSettingsData m_data;
+    QRenderSettingsData m_settings;
+    QCamera *m_camera = nullptr;
 };
 
 } // Qt3DRaytrace

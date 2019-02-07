@@ -22,7 +22,10 @@ void RenderSettings::sceneChangeEvent(const QSceneChangePtr &change)
 {
     if(change->type() == PropertyUpdated) {
         QPropertyUpdatedChangePtr propertyChange = qSharedPointerCast<QPropertyUpdatedChange>(change);
-        if(propertyChange->propertyName() == QByteArrayLiteral("primarySamples")) {
+        if(propertyChange->propertyName() == QByteArrayLiteral("camera")) {
+            m_cameraId = propertyChange->value().value<QNodeId>();
+        }
+        else if(propertyChange->propertyName() == QByteArrayLiteral("primarySamples")) {
             m_primarySamples = propertyChange->value().value<unsigned int>();
         }
         else if(propertyChange->propertyName() == QByteArrayLiteral("secondarySamples")) {
@@ -48,6 +51,7 @@ void RenderSettings::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
     const auto typedChange = qSharedPointerCast<Qt3DCore::QNodeCreatedChange<QRenderSettingsData>>(change);
     const auto &data = typedChange->data;
 
+    m_cameraId = data.cameraId;
     m_primarySamples = static_cast<unsigned int>(data.primarySamples);
     m_secondarySamples = static_cast<unsigned int>(data.secondarySamples);
     m_maxDepth = static_cast<unsigned int>(data.maxDepth);

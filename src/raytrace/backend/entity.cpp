@@ -136,12 +136,6 @@ void Entity::addComponent(QNodeIdTypePair idAndType)
     else if(type->inherits(&Qt3DRaytrace::QCameraLens::staticMetaObject)) {
         m_cameraLensComponent = id;
     }
-
-    // TODO: Support multiple cameras.
-    Q_ASSERT(m_renderer);
-    if(isCamera() && !m_renderer->activeCamera()) {
-        m_renderer->setActiveCamera(this);
-    }
 }
 
 void Entity::removeComponent(QNodeId nodeId)
@@ -157,12 +151,6 @@ void Entity::removeComponent(QNodeId nodeId)
     }
     else if(nodeId == m_cameraLensComponent) {
         m_cameraLensComponent = QNodeId{};
-    }
-
-    // TODO: Support multiple cameras.
-    Q_ASSERT(m_renderer);
-    if(!isCamera() && m_renderer->activeCamera() == this) {
-        m_renderer->setActiveCamera(nullptr);
     }
 }
 

@@ -350,6 +350,17 @@ void Renderer::resetRenderProgress()
     m_frameNumber = 0;
 }
 
+void Renderer::updateActiveCamera()
+{
+    Q_ASSERT(m_cameraManager);
+    if(m_settings) {
+        Raytrace::Entity *cameraEntity = m_nodeManagers->entityManager.lookupResource(m_settings->cameraId());
+        if(cameraEntity && cameraEntity->isCamera()) {
+            m_cameraManager->setActiveCamera(cameraEntity);
+        }
+    }
+}
+
 bool Renderer::querySwapchainProperties(VkPhysicalDevice physicalDevice, VkSurfaceFormatKHR &surfaceFormat, int &minImageCount) const
 {
     Result result;
@@ -796,27 +807,15 @@ void Renderer::setSceneRoot(Raytrace::Entity *rootEntity)
     m_updateWorldTransformJob->setRoot(m_sceneRoot);
 }
 
-Raytrace::Entity *Renderer::activeCamera() const
-{
-    return m_cameraManager->activeCamera();
-}
-
 Raytrace::RenderSettings *Renderer::settings() const
 {
     return m_settings;
 }
 
-void Renderer::setActiveCamera(Raytrace::Entity *cameraEntity)
-{
-    if(cameraEntity) {
-        Q_ASSERT(cameraEntity->isCamera());
-    }
-    m_cameraManager->setActiveCamera(cameraEntity);
-}
-
 void Renderer::setSettings(Raytrace::RenderSettings *settings)
 {
     m_settings = settings;
+    updateActiveCamera();
 }
 
 void Renderer::setNodeManagers(Raytrace::NodeManagers *nodeManagers)
@@ -894,6 +893,7 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::jobsToExecute(qint64 time)
     }
 
     if(m_dirtySet & DirtyFlag::CameraDirty) {
+        updateActiveCamera();
         shouldUpdateRenderParameters = true;
     }
 
