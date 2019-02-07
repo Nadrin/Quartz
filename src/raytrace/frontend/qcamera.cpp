@@ -9,9 +9,17 @@
 
 #include <Qt3DCore/QTransform>
 
+#include <cmath>
+
 using namespace Qt3DCore;
 
 namespace Qt3DRaytrace {
+
+template<typename T> void normalizeAngle(T &angle)
+{
+    T t = std::fmod(angle, 360.0f);
+    angle = std::fmod(t + 360.0f, 360.0f);
+}
 
 QCameraPrivate::QCameraPrivate()
     : m_lens(new QCameraLens)
@@ -32,15 +40,15 @@ void QCameraPrivate::updateRotation(const QQuaternion &rotation, bool updateEule
             QVector3D eulerAngles = m_rotation.toEulerAngles();
             if(!qFuzzyCompare(eulerAngles.x(), m_eulerAngles.x())) {
                 m_eulerAngles.setX(eulerAngles.x());
-                emit q->pitchChanged(m_eulerAngles.x());
+                emit q->rotationPitchChanged(m_eulerAngles.x());
             }
             if(!qFuzzyCompare(eulerAngles.y(), m_eulerAngles.y())) {
                 m_eulerAngles.setY(eulerAngles.y());
-                emit q->yawChanged(m_eulerAngles.y());
+                emit q->rotationYawChanged(m_eulerAngles.y());
             }
             if(!qFuzzyCompare(eulerAngles.z(), m_eulerAngles.z())) {
                 m_eulerAngles.setZ(eulerAngles.z());
-                emit q->rollChanged(m_eulerAngles.z());
+                emit q->rotationRollChanged(m_eulerAngles.z());
             }
         }
     }
@@ -94,19 +102,19 @@ QQuaternion QCamera::rotation() const
     return d->m_rotation;
 }
 
-float QCamera::pitch() const
+float QCamera::rotationPitch() const
 {
     Q_D(const QCamera);
     return d->m_eulerAngles.x();
 }
 
-float QCamera::yaw() const
+float QCamera::rotationYaw() const
 {
     Q_D(const QCamera);
     return d->m_eulerAngles.y();
 }
 
-float QCamera::roll() const
+float QCamera::rotationRoll() const
 {
     Q_D(const QCamera);
     return d->m_eulerAngles.z();
@@ -148,6 +156,55 @@ float QCamera::exposure() const
     return d->m_lens->exposure();
 }
 
+void QCamera::translate(const QVector3D &t)
+{
+    Q_D(QCamera);
+    const QVector3D relativeTranslation = d->m_rotation.rotatedVector(t);
+    setPosition(d->m_position + relativeTranslation);
+}
+
+void QCamera::translateWorld(const QVector3D &t)
+{
+    Q_D(QCamera);
+    setPosition(d->m_position + t);
+}
+
+void QCamera::rotate(const QQuaternion &q)
+{
+    Q_D(QCamera);
+    setRotation(q * d->m_rotation);
+}
+
+void QCamera::tilt(float angle)
+{
+    rotate(QQuaternion::fromEulerAngles(angle, 0.0f, 0.0f));
+}
+
+void QCamera::pan(float angle)
+{
+    rotate(QQuaternion::fromEulerAngles(0.0f, angle, 0.0f));
+}
+
+void QCamera::roll(float angle)
+{
+    rotate(QQuaternion::fromEulerAngles(0.0f, 0.0f, angle));
+}
+
+void QCamera::tiltWorld(float angle)
+{
+    setRotationPitch(rotationPitch() + angle);
+}
+
+void QCamera::panWorld(float angle)
+{
+    setRotationYaw(rotationYaw() + angle);
+}
+
+void QCamera::rollWorld(float angle)
+{
+    setRotationRoll(rotationRoll() + angle);
+}
+
 void QCamera::setPosition(const QVector3D &position)
 {
     Q_D(QCamera);
@@ -164,33 +221,36 @@ void QCamera::setRotation(const QQuaternion &rotation)
     d->updateRotation(rotation, true);
 }
 
-void QCamera::setPitch(float pitch)
+void QCamera::setRotationPitch(float rotationPitch)
 {
     Q_D(QCamera);
-    if(!qFuzzyCompare(d->m_eulerAngles.x(), pitch)) {
-        d->m_eulerAngles.setX(pitch);
+    normalizeAngle(rotationPitch);
+    if(!qFuzzyCompare(d->m_eulerAngles.x(), rotationPitch)) {
+        d->m_eulerAngles.setX(rotationPitch);
         d->updateRotation(QQuaternion::fromEulerAngles(d->m_eulerAngles), false);
-        emit pitchChanged(pitch);
+        emit rotationPitchChanged(rotationPitch);
     }
 }
 
-void QCamera::setYaw(float yaw)
+void QCamera::setRotationYaw(float rotationYaw)
 {
     Q_D(QCamera);
-    if(!qFuzzyCompare(d->m_eulerAngles.y(), yaw)) {
-        d->m_eulerAngles.setY(yaw);
+    normalizeAngle(rotationYaw);
+    if(!qFuzzyCompare(d->m_eulerAngles.y(), rotationYaw)) {
+        d->m_eulerAngles.setY(rotationYaw);
         d->updateRotation(QQuaternion::fromEulerAngles(d->m_eulerAngles), false);
-        emit yawChanged(yaw);
+        emit rotationYawChanged(rotationYaw);
     }
 }
 
-void QCamera::setRoll(float roll)
+void QCamera::setRotationRoll(float rotationRoll)
 {
     Q_D(QCamera);
-    if(!qFuzzyCompare(d->m_eulerAngles.z(), roll)) {
-        d->m_eulerAngles.setZ(roll);
+    normalizeAngle(rotationRoll);
+    if(!qFuzzyCompare(d->m_eulerAngles.z(), rotationRoll)) {
+        d->m_eulerAngles.setZ(rotationRoll);
         d->updateRotation(QQuaternion::fromEulerAngles(d->m_eulerAngles), false);
-        emit rollChanged(roll);
+        emit rotationRollChanged(rotationRoll);
     }
 }
 

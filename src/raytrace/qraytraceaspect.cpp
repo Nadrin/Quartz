@@ -40,6 +40,8 @@ void QRaytraceAspectPrivate::registerBackendTypes()
     qRegisterMetaType<Qt3DRaytrace::QTriangle>();
     qRegisterMetaType<Qt3DRaytrace::QGeometryData>();
 
+    qRegisterMetaType<Qt3DRaytrace::QCamera*>();
+
     q->registerBackendType<Qt3DCore::QEntity>(QSharedPointer<Raytrace::EntityMapper>::create(m_nodeManagers.get(), m_renderer.get()));
 
     using TransformNodeMapper = Raytrace::BackendNodeMapper<Raytrace::Transform, Raytrace::TransformManager>;

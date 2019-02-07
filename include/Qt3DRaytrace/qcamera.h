@@ -27,9 +27,9 @@ class QT3DRAYTRACESHARED_EXPORT QCamera : public Qt3DCore::QEntity
     // QCamera
     Q_PROPERTY(QVector3D position READ position WRITE setPosition NOTIFY positionChanged)
     Q_PROPERTY(QQuaternion rotation READ rotation WRITE setRotation NOTIFY rotationChanged)
-    Q_PROPERTY(float pitch READ pitch WRITE setPitch NOTIFY pitchChanged)
-    Q_PROPERTY(float yaw READ yaw WRITE setYaw NOTIFY yawChanged)
-    Q_PROPERTY(float roll READ roll WRITE setRoll NOTIFY rollChanged)
+    Q_PROPERTY(float rotationPitch READ rotationPitch WRITE setRotationPitch NOTIFY rotationPitchChanged)
+    Q_PROPERTY(float rotationYaw READ rotationYaw WRITE setRotationYaw NOTIFY rotationYawChanged)
+    Q_PROPERTY(float rotationRoll READ rotationRoll WRITE setRotationRoll NOTIFY rotationRollChanged)
     Q_PROPERTY(QVector3D lookAtTarget READ lookAtTarget WRITE setLookAtTarget NOTIFY lookAtTargetChanged)
     Q_PROPERTY(QVector3D lookAtUp READ lookAtUp WRITE setLookAtUp NOTIFY lookAtUpChanged)
     // QCameraLens
@@ -46,9 +46,9 @@ public:
     QVector3D position() const;
     QQuaternion rotation() const;
 
-    float pitch() const;
-    float yaw() const;
-    float roll() const;
+    float rotationPitch() const;
+    float rotationYaw() const;
+    float rotationRoll() const;
 
     QVector3D lookAtTarget() const;
     QVector3D lookAtUp() const;
@@ -58,13 +58,24 @@ public:
     float gamma() const;
     float exposure() const;
 
+    Q_INVOKABLE void translate(const QVector3D &t);
+    Q_INVOKABLE void translateWorld(const QVector3D &t);
+    Q_INVOKABLE void rotate(const QQuaternion &q);
+
+    Q_INVOKABLE void tilt(float angle);
+    Q_INVOKABLE void pan(float angle);
+    Q_INVOKABLE void roll(float angle);
+    Q_INVOKABLE void tiltWorld(float angle);
+    Q_INVOKABLE void panWorld(float angle);
+    Q_INVOKABLE void rollWorld(float angle);
+
 public slots:
     void setPosition(const QVector3D &position);
     void setRotation(const QQuaternion &rotation);
 
-    void setPitch(float pitch);
-    void setYaw(float yaw);
-    void setRoll(float roll);
+    void setRotationPitch(float rotationPitch);
+    void setRotationYaw(float rotationYaw);
+    void setRotationRoll(float rotationRoll);
 
     void setLookAtTarget(const QVector3D &lookAtTarget);
     void setLookAtUp(const QVector3D &lookAtUp);
@@ -78,9 +89,9 @@ signals:
     void positionChanged(const QVector3D &position);
     void rotationChanged(const QQuaternion &rotation);
 
-    void pitchChanged(float pitch);
-    void yawChanged(float yaw);
-    void rollChanged(float roll);
+    void rotationPitchChanged(float rotationPitch);
+    void rotationYawChanged(float rotationYaw);
+    void rotationRollChanged(float rotationRoll);
 
     void lookAtTargetChanged(const QVector3D &lookAtTarget);
     void lookAtUpChanged(const QVector3D &lookAtUp);
