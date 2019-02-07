@@ -13,12 +13,15 @@ set(SOURCES_PRIVATE
     qt3dwindow_p.h
     qt3dquickwindow.cpp
     qt3dquickwindow_p.h
+    qfirstpersoncameracontroller.cpp
+    qfirstpersoncameracontroller_p.h
 )
 
 set(SOURCES_PUBLIC
     ${MODULE_API}/qt3draytraceextras_global.h
     ${MODULE_API}/qt3dwindow.h
     ${MODULE_API}/qt3dquickwindow.h
+    ${MODULE_API}/qfirstpersoncameracontroller.h
 )
 
 add_library(${MODULE_NAME} ${SOURCES_PRIVATE} ${SOURCES_PUBLIC})

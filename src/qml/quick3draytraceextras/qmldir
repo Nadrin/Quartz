@@ -1,0 +1,3 @@
+module Qt3D.RaytraceExtras
+plugin quick3draytraceextrasplugin
+classname Qt3DQuick3DRaytraceExtrasPlugin
