@@ -36,8 +36,9 @@ namespace Vulkan {
 namespace Config {
 
 constexpr bool     EnableVsync = false;
-constexpr VkFormat RenderBufferFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+constexpr VkFormat RenderBufferFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
 constexpr uint32_t DescriptorPoolCapacity = 128;
+constexpr uint32_t GlobalMaxRecursionDepth = 8;
 constexpr int      StatisticsDisplayInterval = 1000;
 
 } // Config
@@ -232,7 +233,7 @@ bool Renderer::createResources()
             .shaders({"test.rgen", "test.rmiss", "test.rchit"})
             .descriptorBindingManager(1, 0, m_descriptorManager.get(), ResourceClass::AttributeBuffer)
             .descriptorBindingManager(2, 0, m_descriptorManager.get(), ResourceClass::IndexBuffer)
-            .maxRecursionDepth(1)
+            .maxRecursionDepth(Config::GlobalMaxRecursionDepth)
             .build();
 
     for(auto &frame : m_frameResources) {
@@ -340,8 +341,8 @@ void Renderer::beginRenderIteration()
         m_settings->skyColorAndIntensity().writeToBuffer(m_renderParams.skyColor.data);
     }
 
-    m_renderParams.frameParams[FrameParam_FrameNumber] = ++m_frameNumber;
-    m_renderParams.frameParams[FrameParam_RandomSeed] = 0;
+    m_renderParams.frame[FrameParam_FrameNumber] = ++m_frameNumber;
+    m_renderParams.frame[FrameParam_RandomSeed] = 0;
 }
 
 void Renderer::resetRenderProgress()
@@ -615,9 +616,10 @@ void Renderer::displayStatistics()
 
     const double cpuTime = m_hostTimeAverage.average();
     const double gpuTime = m_deviceTimeAverage.average();
-    const double fps = (cpuTime > 0.0) ? 1000.0 / cpuTime : 0.0;
+    const double frameTime = std::max(cpuTime, gpuTime);
+    const double fps = (frameTime > 0.0) ? 1000.0 / frameTime : 0.0;
 
-    const QString statistics = QString("%1 [ CPU time: %2 ms | GPU time: %3 ms | FPS: %4 ]")
+    const QString statistics = QString("%1 [ CPU: %2 ms | GPU: %3 ms | FPS: %4 ]")
             .arg(m_windowTitle)
             .arg(cpuTime, 0, 'f', 2)
             .arg(gpuTime, 0, 'f', 2)
