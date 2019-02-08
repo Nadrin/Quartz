@@ -18,7 +18,7 @@
 #include <renderers/vulkan/jobs/updateinstancebufferjob.h>
 #include <renderers/vulkan/jobs/updatematerialsjob.h>
 
-#include <renderers/vulkan/shaders/bindings.glsl.h>
+#include <renderers/vulkan/shaders/bindings.glsl>
 
 #include <backend/managers_p.h>
 #include <backend/rendersettings_p.h>

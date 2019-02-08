@@ -7,7 +7,7 @@
 #ifndef QUARTZ_SHADERS_BINDINGS_H
 #define QUARTZ_SHADERS_BINDINGS_H
 
-#include "types.glsl.h"
+#include "types.glsl"
 
 #ifdef __cplusplus
 namespace Qt3DRaytrace {
