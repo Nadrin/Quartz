@@ -76,6 +76,8 @@ protected:
 
     QMap<uint32_t, VkDescriptorSetLayoutCreateFlags> m_descriptorSetLayoutFlags;
 
+    bool m_allowDuplicateShaderStages = false;
+
 private:
     QVector<VkDescriptorSetLayout> buildDescriptorSetLayouts() const;
     QVector<VkPushConstantRange> buildPushConstantRanges() const;

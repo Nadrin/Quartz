@@ -35,6 +35,7 @@ static VkRayTracingShaderGroupCreateInfoNV createTrianglesHitShaderGroup(uint32_
 RayTracingPipelineBuilder::RayTracingPipelineBuilder(Device *device)
     : PipelineBuilderImpl<RayTracingPipelineBuilder>(device)
 {
+    m_allowDuplicateShaderStages = true;
     m_maxRecursionDepth = 1;
 }
 

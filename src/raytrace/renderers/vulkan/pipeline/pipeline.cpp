@@ -242,7 +242,7 @@ PipelineBuilder &PipelineBuilder::shaders(const QVector<const ShaderModule*> &mo
     };
 
     for(const ShaderModule *module : modules) {
-        if(pipelineContainsShaderStage(module->stage())) {
+        if(!m_allowDuplicateShaderStages && pipelineContainsShaderStage(module->stage())) {
             qCWarning(logVulkan) << "PipelineBuilder: pipeline already contains shader module for stage:" << module->stage();
         }
         else {
