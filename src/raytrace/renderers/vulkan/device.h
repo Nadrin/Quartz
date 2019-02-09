@@ -99,7 +99,7 @@ public:
     void *mapMemory(const VmaAllocation &allocation) const;
     void unmapMemory(const VmaAllocation &allocation) const;
 
-    bool queryTimeElapsed(const QueryPool &queryPool, uint32_t firstTimestampQueryIndex, double &msElapsed) const;
+    bool queryTimeElapsed(const QueryPool &queryPool, uint32_t firstTimestampQueryIndex, double &msElapsed, VkQueryResultFlags flags=0) const;
 
     void waitIdle() const;
 

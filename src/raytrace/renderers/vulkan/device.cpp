@@ -646,10 +646,10 @@ void Device::unmapMemory(const VmaAllocation &allocation) const
     vmaUnmapMemory(m_allocator, allocation);
 }
 
-bool Device::queryTimeElapsed(const QueryPool &queryPool, uint32_t firstTimestampQueryIndex, double &msElapsed) const
+bool Device::queryTimeElapsed(const QueryPool &queryPool, uint32_t firstTimestampQueryIndex, double &msElapsed, VkQueryResultFlags flags) const
 {
     uint64_t timestamps[2];
-    if(VKSUCCEEDED(vkGetQueryPoolResults(m_device, queryPool, firstTimestampQueryIndex, 2, sizeof(timestamps), timestamps, 0, VK_QUERY_RESULT_64_BIT))) {
+    if(VKSUCCEEDED(vkGetQueryPoolResults(m_device, queryPool, firstTimestampQueryIndex, 2, sizeof(timestamps), timestamps, 0, VK_QUERY_RESULT_64_BIT | flags))) {
         double timestampPeriod = m_physicalDeviceProperties.limits.timestampPeriod;
         msElapsed = ((timestamps[1] - timestamps[0]) * timestampPeriod) * 1e-6;
         return true;

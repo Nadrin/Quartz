@@ -39,7 +39,7 @@ constexpr bool     EnableVsync = false;
 constexpr VkFormat RenderBufferFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
 constexpr uint32_t DescriptorPoolCapacity = 128;
 constexpr uint32_t GlobalMaxRecursionDepth = 8;
-constexpr int      StatisticsDisplayInterval = 1000;
+constexpr int      StatisticsDisplayInterval = 500;
 
 } // Config
 
@@ -234,8 +234,8 @@ bool Renderer::createResources()
     m_renderPipeline = RayTracingPipelineBuilder(m_device.get())
             .shaders({"test.rgen", "test.rmiss", "test.rchit"})
             .shaders({"occlusion.rchit", "occlusion.rmiss"})
-            .descriptorBindingManager(1, 0, m_descriptorManager.get(), ResourceClass::AttributeBuffer)
-            .descriptorBindingManager(2, 0, m_descriptorManager.get(), ResourceClass::IndexBuffer)
+            .descriptorBindingManager(DS_AttributeBuffer, 0, m_descriptorManager.get(), ResourceClass::AttributeBuffer)
+            .descriptorBindingManager(DS_IndexBuffer, 0, m_descriptorManager.get(), ResourceClass::IndexBuffer)
             .maxRecursionDepth(Config::GlobalMaxRecursionDepth)
             .build();
 
@@ -595,7 +595,7 @@ void Renderer::renderFrame()
         }
 
         commandBuffer.resourceBarrier({currentFrame.renderBuffer, ImageState::ShaderRead, ImageState::ShaderReadWrite});
-        commandBuffer.writeTimestamp(VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, m_defaultQueryPool, currentFrameQueryIndex+1);
+        commandBuffer.writeTimestamp(VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, m_defaultQueryPool, currentFrameQueryIndex+1);
     }
     commandBuffer.end();
 
@@ -604,8 +604,9 @@ void Renderer::renderFrame()
     m_commandBufferManager->proceedToNextFrame();
     m_frameAdvanceService->proceedToNextFrame();
 
+    // TODO: Don't wait on previous frame query availability (though in practice it doesn't seem to reduce performance).
     double previousDeviceTime;
-    if(m_device->queryTimeElapsed(m_defaultQueryPool, previousFrameQueryIndex, previousDeviceTime)) {
+    if(m_device->queryTimeElapsed(m_defaultQueryPool, previousFrameQueryIndex, previousDeviceTime, VK_QUERY_RESULT_WAIT_BIT)) {
         m_deviceTimeAverage.add(previousDeviceTime);
     }
     m_hostTimeAverage.add(frameTimer.nsecsElapsed() * 1e-6);
