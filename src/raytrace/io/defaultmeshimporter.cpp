@@ -12,6 +12,9 @@
 #include <assimp/LogStream.hpp>
 #include <assimp/DefaultLogger.hpp>
 
+#include <QFile>
+#include <QFileInfo>
+
 #include <QMutex>
 #include <QMutexLocker>
 
@@ -111,18 +114,23 @@ static bool importScene(const aiScene *scene, QGeometryData &data)
 
 bool DefaultMeshImporter::import(const QUrl &url, QGeometryData &data)
 {
-    // TODO: Support not only local files.
-    if(url.isEmpty() || !url.isLocalFile()) {
-        qCCritical(logImport) << "Invalid URL:" << url;
-        return false;
-    }
-
     LogStream::initialize();
 
     qCInfo(logImport) << "Loading mesh:" << url.toString();
 
+    const aiScene *scene = nullptr;
     Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(url.path().toUtf8().data(), ImportFlags);
+    {
+        QFile sceneFile(url.path());
+        if(!sceneFile.open(QFile::ReadOnly)) {
+            qCCritical(logImport) << "Cannot open mesh file:" << url;
+            return false;
+        }
+
+        const QByteArray sceneData = sceneFile.readAll();
+        const QByteArray sceneHint = QFileInfo(url.path()).completeSuffix().toUtf8();
+        scene = importer.ReadFileFromMemory(sceneData.data(), size_t(sceneData.size()), ImportFlags, sceneHint.data());
+    }
 
     bool result = false;
     if(scene && scene->HasMeshes()) {
