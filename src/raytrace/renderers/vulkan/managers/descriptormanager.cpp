@@ -20,6 +20,9 @@ static VkDescriptorType resourceClassToDescriptorType(ResourceClass rclass)
     case ResourceClass::IndexBuffer:
         return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     }
+
+	Q_ASSERT_X(false, Q_FUNC_INFO, "Invalid resource class");
+	return VkDescriptorType(0);
 }
 
 DescriptorManager::DescriptorManager(Renderer *renderer)
@@ -148,7 +151,7 @@ DescriptorHandle DescriptorManager::allocateDescriptor(ResourceClass rclass)
 
 void DescriptorManager::updateBufferDescriptor(DescriptorHandle handle, const DescriptorBufferInfo &bufferInfo) const
 {
-    Q_ASSERT(handle > 0);
+    Q_ASSERT(handle);
     Q_ASSERT(m_pools.contains(handle.rclass));
 
     const auto &pool = m_pools[handle.rclass];

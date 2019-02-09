@@ -3,10 +3,16 @@ project(Quartz)
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(BUILD_EXAMPLES "Build example programs" ON)
+option(DUMP_QML_TYPEINFO "Dump QML type information for use in QtCreator" OFF)
+
+set(QTDIR "$ENV{QTDIR}" CACHE STRING "Path to Qt SDK")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${QTDIR}/lib/cmake")
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DQUARTZ_DEBUG")
 

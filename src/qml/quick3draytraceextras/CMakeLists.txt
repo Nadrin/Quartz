@@ -2,7 +2,6 @@ set(MODULE_NAME "quick3draytraceextrasplugin")
 set(MODULE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 find_package(Qt5 COMPONENTS Core Qml REQUIRED)
-find_program(QMLPLUGINDUMP NAMES qmlplugindump qmlplugindump.exe HINTS $ENV{QTDIR}/bin)
 
 add_library(${MODULE_NAME}
     qtquick3draytraceextrasplugin.cpp
@@ -28,5 +27,8 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/qml/Qt3D/RaytraceExtras"
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/qmldir" "${PROJECT_BINARY_DIR}/qml/Qt3D/RaytraceExtras"
     COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${MODULE_NAME}>" "${PROJECT_BINARY_DIR}/qml/Qt3D/RaytraceExtras"
-    COMMAND ${QMLPLUGINDUMP} -nonrelocatable Qt3D.RaytraceExtras 1.0 "${PROJECT_BINARY_DIR}/qml" > "${PROJECT_BINARY_DIR}/qml/Qt3D/RaytraceExtras/plugins.qmltypes"
 )
+
+if(DUMP_QML_TYPEINFO)
+    qml_typeinfo("Qt3D.RaytraceExtras" "1.0" "Qt3D/RaytraceExtras/plugins.qmltypes")
+endif()

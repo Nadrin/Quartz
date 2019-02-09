@@ -39,7 +39,7 @@ public:
     {
         QMutexLocker lock(&LoggerInitMutex);
         if(Assimp::DefaultLogger::isNullLogger()) {
-            Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE);
+            Assimp::DefaultLogger::create("", Assimp::Logger::NORMAL);
             Assimp::DefaultLogger::get()->attachStream(new LogStream, Assimp::Logger::Err | Assimp::Logger::Warn);
         }
     }

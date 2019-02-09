@@ -213,7 +213,7 @@ QVector<VkPushConstantRange> PipelineBuilder::buildPushConstantRanges() const
             const uint64_t hash = (uint64_t(pushConstantRange.size) << 32) | pushConstantRange.offset;
             auto it = rangesMap.find(hash);
             if(it == rangesMap.end()) {
-                rangesMap.insert(hash, VkPushConstantRange{shader->stage(), pushConstantRange.offset, pushConstantRange.size});
+                rangesMap.insert(hash, VkPushConstantRange{static_cast<VkShaderStageFlags>(shader->stage()), pushConstantRange.offset, pushConstantRange.size});
             }
             else {
                 auto &range = *it;

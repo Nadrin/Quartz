@@ -1,14 +1,16 @@
-cmake_minimum_required(VERSION 3.8)
-
 set(MODULE_NAME "Qt3DRaytrace")
 set(MODULE_LIBNAME "Qt53DRaytrace")
 set(MODULE_API ${QUARTZ_PUBLIC_API}/${MODULE_NAME})
 set(MODULE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
-find_package(PkgConfig REQUIRED)
-find_package(Qt5 COMPONENTS Core Gui 3DCore REQUIRED)
+set(MODULE_PATH ${MODULE_PATH} ${MODULE_BINARY_DIR} PARENT_SCOPE)
 
-pkg_check_modules(ASSIMP REQUIRED assimp)
+find_package(Qt5 COMPONENTS Core Gui 3DCore REQUIRED)
+find_package(assimp REQUIRED)
+
+if(WIN32)
+    set(THIRDPARTY_PATH ${THIRDPARTY_PATH} ${ASSIMP_BINARY_DIR})
+endif()
 
 set(SOURCES_PRIVATE
     qt3draytrace_global_p.h
@@ -78,12 +80,12 @@ set_target_properties(${MODULE_NAME} PROPERTIES OUTPUT_NAME ${MODULE_LIBNAME})
 
 target_include_directories(${MODULE_NAME}
     PUBLIC ${QUARTZ_PUBLIC_API}
-    PRIVATE ${ASSIMP_INCLUDE_DIRS}
+    PRIVATE ${assimp_INCLUDE_DIRS}
 )
 
 target_compile_features(${MODULE_NAME} PUBLIC cxx_std_14)
 target_compile_definitions(${MODULE_NAME} PRIVATE VK_NO_PROTOTYPES)
-target_link_libraries(${MODULE_NAME} Qt5::Core Qt5::Gui Qt5::3DCorePrivate ${ASSIMP_LIBRARIES})
+target_link_libraries(${MODULE_NAME} Qt5::Core Qt5::Gui Qt5::3DCorePrivate ${assimp_LIBRARIES})
 
 add_subdirectory(renderers)
 add_dependencies(${MODULE_NAME} RendererShaders)

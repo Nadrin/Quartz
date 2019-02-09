@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.8)
-
 set(MODULE_NAME "Qt3DRaytraceExtras")
 set(MODULE_LIBNAME "Qt53DRaytraceExtras")
 set(MODULE_API ${QUARTZ_PUBLIC_API}/${MODULE_NAME})
 set(MODULE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
+set(MODULE_PATH ${MODULE_PATH} ${MODULE_BINARY_DIR} PARENT_SCOPE)
 
 find_package(Qt5 COMPONENTS Core Gui 3DCore 3DQuick 3DInput 3DLogic REQUIRED)
 

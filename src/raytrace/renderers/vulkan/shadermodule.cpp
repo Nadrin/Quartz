@@ -124,8 +124,7 @@ void ShaderModule::destroy()
 
 QString ShaderModule::getModulePath(const QString &name)
 {
-    // TODO: Move into application directory or (even better) embed SPIR-V modules into DLL/so via Qt resource system.
-    return QString("%1/%2.spv").arg("./shaders").arg(name);
+    return QString(":/spv/%1.spv").arg(name);
 }
 
 } // Vulkan

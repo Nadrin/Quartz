@@ -12,9 +12,6 @@
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
-static constexpr VkMemoryPropertyFlags HostMappableMemoryFlags =
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
 Device::~Device()
 {
     if(m_accelerationStructuresPool != VK_NULL_HANDLE) {
@@ -221,17 +218,7 @@ Image Device::createImage(const ImageCreateInfo &createInfo, const AllocationCre
         qCCritical(logVulkan) << "Failed to create image resource:" << result.toString();
         return image;
     }
-
-    if(allocInfo.pMappedData) {
-        image.hostAddress = allocInfo.pMappedData;
-    }
-    else if(createInfo.tiling == VK_IMAGE_TILING_LINEAR) {
-        VkMemoryPropertyFlags memoryFlags;
-        vmaGetMemoryTypeProperties(m_allocator, allocInfo.memoryType, &memoryFlags);
-        if((memoryFlags & HostMappableMemoryFlags) == HostMappableMemoryFlags) {
-            image.hostAddress = mapMemory(image.allocation);
-        }
-    }
+    image.hostAddress = allocInfo.pMappedData;
 
     VkImageViewType viewType;
     switch(createInfo.imageType) {
@@ -296,17 +283,7 @@ Buffer Device::createBuffer(const BufferCreateInfo &createInfo, const Allocation
         qCCritical(logVulkan) << "Failed to create buffer resource:" << result.toString();
         return Buffer();
     }
-
-    if(allocInfo.pMappedData) {
-        buffer.hostAddress = allocInfo.pMappedData;
-    }
-    else {
-        VkMemoryPropertyFlags memoryFlags;
-        vmaGetMemoryTypeProperties(m_allocator, allocInfo.memoryType, &memoryFlags);
-        if((memoryFlags & HostMappableMemoryFlags) == HostMappableMemoryFlags) {
-            buffer.hostAddress = mapMemory(buffer.allocation);
-        }
-    }
+    buffer.hostAddress = allocInfo.pMappedData;
     return buffer;
 }
 

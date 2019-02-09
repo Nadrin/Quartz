@@ -1,18 +1,27 @@
-cmake_minimum_required(VERSION 3.8)
+target_sources(${MODULE_NAME} PRIVATE renderers/vulkan/shaders/vulkan_shaders.qrc)
 
-find_program(GLSLANG NAMES glslangValidator glslangValidator.exe HINTS /opt/glslang/bin)
+set(GLSL_SOURCES
+    display.frag.glsl
+    display.vert.glsl
+    test.rgen.glsl
+    test.rmiss.glsl
+    test.rchit.glsl
+    occlusion.rchit.glsl
+    occlusion.rmiss.glsl
+)
 
-file(GLOB_RECURSE GLSL_SOURCES "*.glsl")
-foreach(GLSL_PATH ${GLSL_SOURCES})
+find_program(GLSLANG NAMES glslangValidator glslangValidator.exe
+    HINTS /opt/glslang/bin "$ENV{VULKAN_SDK}/bin")
+
+add_custom_target(VulkanShaders)
+foreach(GLSL_SOURCE_ITEM ${GLSL_SOURCES})
+    set(GLSL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/${GLSL_SOURCE_ITEM}")
     get_filename_component(GLSL_FILE ${GLSL_PATH} NAME)
     string(REGEX REPLACE "\\.[^.]*$" "" GLSL_BASE_FILE ${GLSL_FILE})
-    set(SPV_PATH "${PROJECT_BINARY_DIR}/shaders/${GLSL_BASE_FILE}.spv")
+    set(SPV_PATH "${CMAKE_CURRENT_SOURCE_DIR}/spv/${GLSL_BASE_FILE}.spv")
     add_custom_command(
-        OUTPUT ${SPV_PATH}
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/shaders/"
-        COMMAND ${GLSLANG} -V ${GLSL_PATH} -o ${SPV_PATH}
-        DEPENDS ${GLSL_PATH})
-    list(APPEND SPV_BINARY_FILES ${SPV_PATH})
-endforeach(GLSL_PATH)
-
-add_custom_target(VulkanShaders DEPENDS ${SPV_BINARY_FILES})
+        TARGET VulkanShaders
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/spv"
+        COMMAND ${GLSLANG} -V ${GLSL_PATH} -o ${SPV_PATH})
+endforeach(GLSL_SOURCE_ITEM)

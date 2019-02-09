@@ -5,7 +5,7 @@
  */
 
 #include <renderers/vulkan/managers/cameramanager.h>
-#include <renderers/vulkan/shaders/types.glsl>
+#include <renderers/vulkan/shaders/lib/types.glsl>
 
 #include <backend/entity_p.h>
 #include <backend/transform_p.h>

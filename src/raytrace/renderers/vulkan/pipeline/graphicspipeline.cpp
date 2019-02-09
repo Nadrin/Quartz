@@ -46,6 +46,7 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder(Device *device, VkRenderPass re
     m_depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
     // TODO: Configure default stencil state.
 
+    m_colorBlendState.logicOpEnable = VK_FALSE;
     m_colorBlendState.attachments.resize(1);
     m_colorBlendState.attachments[0] = DefaultBlendAttachmentState;
 

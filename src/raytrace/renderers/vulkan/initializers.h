@@ -278,6 +278,7 @@ struct AllocationCreateInfo : VmaAllocationCreateInfo
         usage = usage_;
         requiredFlags = requiredFlags_;
         preferredFlags = preferredFlags_;
+        flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
     }
     operator const VmaAllocationCreateInfo*() const
     {

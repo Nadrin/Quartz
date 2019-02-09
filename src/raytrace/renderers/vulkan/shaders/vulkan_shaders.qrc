@@ -1,0 +1,12 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource>
+        <file>spv/display.vert.spv</file>
+		<file>spv/display.frag.spv</file>
+		<file>spv/test.rgen.spv</file>
+		<file>spv/test.rchit.spv</file>
+		<file>spv/test.rmiss.spv</file>
+		<file>spv/occlusion.rchit.spv</file>
+		<file>spv/occlusion.rmiss.spv</file>
+    </qresource>
+</RCC>

@@ -18,7 +18,7 @@
 #include <renderers/vulkan/jobs/updateinstancebufferjob.h>
 #include <renderers/vulkan/jobs/updatematerialsjob.h>
 
-#include <renderers/vulkan/shaders/bindings.glsl>
+#include <renderers/vulkan/shaders/lib/bindings.glsl>
 
 #include <backend/managers_p.h>
 #include <backend/rendersettings_p.h>
@@ -55,6 +55,8 @@ Renderer::Renderer(QObject *parent)
     , m_destroyExpiredResourcesJob(new DestroyExpiredResourcesJob(this))
     , m_updateRenderParametersJob(new UpdateRenderParametersJob(this))
 {
+    Q_INIT_RESOURCE(vulkan_shaders);
+
     QObject::connect(m_renderTimer, &QTimer::timeout, this, &Renderer::renderFrame);
     QObject::connect(m_statisticsTimer, &QTimer::timeout, this, &Renderer::displayStatistics);
 }
@@ -231,6 +233,7 @@ bool Renderer::createResources()
 
     m_renderPipeline = RayTracingPipelineBuilder(m_device.get())
             .shaders({"test.rgen", "test.rmiss", "test.rchit"})
+            .shaders({"occlusion.rchit", "occlusion.rmiss"})
             .descriptorBindingManager(1, 0, m_descriptorManager.get(), ResourceClass::AttributeBuffer)
             .descriptorBindingManager(2, 0, m_descriptorManager.get(), ResourceClass::IndexBuffer)
             .maxRecursionDepth(Config::GlobalMaxRecursionDepth)

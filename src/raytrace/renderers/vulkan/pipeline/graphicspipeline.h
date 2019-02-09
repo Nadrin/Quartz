@@ -45,7 +45,7 @@ private:
     VkPipelineRasterizationStateCreateInfo m_rasterizationState;
     VkPipelineMultisampleStateCreateInfo m_multisampleState;
     VkPipelineDepthStencilStateCreateInfo m_depthStencilState;
-    ColorBlendState m_colorBlendState;
+    ColorBlendState m_colorBlendState = {};
     QVector<VkDynamicState> m_dynamicStates;
     VkRenderPass m_renderPass;
     uint32_t m_subpass;

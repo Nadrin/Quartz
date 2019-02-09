@@ -37,7 +37,7 @@ QFirstPersonCameraControllerPrivate::QFirstPersonCameraControllerPrivate()
     , m_keyboardTyNegInput(new Qt3DInput::QButtonAxisInput)
     , m_keyboardTzNegInput(new Qt3DInput::QButtonAxisInput)
     , m_moveSpeed(10.0f)
-    , m_lookSpeed(1800.0f)
+    , m_lookSpeed(360.0f)
     , m_acceleration(-1.0f)
     , m_deceleration(-1.0f)
 {
