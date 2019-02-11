@@ -29,9 +29,6 @@ namespace Qt3DRaytrace {
 
 Q_LOGGING_CATEGORY(logAspect, "raytrace.aspect")
 
-QRaytraceAspectPrivate::QRaytraceAspectPrivate()
-{}
-
 void QRaytraceAspectPrivate::registerBackendTypes()
 {
     Q_Q(QRaytraceAspect);
@@ -97,6 +94,18 @@ QRendererInterface *QRaytraceAspect::renderer() const
     return d->m_renderer.get();
 }
 
+void QRaytraceAspect::suspendJobs()
+{
+    Q_D(QRaytraceAspect);
+    d->m_jobsSuspended = true;
+}
+
+void QRaytraceAspect::resumeJobs()
+{
+    Q_D(QRaytraceAspect);
+    d->m_jobsSuspended = false;
+}
+
 QRaytraceAspect::QRaytraceAspect(QRaytraceAspectPrivate &dd, QObject *parent)
     : QAbstractAspect(dd, parent)
 {
@@ -108,6 +117,10 @@ QVector<QAspectJobPtr> QRaytraceAspect::jobsToExecute(qint64 time)
     Q_D(QRaytraceAspect);
 
     QVector<QAspectJobPtr> jobs;
+
+    if(d->m_jobsSuspended) {
+        return jobs;
+    }
     jobs.append(d->createGeometryRendererJobs());
     if(d->m_renderer) {
         jobs.append(d->m_renderer->jobsToExecute(time));

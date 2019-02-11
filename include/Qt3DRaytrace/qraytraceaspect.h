@@ -22,6 +22,10 @@ public:
 
     QRendererInterface *renderer() const;
 
+public slots:
+    void suspendJobs();
+    void resumeJobs();
+
 protected:
     QRaytraceAspect(QRaytraceAspectPrivate &dd, QObject *parent);
     Q_DECLARE_PRIVATE(QRaytraceAspect)

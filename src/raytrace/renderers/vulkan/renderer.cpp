@@ -28,8 +28,6 @@
 #include <QTimer>
 #include <QElapsedTimer>
 
-#include <QtMath>
-
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
@@ -132,8 +130,11 @@ void Renderer::shutdown()
     if(m_device) {
         m_device->waitIdle();
 
-        releaseSwapchainResources();
-        m_device->destroySwapchain(m_swapchain);
+        if(m_swapchain) {
+            releaseSwapchainResources();
+            m_device->destroySwapchain(m_swapchain);
+        }
+
         releaseResources();
 
         m_sceneManager.reset();
@@ -348,6 +349,18 @@ void Renderer::beginRenderIteration()
     m_renderParams.frame[FrameParam_RandomSeed] = 0;
 }
 
+void Renderer::releaseWindowSurface()
+{
+    Q_ASSERT(m_device);
+
+    if(m_window && m_swapchain) {
+        m_device->waitIdle();
+        releaseSwapchainResources();
+        m_device->destroySwapchain(m_swapchain);
+    }
+    m_window = nullptr;
+}
+
 void Renderer::resetRenderProgress()
 {
     m_clearPreviousRenderBuffer = true;
@@ -504,6 +517,14 @@ bool Renderer::submitFrameCommandsAndPresent(uint32_t imageIndex)
 
 void Renderer::renderFrame()
 {
+    Q_ASSERT(m_device);
+
+    QReadLocker lock(&m_windowSurfaceLock);
+    if(!m_window) {
+        // Window surface has already been released. Bail out.
+        return;
+    }
+
     resizeSwapchain();
 
     QElapsedTimer frameTimer;
@@ -614,6 +635,7 @@ void Renderer::renderFrame()
 
 void Renderer::displayStatistics()
 {
+    QReadLocker lock(&m_windowSurfaceLock);
     if(!m_window) {
         return;
     }
@@ -771,11 +793,17 @@ int Renderer::previousFrameIndex() const
 
 QSurface *Renderer::surface() const
 {
+    QReadLocker lock(&m_windowSurfaceLock);
     return m_window;
 }
 
 void Renderer::setSurface(QObject *surfaceObject)
 {
+    QWriteLocker lock(&m_windowSurfaceLock);
+
+    if(m_window) {
+        releaseWindowSurface();
+    }
     if(surfaceObject) {
         if(QWindow *window = qobject_cast<QWindow*>(surfaceObject)) {
             m_window = window;
@@ -784,9 +812,6 @@ void Renderer::setSurface(QObject *surfaceObject)
         else {
             qCWarning(logVulkan) << "Incompatible surface object: expected QWindow instance";
         }
-    }
-    else {
-        m_window = nullptr;
     }
 }
 

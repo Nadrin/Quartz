@@ -27,6 +27,7 @@
 #include <Qt3DCore/QNodeId>
 #include <QObject>
 #include <QSharedPointer>
+#include <QReadWriteLock>
 #include <QVector>
 #include <QHash>
 #include <QSize>
@@ -88,6 +89,7 @@ private:
     void releaseResources();
     void createSwapchainResources();
     void releaseSwapchainResources();
+    void releaseWindowSurface();
 
     void beginRenderIteration();
     void resetRenderProgress();
@@ -106,6 +108,7 @@ private:
     QVulkanInstance *m_instance = nullptr;
     QWindow *m_window = nullptr;
     QString m_windowTitle;
+    mutable QReadWriteLock m_windowSurfaceLock;
 
     QTimer *m_renderTimer = nullptr;
     QTimer *m_statisticsTimer = nullptr;

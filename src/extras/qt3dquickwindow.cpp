@@ -34,6 +34,7 @@ Qt3DQuickWindow::Qt3DQuickWindow(QWindow *parent)
 
     QObject::connect(this, &Qt3DQuickWindow::widthChanged, this, &Qt3DQuickWindow::updateCameraAspectRatio);
     QObject::connect(this, &Qt3DQuickWindow::heightChanged, this, &Qt3DQuickWindow::updateCameraAspectRatio);
+    QObject::connect(this, &Qt3DQuickWindow::aboutToClose, d->m_raytraceAspect, &Qt3DRaytrace::QRaytraceAspect::suspendJobs);
 
     d->m_engine->aspectEngine()->registerAspect(d->m_raytraceAspect);
     d->m_engine->aspectEngine()->registerAspect(d->m_inputAspect);
@@ -92,9 +93,14 @@ bool Qt3DQuickWindow::event(QEvent *event)
     Q_D(Qt3DQuickWindow);
 
     switch(event->type()) {
+    case QEvent::Close:
+        emit aboutToClose();
+        break;
     case QEvent::PlatformSurface:
         if(static_cast<QPlatformSurfaceEvent*>(event)->surfaceEventType() == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
-            d->m_engine.reset();
+            if(d->m_raytraceAspect->renderer()) {
+                d->m_raytraceAspect->renderer()->setSurface(nullptr);
+            }
         }
         break;
     default:

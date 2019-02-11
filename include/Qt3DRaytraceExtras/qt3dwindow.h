@@ -34,6 +34,9 @@ public:
 
     void setRootEntity(Qt3DCore::QEntity *root);
 
+signals:
+    void aboutToClose();
+
 protected:
     Qt3DWindow(Qt3DWindowPrivate &dd, QWindow *parent);
 

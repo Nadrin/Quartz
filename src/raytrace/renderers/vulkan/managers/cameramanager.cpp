@@ -68,11 +68,12 @@ void CameraManager::updateParameters()
     m_forwardVector = worldTransformMatrix.mapVector(IdentityForwardVector);
 
     const Raytrace::CameraLens *lens = m_activeCamera->cameraLensComponent();
-    Q_ASSERT(lens);
-    m_aspectRatio = lens->aspectRatio();
-    m_tanHalfFOV = std::tan(0.5f * qDegreesToRadians(lens->fieldOfView()));
-    m_invGamma = 1.0f / lens->gamma();
-    m_exposure = lens->exposure();
+    if(lens) {
+        m_aspectRatio = lens->aspectRatio();
+        m_tanHalfFOV = std::tan(0.5f * qDegreesToRadians(lens->fieldOfView()));
+        m_invGamma = 1.0f / lens->gamma();
+        m_exposure = lens->exposure();
+    }
 }
 
 void CameraManager::applyRenderParameters(RenderParameters &params) const

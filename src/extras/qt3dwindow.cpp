@@ -39,6 +39,8 @@ Qt3DWindow::Qt3DWindow(QWindow *parent)
     setSurfaceType(SurfaceType::VulkanSurface);
     setTitle("Quartz Viewport");
 
+    QObject::connect(this, &Qt3DWindow::aboutToClose, d->m_raytraceAspect, &Qt3DRaytrace::QRaytraceAspect::suspendJobs);
+
     d->m_aspectEngine->registerAspect(d->m_raytraceAspect);
     d->m_aspectEngine->registerAspect(d->m_inputAspect);
     d->m_aspectEngine->registerAspect(d->m_logicAspect);
@@ -85,9 +87,14 @@ bool Qt3DWindow::event(QEvent *event)
     Q_D(Qt3DWindow);
 
     switch(event->type()) {
+    case QEvent::Close:
+        emit aboutToClose();
+        break;
     case QEvent::PlatformSurface:
         if(static_cast<QPlatformSurfaceEvent*>(event)->surfaceEventType() == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
-            d->m_aspectEngine.reset();
+            if(d->m_raytraceAspect->renderer()) {
+                d->m_raytraceAspect->renderer()->setSurface(nullptr);
+            }
         }
         break;
     default:

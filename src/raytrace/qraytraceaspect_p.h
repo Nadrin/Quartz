@@ -20,8 +20,6 @@ namespace Qt3DRaytrace {
 class QRaytraceAspectPrivate : public Qt3DCore::QAbstractAspectPrivate
 {
 public:
-    QRaytraceAspectPrivate();
-
     void registerBackendTypes();
     void updateServiceProviders();
 
@@ -29,6 +27,7 @@ public:
 
     QScopedPointer<Raytrace::AbstractRenderer> m_renderer;
     QScopedPointer<Raytrace::NodeManagers> m_nodeManagers;
+    bool m_jobsSuspended = false;
 
     Q_DECLARE_PUBLIC(QRaytraceAspect)
 };

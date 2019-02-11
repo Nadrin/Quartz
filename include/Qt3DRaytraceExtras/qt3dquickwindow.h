@@ -52,6 +52,7 @@ public:
 
 signals:
     void cameraAspectRatioModeChanged(CameraAspectRatioMode mode);
+    void aboutToClose();
 
 protected:
     Qt3DQuickWindow(Qt3DQuickWindowPrivate &dd, QWindow *parent);
