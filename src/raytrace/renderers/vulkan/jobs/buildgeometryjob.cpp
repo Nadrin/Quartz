@@ -29,7 +29,6 @@ static void copyAttributes(Attributes *dest, const QVertex *src, size_t count)
             dest[i].position[j]  = src[i].position[j];
             dest[i].normal[j]    = src[i].normal[j];
             dest[i].tangent[j]   = src[i].tangent[j];
-            dest[i].bitangent[j] = src[i].bitangent[j];
         }
         for(int j=0; j<2; ++j) {
             dest[i].texcoord[j]  = src[i].texcoord[j];

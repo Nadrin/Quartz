@@ -20,7 +20,6 @@ struct QVertex
     QVector3D position;
     QVector3D normal;
     QVector3D tangent;
-    QVector3D bitangent;
     QVector2D texcoord;
 };
 

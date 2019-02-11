@@ -52,7 +52,6 @@ struct Attributes // std430 layout
     vec4 position;
     vec4 normal;
     vec4 tangent;
-    vec4 bitangent;
     vec4 texcoord;
 };
 

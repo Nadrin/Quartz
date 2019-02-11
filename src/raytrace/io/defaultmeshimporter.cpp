@@ -90,16 +90,14 @@ static bool importScene(const aiScene *scene, QGeometryData &data)
 
             vertex.position = { mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z };
             vertex.normal = { mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z };
-
             if(mesh->HasTextureCoords(0)) {
                 vertex.texcoord = { mesh->mTextureCoords[0][j].x, mesh->mTextureCoords[0][j].y };
             }
             if(mesh->HasTangentsAndBitangents()) {
                 vertex.tangent = { mesh->mTangents[j].x, mesh->mTangents[j].y, mesh->mTangents[j].z };
-                vertex.bitangent = { mesh->mBitangents[j].x, mesh->mBitangents[j].y, mesh->mBitangents[j].z };
             }
             else {
-                // TODO: Compute tangents & bitangents.
+                // TODO: Compute tangents in case they are missing.
             }
         }
         for(int j=0; j<int(mesh->mNumFaces); ++j, ++triangleIndex) {
