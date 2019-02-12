@@ -35,6 +35,10 @@ static constexpr unsigned int ImportFlags =
         aiProcess_Debone |
         aiProcess_ValidateDataStructure;
 
+static constexpr QVector3D TangentGenUp{0.0f, 1.0f, 0.0f};
+static constexpr QVector3D TangentGenRight{1.0f, 0.0f, 0.0f};
+static constexpr float     TangentGenLengthThreshold = 0.001f;
+
 class LogStream final : public Assimp::LogStream
 {
 public:
@@ -97,7 +101,11 @@ static bool importScene(const aiScene *scene, QGeometryData &data)
                 vertex.tangent = { mesh->mTangents[j].x, mesh->mTangents[j].y, mesh->mTangents[j].z };
             }
             else {
-                // TODO: Compute tangents in case they are missing.
+                vertex.tangent = QVector3D::crossProduct(TangentGenUp, vertex.normal);
+                if(vertex.tangent.lengthSquared() < TangentGenLengthThreshold) {
+                    vertex.tangent = QVector3D::crossProduct(TangentGenRight, vertex.normal);
+                }
+                vertex.tangent.normalize();
             }
         }
         for(int j=0; j<int(mesh->mNumFaces); ++j, ++triangleIndex) {
