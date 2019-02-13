@@ -36,7 +36,7 @@ namespace Config {
 constexpr bool     EnableVsync = false;
 constexpr VkFormat RenderBufferFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
 constexpr uint32_t DescriptorPoolCapacity = 128;
-constexpr uint32_t GlobalMaxRecursionDepth = 8;
+constexpr uint32_t GlobalMaxRecursionDepth = 16;
 constexpr int      StatisticsDisplayInterval = 500;
 
 } // Config
@@ -233,8 +233,8 @@ bool Renderer::createResources()
             .build();
 
     m_renderPipeline = RayTracingPipelineBuilder(m_device.get())
-            .shaders({"test.rgen", "test.rmiss", "test.rchit"})
-            .shaders({"occlusion.rchit", "occlusion.rmiss"})
+            .shaders({"pathtrace.rgen", "pathtrace.rmiss", "pathtrace.rchit"})
+            .shaders({"samplelight.rchit", "samplelight.rmiss"})
             .descriptorBindingManager(DS_AttributeBuffer, 0, m_descriptorManager.get(), ResourceClass::AttributeBuffer)
             .descriptorBindingManager(DS_IndexBuffer, 0, m_descriptorManager.get(), ResourceClass::IndexBuffer)
             .maxRecursionDepth(Config::GlobalMaxRecursionDepth)
@@ -341,12 +341,12 @@ void Renderer::beginRenderIteration()
     if(m_settings) {
         m_renderParams.settings[RenderSetting_PrimarySamples] = m_settings->primarySamples();
         m_renderParams.settings[RenderSetting_SecondarySamples] = m_settings->secondarySamples();
+        m_renderParams.settings[RenderSetting_MinDepth] = m_settings->minDepth();
         m_renderParams.settings[RenderSetting_MaxDepth] = m_settings->maxDepth();
-        m_settings->skyColorAndIntensity().writeToBuffer(m_renderParams.skyColor.data);
+        m_settings->skyRadiance().writeToBuffer(m_renderParams.skyRadiance.data);
     }
 
     m_renderParams.frame[FrameParam_FrameNumber] = ++m_frameNumber;
-    m_renderParams.frame[FrameParam_RandomSeed] = 0;
 }
 
 void Renderer::releaseWindowSurface()

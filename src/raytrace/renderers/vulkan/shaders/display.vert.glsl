@@ -1,5 +1,4 @@
 #version 460
-
 /*
  * Copyright (C) 2018-2019 Michał Siejak
  * This file is part of Quartz - a raytracing aspect for Qt3D.

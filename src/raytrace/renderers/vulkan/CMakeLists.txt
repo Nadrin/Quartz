@@ -15,8 +15,9 @@ target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/descriptors.h
     renderers/vulkan/resourcebarrier.h
     renderers/vulkan/geometry.h
+    renderers/vulkan/glsl.h
     renderers/vulkan/shaders/lib/bindings.glsl
-    renderers/vulkan/shaders/lib/types.glsl
+    renderers/vulkan/shaders/lib/shared.glsl
     renderers/vulkan/pipeline/pipeline.cpp
     renderers/vulkan/pipeline/pipeline.h
     renderers/vulkan/pipeline/graphicspipeline.cpp

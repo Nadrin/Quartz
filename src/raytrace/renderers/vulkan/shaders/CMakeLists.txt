@@ -3,11 +3,11 @@ target_sources(${MODULE_NAME} PRIVATE renderers/vulkan/shaders/vulkan_shaders.qr
 set(GLSL_SOURCES
     display.frag.glsl
     display.vert.glsl
-    test.rgen.glsl
-    test.rmiss.glsl
-    test.rchit.glsl
-    occlusion.rchit.glsl
-    occlusion.rmiss.glsl
+    pathtrace.rgen.glsl
+    pathtrace.rmiss.glsl
+    pathtrace.rchit.glsl
+    samplelight.rchit.glsl
+    samplelight.rmiss.glsl
 )
 
 find_program(GLSLANG NAMES glslangValidator glslangValidator.exe

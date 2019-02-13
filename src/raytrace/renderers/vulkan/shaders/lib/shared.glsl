@@ -7,41 +7,6 @@
 #ifndef QUARTZ_SHADERS_TYPES_H
 #define QUARTZ_SHADERS_TYPES_H
 
-#ifdef __cplusplus
-
-#include <cstdint>
-#include <QtGlobal>
-
-namespace Qt3DRaytrace {
-namespace Vulkan {
-
-namespace glsl {
-
-template<typename T, size_t N>
-struct vec
-{
-    T &operator[](int index)
-    {
-        Q_ASSERT(index >= 0 && index < N);
-        return data[index];
-    }
-    const T &operator[](int index) const
-    {
-        Q_ASSERT(index >= 0 && index < N);
-        return data[index];
-    }
-    T data[N];
-};
-
-} // glsl
-
-using uint = unsigned int;
-using vec2 = glsl::vec<float, 2>;
-using vec3 = glsl::vec<float, 3>;
-using vec4 = glsl::vec<float, 4>;
-
-#endif // __cplusplus
-
 struct Material // std430 layout
 {
     vec4 albedo;
@@ -74,7 +39,7 @@ struct RenderParameters // std430 layout
     vec4 cameraUpVectorAndTanHalfFOV;
     vec4 cameraRightVector;
     vec4 cameraForwardVector;
-    vec4 skyColor;
+    vec4 skyRadiance;
 };
 
 struct DisplayParameters // std430 layout
@@ -83,10 +48,5 @@ struct DisplayParameters // std430 layout
     float exposure;
     float padding[2];
 };
-
-#ifdef __cplusplus
-} // Vulkan
-} // Qt3DRaytrace
-#endif // __cplusplus
 
 #endif // QUARTZ_SHADERS_TYPES_H

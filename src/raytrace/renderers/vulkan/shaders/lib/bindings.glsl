@@ -7,13 +7,6 @@
 #ifndef QUARTZ_SHADERS_BINDINGS_H
 #define QUARTZ_SHADERS_BINDINGS_H
 
-#include "types.glsl"
-
-#ifdef __cplusplus
-namespace Qt3DRaytrace {
-namespace Vulkan {
-#endif
-
 const uint DS_Display = 0;
 
 const uint Binding_DisplayBuffer = 0;
@@ -29,15 +22,15 @@ const uint Binding_RenderBuffer = 3;
 const uint Binding_PrevRenderBuffer = 4;
 
 const uint FrameParam_FrameNumber = 0;
-const uint FrameParam_RandomSeed = 1;
 
 const uint RenderSetting_PrimarySamples = 0;
 const uint RenderSetting_SecondarySamples = 1;
-const uint RenderSetting_MaxDepth = 2;
+const uint RenderSetting_MinDepth = 2;
+const uint RenderSetting_MaxDepth = 3;
 
-#ifdef __cplusplus
-} // Vulkan
-} // Qt3DRaytrace
-#endif
+const uint Shader_PathTraceHit    = 0;
+const uint Shader_PathTraceMiss   = 0;
+const uint Shader_SampleLightHit  = 1;
+const uint Shader_SampleLightMiss = 1;
 
 #endif // QUARTZ_SHADERS_BINDINGS_H

@@ -9,7 +9,7 @@
 #include <renderers/vulkan/vkcommon.h>
 #include <renderers/vulkan/vkresources.h>
 #include <renderers/vulkan/geometry.h>
-#include <renderers/vulkan/shaders/lib/types.glsl>
+#include <renderers/vulkan/glsl.h>
 #include <renderers/vulkan/managers/sceneresourceset.h>
 
 #include <backend/handles_p.h>

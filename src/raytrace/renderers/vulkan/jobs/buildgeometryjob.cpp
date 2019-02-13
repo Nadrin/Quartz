@@ -7,7 +7,7 @@
 #include <renderers/vulkan/jobs/buildgeometryjob.h>
 #include <renderers/vulkan/renderer.h>
 #include <renderers/vulkan/geometry.h>
-#include <renderers/vulkan/shaders/lib/types.glsl>
+#include <renderers/vulkan/glsl.h>
 
 #include <backend/managers_p.h>
 #include <backend/geometry_p.h>
