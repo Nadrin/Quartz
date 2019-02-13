@@ -351,9 +351,7 @@ void Renderer::beginRenderIteration()
 
 void Renderer::releaseWindowSurface()
 {
-    Q_ASSERT(m_device);
-
-    if(m_window && m_swapchain) {
+    if(m_device && m_window && m_swapchain) {
         m_device->waitIdle();
         releaseSwapchainResources();
         m_device->destroySwapchain(m_swapchain);
