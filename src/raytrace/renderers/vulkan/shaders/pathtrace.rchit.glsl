@@ -83,6 +83,7 @@ void main()
     const uint kMinDepth = renderParams.settings[RenderSetting_MinDepth];
     const uint kMaxDepth = renderParams.settings[RenderSetting_MaxDepth];
 
+    EntityInstance instance = fetchInstance();
     Triangle triangle = fetchTriangle();
     Material material = fetchMaterial();
 
@@ -92,7 +93,7 @@ void main()
     vec3 p  = hitRay.p + hitT * hitRay.d;
     vec3 wo = -hitRay.d;
 
-    TangentBasis basis = getTangentBasis(triangle, hitBarycentrics);
+    TangentBasis basis = getTangentBasis(triangle, hitBarycentrics, instance.basisObjectToWorld);
 
     payload.L += step(payload.depth, 0) * material.emission.rgb;
     payload.L += directLighting(p, wo, basis, material);

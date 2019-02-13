@@ -21,6 +21,7 @@
 #include <jobs/updateworldtransformjob_p.h>
 #include <renderers/vulkan/jobs/destroyexpiredresourcesjob.h>
 #include <renderers/vulkan/jobs/updaterenderparametersjob.h>
+#include <renderers/vulkan/jobs/updateinstancebufferjob.h>
 
 #include <utility/movingaverage.h>
 
@@ -169,6 +170,7 @@ private:
     Raytrace::UpdateWorldTransformJobPtr m_updateWorldTransformJob;
     DestroyExpiredResourcesJobPtr m_destroyExpiredResourcesJob;
     UpdateRenderParametersJobPtr m_updateRenderParametersJob;
+    UpdateInstanceBufferJobPtr m_updateInstanceBufferJob;
 
     Raytrace::Entity *m_sceneRoot = nullptr;
     DirtySet m_dirtySet = DirtyFlag::AllDirty;

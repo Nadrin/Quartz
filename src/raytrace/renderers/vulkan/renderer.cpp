@@ -52,6 +52,7 @@ Renderer::Renderer(QObject *parent)
     , m_updateWorldTransformJob(new Raytrace::UpdateWorldTransformJob)
     , m_destroyExpiredResourcesJob(new DestroyExpiredResourcesJob(this))
     , m_updateRenderParametersJob(new UpdateRenderParametersJob(this))
+    , m_updateInstanceBufferJob(new UpdateInstanceBufferJob(this))
 {
     Q_INIT_RESOURCE(vulkan_shaders);
 
@@ -885,7 +886,7 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::jobsToExecute(qint64 time)
     bool shouldUpdateInstanceBuffer = false;
     bool shouldUpdateTLAS = false;
 
-    m_updateRenderParametersJob->removeDependency(m_updateWorldTransformJob);
+    m_updateInstanceBufferJob->removeDependency(Qt3DCore::QAspectJobPtr());
 
     jobs.append(m_destroyExpiredResourcesJob);
 
@@ -902,8 +903,15 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::jobsToExecute(qint64 time)
     if(m_dirtySet & DirtyFlag::TransformDirty) {
         jobs.append(m_updateWorldTransformJob);
         m_updateRenderParametersJob->addDependency(m_updateWorldTransformJob);
+        m_updateInstanceBufferJob->addDependency(m_updateWorldTransformJob);
         shouldUpdateTLAS = true;
         shouldUpdateRenderParameters = true;
+        // TODO: Move basisObjectToWorld matrix update into dedicated job.
+        shouldUpdateInstanceBuffer = true;
+    }
+    else {
+        m_updateRenderParametersJob->removeDependency(m_updateWorldTransformJob);
+        m_updateInstanceBufferJob->removeDependency(m_updateWorldTransformJob);
     }
 
     QVector<Qt3DCore::QAspectJobPtr> geometryJobs;
@@ -945,14 +953,13 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::jobsToExecute(qint64 time)
         jobs.append(buildSceneTLASJob);
     }
     if(shouldUpdateInstanceBuffer) {
-        Qt3DCore::QAspectJobPtr updateInstanceBufferJob = UpdateInstanceBufferJobPtr::create(this);
         for(const auto &job : geometryJobs) {
-            updateInstanceBufferJob->addDependency(job);
+            m_updateInstanceBufferJob->addDependency(job);
         }
         for(const auto &job : materialJobs) {
-            updateInstanceBufferJob->addDependency(job);
+            m_updateInstanceBufferJob->addDependency(job);
         }
-        jobs.append(updateInstanceBufferJob);
+        jobs.append(m_updateInstanceBufferJob);
     }
 
     return jobs;

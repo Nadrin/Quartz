@@ -30,6 +30,8 @@ struct EntityInstance // std430 layout
 {
     uint materialIndex;
     uint geometryIndex;
+    float _padding[2];
+    mat3 basisObjectToWorld;
 };
 
 struct RenderParameters // std430 layout
@@ -47,7 +49,7 @@ struct DisplayParameters // std430 layout
 {
     float invGamma;
     float exposure;
-    float padding[2];
+    float _padding[2];
 };
 
 #endif // QUARTZ_SHADERS_TYPES_H

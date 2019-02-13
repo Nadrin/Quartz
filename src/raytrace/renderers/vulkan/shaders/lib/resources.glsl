@@ -38,10 +38,15 @@ Triangle fetchTriangle()
     return result;
 }
 
+EntityInstance fetchInstance()
+{
+    return instanceBuffer.instances[gl_InstanceID];
+}
+
 Material fetchMaterial()
 {
-    const EntityInstance instance = instanceBuffer.instances[gl_InstanceID];
-    return materialBuffer.materials[instance.materialIndex];
+    uint materialIndex = instanceBuffer.instances[gl_InstanceID].materialIndex;
+    return materialBuffer.materials[materialIndex];
 }
 
 #endif // QUARTZ_SHADERS_RESOURCES_H

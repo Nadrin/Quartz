@@ -35,19 +35,19 @@ vec3 blerp(vec2 t, vec3 p1, vec3 p2, vec3 p3)
 
 vec3 getNormal(Triangle triangle, vec2 hit)
 {
-    return normalize(blerp(hit, triangle.v1.normal.xyz, triangle.v2.normal.xyz, triangle.v3.normal.xyz));
+    return blerp(hit, triangle.v1.normal.xyz, triangle.v2.normal.xyz, triangle.v3.normal.xyz);
 }
 
 vec3 getTangent(Triangle triangle, vec2 hit)
 {
-    return normalize(blerp(hit, triangle.v1.tangent.xyz, triangle.v2.tangent.xyz, triangle.v3.tangent.xyz));
+    return blerp(hit, triangle.v1.tangent.xyz, triangle.v2.tangent.xyz, triangle.v3.tangent.xyz);
 }
 
-TangentBasis getTangentBasis(Triangle triangle, vec2 hit)
+TangentBasis getTangentBasis(Triangle triangle, vec2 hit, mat3 basisObjectToWorld)
 {
     TangentBasis basis;
-    basis.N = getNormal(triangle, hit);
-    basis.T = getTangent(triangle, hit);
+    basis.N = normalize(basisObjectToWorld * getNormal(triangle, hit));
+    basis.T = normalize(basisObjectToWorld * getTangent(triangle, hit));
     basis.B = cross(basis.N, basis.T);
     return basis;
 }
