@@ -23,6 +23,7 @@ class QT3DRAYTRACESHARED_EXPORT QRenderSettings : public Qt3DCore::QComponent
     Q_PROPERTY(Qt3DRaytrace::QCamera* camera READ camera WRITE setCamera NOTIFY cameraChanged)
     Q_PROPERTY(int primarySamples READ primarySamples WRITE setPrimarySamples NOTIFY primarySamplesChanged)
     Q_PROPERTY(int secondarySamples READ secondarySamples WRITE setSecondarySamples NOTIFY secondarySamplesChanged)
+    Q_PROPERTY(int minDepth READ minDepth WRITE setMinDepth NOTIFY minDepthChanged)
     Q_PROPERTY(int maxDepth READ maxDepth WRITE setMaxDepth NOTIFY maxDepthChanged)
     Q_PROPERTY(QColor skyColor READ skyColor WRITE setSkyColor NOTIFY skyColorChanged)
     Q_PROPERTY(float skyIntensity READ skyIntensity WRITE setSkyIntensity NOTIFY skyIntensityChanged)
@@ -32,6 +33,7 @@ public:
     QCamera *camera() const;
     int primarySamples() const;
     int secondarySamples() const;
+    int minDepth() const;
     int maxDepth() const;
     QColor skyColor() const;
     float skyIntensity() const;
@@ -40,6 +42,7 @@ public slots:
     void setCamera(QCamera *camera);
     void setPrimarySamples(int primarySamples);
     void setSecondarySamples(int secondarySamples);
+    void setMinDepth(int minDepth);
     void setMaxDepth(int maxDepth);
     void setSkyColor(const QColor &skyColor);
     void setSkyIntensity(float skyIntensity);
@@ -48,6 +51,7 @@ signals:
     void cameraChanged(QCamera *camera);
     void primarySamplesChanged(int primarySamples);
     void secondarySamplesChanged(int secondarySamples);
+    void minDepthChanged(int minDepth);
     void maxDepthChanged(int maxDepth);
     void skyColorChanged(const QColor &skyColor);
     void skyIntensityChanged(float skyIntensity);

@@ -37,6 +37,12 @@ int QRenderSettings::secondarySamples() const
     return d->m_settings.secondarySamples;
 }
 
+int QRenderSettings::minDepth() const
+{
+    Q_D(const QRenderSettings);
+    return d->m_settings.minDepth;
+}
+
 int QRenderSettings::maxDepth() const
 {
     Q_D(const QRenderSettings);
@@ -98,10 +104,20 @@ void QRenderSettings::setSecondarySamples(int secondarySamples)
     }
 }
 
+void QRenderSettings::setMinDepth(int minDepth)
+{
+    Q_D(QRenderSettings);
+    minDepth = std::max(minDepth, 0);
+    if(d->m_settings.minDepth != minDepth) {
+        d->m_settings.minDepth = minDepth;
+        emit minDepthChanged(minDepth);
+    }
+}
+
 void QRenderSettings::setMaxDepth(int maxDepth)
 {
     Q_D(QRenderSettings);
-    maxDepth = std::max(maxDepth, 1);
+    maxDepth = std::max(maxDepth, 0);
     if(d->m_settings.maxDepth != maxDepth) {
         d->m_settings.maxDepth = maxDepth;
         emit maxDepthChanged(maxDepth);

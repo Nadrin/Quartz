@@ -31,6 +31,9 @@ void RenderSettings::sceneChangeEvent(const QSceneChangePtr &change)
         else if(propertyChange->propertyName() == QByteArrayLiteral("secondarySamples")) {
             m_secondarySamples = propertyChange->value().value<unsigned int>();
         }
+        else if(propertyChange->propertyName() == QByteArrayLiteral("minDepth")) {
+            m_minDepth = propertyChange->value().value<unsigned int>();
+        }
         else if(propertyChange->propertyName() == QByteArrayLiteral("maxDepth")) {
             m_maxDepth = propertyChange->value().value<unsigned int>();
         }
@@ -54,6 +57,7 @@ void RenderSettings::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
     m_cameraId = data.cameraId;
     m_primarySamples = static_cast<unsigned int>(data.primarySamples);
     m_secondarySamples = static_cast<unsigned int>(data.secondarySamples);
+    m_minDepth = static_cast<unsigned int>(data.minDepth);
     m_maxDepth = static_cast<unsigned int>(data.maxDepth);
     m_skyColor = data.skyColor;
     m_skyIntensity = data.skyIntensity;

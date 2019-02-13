@@ -21,9 +21,10 @@ public:
     Qt3DCore::QNodeId cameraId() const { return m_cameraId; }
     unsigned int primarySamples() const { return m_primarySamples; }
     unsigned int secondarySamples() const { return m_secondarySamples; }
+    unsigned int minDepth() const { return m_minDepth; }
     unsigned int maxDepth() const { return m_maxDepth; }
 
-    LinearColor skyColorAndIntensity() const
+    LinearColor skyRadiance() const
     {
         return LinearColor(m_skyColor, m_skyIntensity);
     }
@@ -36,6 +37,7 @@ private:
     Qt3DCore::QNodeId m_cameraId;
     unsigned int m_primarySamples;
     unsigned int m_secondarySamples;
+    unsigned int m_minDepth;
     unsigned int m_maxDepth;
     QColor m_skyColor;
     float m_skyIntensity;
