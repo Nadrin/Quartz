@@ -59,7 +59,7 @@ vec3 indirectLighting(vec3 p, vec3 wo, TangentBasis basis, Material material, ui
     vec3 pathThroughput = payload.T * (brdf * cosTheta) / pdf;
 
     if(payload.depth > minDepth) {
-        float terminationThreshold = max(MinTerminationThreshold, 1.0 - pathThroughput.g);
+        float terminationThreshold = max(MinTerminationThreshold, 1.0 - maxcomp3(pathThroughput));
         if(nextFloat(payload.rng) < terminationThreshold) {
             return vec3(0.0);
         }

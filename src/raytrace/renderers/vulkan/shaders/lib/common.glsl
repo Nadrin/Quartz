@@ -20,4 +20,9 @@ const float Infinity = 1000000.0;
 
 const float MinTerminationThreshold = 0.05;
 
+float maxcomp3(vec3 v)
+{
+    return max(max(v.x, v.y), v.z);
+}
+
 #endif // QUARTZ_SHADERS_COMMON_H
