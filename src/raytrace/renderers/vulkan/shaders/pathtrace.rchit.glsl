@@ -94,6 +94,7 @@ void main()
 
     TangentBasis basis = getTangentBasis(triangle, hitBarycentrics);
 
+    payload.L += step(payload.depth, 0) * material.emission.rgb;
     payload.L += directLighting(p, wo, basis, material);
     if(payload.depth + 1 <= kMaxDepth) {
         payload.L += indirectLighting(p, wo, basis, material, kMinDepth);

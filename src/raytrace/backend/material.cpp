@@ -33,6 +33,13 @@ void Material::sceneChangeEvent(const QSceneChangePtr &change)
         if(propertyName == QByteArrayLiteral("albedo")) {
             m_albedo = propertyChange->value().value<QColor>();
         }
+        else if(propertyName == QByteArrayLiteral("emission")) {
+            m_emission = propertyChange->value().value<QColor>();
+        }
+        else if(propertyName == QByteArrayLiteral("emissionPower")) {
+            m_emissionPower = propertyChange->value().value<float>();
+        }
+
         if(m_manager) {
             m_manager->markComponentDirty(peerId());
         }
@@ -48,6 +55,8 @@ void Material::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
     const auto &data = typedChange->data;
 
     m_albedo = data.albedo;
+    m_emission = data.emission;
+    m_emissionPower = data.emissionPower;
 
     if(m_manager) {
         m_manager->markComponentDirty(peerId());

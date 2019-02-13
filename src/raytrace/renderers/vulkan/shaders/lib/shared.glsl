@@ -10,6 +10,7 @@
 struct Material // std430 layout
 {
     vec4 albedo;
+    vec4 emission;
 };
 
 struct Attributes // std430 layout

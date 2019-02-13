@@ -23,13 +23,22 @@ public:
     void setManager(MaterialManager *manager);
     void sceneChangeEvent(const Qt3DCore::QSceneChangePtr &change) override;
 
-    const LinearColor &albedo() const { return m_albedo; }
+    LinearColor albedo() const
+    {
+        return LinearColor(m_albedo);
+    }
+    LinearColor emission() const
+    {
+        return LinearColor(m_emission, m_emissionPower);
+    }
 
 private:
     void initializeFromPeer(const Qt3DCore::QNodeCreatedChangeBasePtr &change) override;
 
     MaterialManager *m_manager;
-    LinearColor m_albedo;
+    QColor m_albedo;
+    QColor m_emission;
+    float m_emissionPower;
 };
 
 class MaterialNodeMapper final : public BackendNodeMapper<Material, MaterialManager>

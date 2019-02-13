@@ -9,6 +9,7 @@
 
 #include "bindings.glsl"
 #include "shared.glsl"
+#include "rayhit.glsl"
 
 layout(set=DS_Render, binding=Binding_Instances, std430) readonly buffer InstanceBuffer {
     EntityInstance instances[];

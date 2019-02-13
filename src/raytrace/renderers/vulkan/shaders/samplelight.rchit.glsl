@@ -6,13 +6,16 @@
  */
 
 #extension GL_GOOGLE_include_directive : require
+#extension GL_EXT_nonuniform_qualifier : require
 #extension GL_NV_ray_tracing : require
 
 #include "lib/common.glsl"
+#include "lib/resources.glsl"
 
 rayPayloadInNV vec3 Le;
 
 void main()
 {
-    Le = vec3(0.0);
+    Material material = fetchMaterial();
+    Le = material.emission.rgb;
 }

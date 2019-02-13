@@ -14,15 +14,15 @@ namespace Qt3DRaytrace {
 
 struct QMaterialData
 {
-    QColor albedo;
+    QColor albedo = Qt::GlobalColor::gray;
+    QColor emission = Qt::GlobalColor::white;
+    float emissionPower = 0.0f;
 };
 
 class QMaterialPrivate : public Qt3DCore::QComponentPrivate
 {
 public:
-    QMaterialPrivate();
     Q_DECLARE_PUBLIC(QMaterial)
-
     QMaterialData m_data;
 };
 

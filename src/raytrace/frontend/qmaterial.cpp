@@ -10,11 +10,6 @@ using namespace Qt3DCore;
 
 namespace Qt3DRaytrace {
 
-QMaterialPrivate::QMaterialPrivate()
-{
-    m_data.albedo = Qt::GlobalColor::gray;
-}
-
 QMaterial::QMaterial(Qt3DCore::QNode *parent)
     : QComponent(*new QMaterialPrivate, parent)
 {}
@@ -25,12 +20,42 @@ QColor QMaterial::albedo() const
     return d->m_data.albedo;
 }
 
+QColor QMaterial::emission() const
+{
+    Q_D(const QMaterial);
+    return d->m_data.emission;
+}
+
+float QMaterial::emissionPower() const
+{
+    Q_D(const QMaterial);
+    return d->m_data.emissionPower;
+}
+
 void QMaterial::setAlbedo(const QColor &albedo)
 {
     Q_D(QMaterial);
     if(d->m_data.albedo != albedo) {
         d->m_data.albedo = albedo;
         emit albedoChanged(albedo);
+    }
+}
+
+void QMaterial::setEmission(const QColor &emission)
+{
+    Q_D(QMaterial);
+    if(d->m_data.emission != emission) {
+        d->m_data.emission = emission;
+        emit emissionChanged(emission);
+    }
+}
+
+void QMaterial::setEmissionPower(float power)
+{
+    Q_D(QMaterial);
+    if(!qFuzzyCompare(d->m_data.emissionPower, power)) {
+        d->m_data.emissionPower = power;
+        emit emissionPowerChanged(power);
     }
 }
 

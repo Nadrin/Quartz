@@ -19,16 +19,24 @@ class QT3DRAYTRACESHARED_EXPORT QMaterial : public Qt3DCore::QComponent
 {
     Q_OBJECT
     Q_PROPERTY(QColor albedo READ albedo WRITE setAlbedo NOTIFY albedoChanged)
+    Q_PROPERTY(QColor emission READ emission WRITE setEmission NOTIFY emissionChanged)
+    Q_PROPERTY(float emissionPower READ emissionPower WRITE setEmissionPower NOTIFY emissionPowerChanged)
 public:
     explicit QMaterial(Qt3DCore::QNode *parent = nullptr);
 
     QColor albedo() const;
+    QColor emission() const;
+    float emissionPower() const;
 
 public slots:
     void setAlbedo(const QColor &albedo);
+    void setEmission(const QColor &emission);
+    void setEmissionPower(float power);
 
 signals:
     void albedoChanged(const QColor &albedo);
+    void emissionChanged(const QColor &emission);
+    void emissionPowerChanged(float power);
 
 protected:
     explicit QMaterial(QMaterialPrivate &dd, Qt3DCore::QNode *parent = nullptr);
