@@ -32,10 +32,10 @@
 #include <QVector>
 #include <QHash>
 #include <QSize>
+#include <QElapsedTimer>
 
 class QWindow;
 class QTimer;
-class QElapsedTimer;
 
 namespace Qt3DRaytrace {
 namespace Vulkan {
@@ -160,6 +160,7 @@ private:
 
     int m_frameIndex = 0;
     uint32_t m_frameNumber = 0;
+    QElapsedTimer m_frameElapsedTimer;
 
     RenderParameters m_renderParams = {};
     DisplayParameters m_displayParams = {};

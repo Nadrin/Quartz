@@ -364,6 +364,13 @@ void Renderer::resetRenderProgress()
 {
     m_clearPreviousRenderBuffer = true;
     m_frameNumber = 0;
+
+    if(m_frameElapsedTimer.isValid()) {
+        m_frameElapsedTimer.restart();
+    }
+    else {
+        m_frameElapsedTimer.start();
+    }
 }
 
 void Renderer::updateActiveCamera()
@@ -644,11 +651,13 @@ void Renderer::displayStatistics()
     const double frameTime = std::max(cpuTime, gpuTime);
     const double fps = (frameTime > 0.0) ? 1000.0 / frameTime : 0.0;
 
-    const QString statistics = QString("%1 [ CPU: %2 ms | GPU: %3 ms | FPS: %4 ]")
+    const QString statistics = QString("%1 [ CPU: %2 ms | GPU: %3 ms | FPS: %4 | Current image: %5 s / %6 iterations ]")
             .arg(m_windowTitle)
             .arg(cpuTime, 0, 'f', 2)
             .arg(gpuTime, 0, 'f', 2)
-            .arg(fps, 0, 'f', 0);
+            .arg(fps, 0, 'f', 0)
+            .arg(m_frameElapsedTimer.elapsed() * 1e-3, 0, 'f', 2)
+            .arg(m_frameNumber);
     m_window->setTitle(statistics);
 }
 
