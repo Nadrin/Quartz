@@ -37,6 +37,9 @@ vec3 directLighting(vec3 p, vec3 wo, TangentBasis basis, Material material)
     vec3 wi = sampleHemisphereCosine(nextVec2(payload.rng));
     float cosTheta = cosThetaTangent(wi);
     float pdf = pdfHemisphereCosine(cosTheta);
+    if(pdf < Epsilon) {
+        return vec3(0.0);
+    }
 
     vec3 brdf = sampleBRDF(material, wo, wi);
 
@@ -54,6 +57,9 @@ vec3 indirectLighting(vec3 p, vec3 wo, TangentBasis basis, Material material, ui
     vec3 wi = sampleHemisphereCosine(nextVec2(payload.rng));
     float cosTheta = cosThetaTangent(wi);
     float pdf = pdfHemisphereCosine(cosTheta);
+    if(pdf < Epsilon) {
+        return vec3(0.0);
+    }
 
     vec3 brdf = sampleBRDF(material, wo, wi);
     vec3 pathThroughput = payload.T * (brdf * cosTheta) / pdf;
