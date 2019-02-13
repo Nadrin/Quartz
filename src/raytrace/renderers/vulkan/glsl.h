@@ -9,6 +9,12 @@
 #include <cstdint>
 #include <QtGlobal>
 
+#include <QVector3D>
+#include <QVector2D>
+#include <QVector4D>
+#include <QMatrix3x3>
+#include <QMatrix4x4>
+
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
@@ -33,9 +39,60 @@ struct vec
 } // glsl
 
 using uint = unsigned int;
-using vec2 = glsl::vec<float, 2>;
-using vec3 = glsl::vec<float, 3>;
-using vec4 = glsl::vec<float, 4>;
+
+struct vec2 : glsl::vec<float, 2>
+{
+    vec2() = default;
+    vec2(const QVector2D &v)
+    {
+        data[0] = v.x();
+        data[1] = v.y();
+    }
+};
+
+struct vec3 : glsl::vec<float, 4>
+{
+    vec3() = default;
+    vec3(const QVector3D &v)
+    {
+        data[0] = v.x();
+        data[1] = v.y();
+        data[2] = v.z();
+    }
+};
+
+struct vec4 : glsl::vec<float, 4>
+{
+    vec4() = default;
+    vec4(const QVector4D &v)
+    {
+        data[0] = v.x();
+        data[1] = v.y();
+        data[2] = v.z();
+        data[3] = v.w();
+    }
+};
+
+struct mat3 : glsl::vec<float, 12>
+{
+    mat3() = default;
+    mat3(const QMatrix3x3 &m)
+    {
+        const float *md = m.constData();
+        data[0] = md[0]; data[1] = md[1]; data[2]  = md[2];
+        data[4] = md[3]; data[5] = md[4]; data[6]  = md[5];
+        data[8] = md[6]; data[9] = md[7]; data[10] = md[8];
+    }
+};
+
+struct mat4 : glsl::vec<float, 16>
+{
+    mat4() = default;
+    mat4(const QMatrix4x4 &m)
+    {
+        std::memcpy(data, m.constData(), sizeof(*this));
+    }
+};
 
 #include <renderers/vulkan/shaders/lib/shared.glsl>
 #include <renderers/vulkan/shaders/lib/bindings.glsl>
