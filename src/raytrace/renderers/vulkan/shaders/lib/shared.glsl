@@ -7,45 +7,59 @@
 #ifndef QUARTZ_SHADERS_TYPES_H
 #define QUARTZ_SHADERS_TYPES_H
 
-struct Material // std430 layout
+struct Material
 {
-    vec4 albedo;
-    vec4 emission;
+    vec3 albedo;
+    vec3 emission;
 };
 
-struct Attributes // std430 layout
+struct Emitter
 {
-    vec4 position;
-    vec4 normal;
-    vec4 tangent;
-    vec4 texcoord;
+    vec3 radiance;
+    mat4x3 transform;
+    uint geometryIndex;
+    uint geometryFaceCount;
+    float _padding[2];
 };
 
-struct Face // std430 layout
+struct Attributes
+{
+    vec3 position;
+    vec3 normal;
+    vec3 tangent;
+    vec2 texcoord;
+    float _padding[2];
+};
+
+struct Face
 {
     uint vertices[3];
 };
 
-struct EntityInstance // std430 layout
+struct EntityInstance
 {
     uint materialIndex;
     uint geometryIndex;
     float _padding[2];
-    mat3 basisObjectToWorld;
+    mat3 basisTransform;
 };
 
-struct RenderParameters // std430 layout
+struct RenderParameters
 {
-    uint settings[4];
-    uint frame[4];
+    uint minDepth;
+    uint maxDepth;
+    uint frameNumber;
+    uint numEmitters;
+    uint numPrimarySamples;
+    uint numSecondarySamples;
+    uint _reserved[2];
     vec4 cameraPositionAndAspect;
     vec4 cameraUpVectorAndTanHalfFOV;
     vec4 cameraRightVector;
     vec4 cameraForwardVector;
-    vec4 skyRadiance;
 };
 
-struct DisplayParameters // std430 layout
+struct DisplayParameters
 {
     float invGamma;
     float exposure;

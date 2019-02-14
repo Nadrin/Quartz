@@ -94,6 +94,19 @@ struct mat4 : glsl::vec<float, 16>
     }
 };
 
+struct mat4x3 : glsl::vec<float, 12>
+{
+    mat4x3() = default;
+    mat4x3(const QMatrix4x3 &m)
+    {
+        std::memcpy(data, m.constData(), sizeof(*this));
+    }
+    mat4x3(const QMatrix4x4 &m)
+    {
+        std::memcpy(data, m.constData(), sizeof(*this));
+    }
+};
+
 #include <renderers/vulkan/shaders/lib/shared.glsl>
 #include <renderers/vulkan/shaders/lib/bindings.glsl>
 

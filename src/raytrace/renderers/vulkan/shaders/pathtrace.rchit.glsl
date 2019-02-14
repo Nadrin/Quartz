@@ -18,7 +18,7 @@ layout(set=DS_Render, binding=Binding_TLAS) uniform accelerationStructureNV scen
 
 layout(push_constant) uniform RenderParametersBlock
 {
-    RenderParameters renderParams;
+    RenderParameters params;
 };
 
 rayPayloadInNV RayPayload payload;
@@ -86,9 +86,6 @@ vec3 indirectLighting(vec3 p, vec3 wo, TangentBasis basis, Material material, ui
 
 void main()
 {
-    const uint kMinDepth = renderParams.settings[RenderSetting_MinDepth];
-    const uint kMaxDepth = renderParams.settings[RenderSetting_MaxDepth];
-
     EntityInstance instance = fetchInstance();
     Triangle triangle = fetchTriangle();
     Material material = fetchMaterial();
@@ -99,11 +96,11 @@ void main()
     vec3 p  = hitRay.p + hitT * hitRay.d;
     vec3 wo = -hitRay.d;
 
-    TangentBasis basis = getTangentBasis(triangle, hitBarycentrics, instance.basisObjectToWorld);
+    TangentBasis basis = getTangentBasis(triangle, hitBarycentrics, instance.basisTransform);
 
     payload.L += step(payload.depth, 0) * material.emission.rgb;
     payload.L += directLighting(p, wo, basis, material);
-    if(payload.depth + 1 <= kMaxDepth) {
-        payload.L += indirectLighting(p, wo, basis, material, kMinDepth);
+    if(payload.depth + 1 <= params.maxDepth) {
+        payload.L += indirectLighting(p, wo, basis, material, params.minDepth);
     }
 }

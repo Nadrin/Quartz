@@ -35,12 +35,12 @@ vec3 blerp(vec2 t, vec3 p1, vec3 p2, vec3 p3)
 
 vec3 getNormal(Triangle triangle, vec2 hit)
 {
-    return blerp(hit, triangle.v1.normal.xyz, triangle.v2.normal.xyz, triangle.v3.normal.xyz);
+    return blerp(hit, triangle.v1.normal, triangle.v2.normal, triangle.v3.normal);
 }
 
 vec3 getTangent(Triangle triangle, vec2 hit)
 {
-    return blerp(hit, triangle.v1.tangent.xyz, triangle.v2.tangent.xyz, triangle.v3.tangent.xyz);
+    return blerp(hit, triangle.v1.tangent, triangle.v2.tangent, triangle.v3.tangent);
 }
 
 TangentBasis getTangentBasis(Triangle triangle, vec2 hit, mat3 basisObjectToWorld)
