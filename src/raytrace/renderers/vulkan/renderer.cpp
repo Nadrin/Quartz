@@ -53,6 +53,7 @@ Renderer::Renderer(QObject *parent)
     , m_destroyExpiredResourcesJob(new DestroyExpiredResourcesJob(this))
     , m_updateRenderParametersJob(new UpdateRenderParametersJob(this))
     , m_updateInstanceBufferJob(new UpdateInstanceBufferJob(this))
+    , m_updateEmittersJob(new UpdateEmittersJob(this))
 {
     Q_INIT_RESOURCE(vulkan_shaders);
 
@@ -219,6 +220,7 @@ bool Renderer::createResources()
             { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, numConcurrentFrames() }, // Render buffer
             { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, numConcurrentFrames() }, // Instance buffer
             { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, numConcurrentFrames() }, // Material buffer
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, numConcurrentFrames() }, // Emitter buffer
         };
         const uint32_t descriptorPoolCapacity = uint32_t(descriptorPoolSizes.size()) * numConcurrentFrames();
         m_frameDescriptorPool = m_device->createDescriptorPool({ descriptorPoolCapacity, descriptorPoolSizes});
@@ -235,7 +237,8 @@ bool Renderer::createResources()
 
     m_renderPipeline = RayTracingPipelineBuilder(m_device.get())
             .shaders({"pathtrace.rgen", "pathtrace.rmiss", "pathtrace.rchit"})
-            .shaders({"samplelight.rchit", "samplelight.rmiss"})
+            .shaders({"queryemission.rchit", "queryemission.rmiss"})
+            .shaders({"queryvisibility.rchit", "queryvisibility.rmiss"})
             .descriptorBindingManager(DS_AttributeBuffer, 0, m_descriptorManager.get(), ResourceClass::AttributeBuffer)
             .descriptorBindingManager(DS_IndexBuffer, 0, m_descriptorManager.get(), ResourceClass::IndexBuffer)
             .maxRecursionDepth(Config::GlobalMaxRecursionDepth)
@@ -340,14 +343,14 @@ void Renderer::releaseSwapchainResources()
 void Renderer::beginRenderIteration()
 {
     if(m_settings) {
-        m_renderParams.settings[RenderSetting_PrimarySamples] = m_settings->primarySamples();
-        m_renderParams.settings[RenderSetting_SecondarySamples] = m_settings->secondarySamples();
-        m_renderParams.settings[RenderSetting_MinDepth] = m_settings->minDepth();
-        m_renderParams.settings[RenderSetting_MaxDepth] = m_settings->maxDepth();
-        m_settings->skyRadiance().writeToBuffer(m_renderParams.skyRadiance.data);
+        m_renderParams.numPrimarySamples = m_settings->primarySamples();
+        m_renderParams.numSecondarySamples = m_settings->secondarySamples();
+        m_renderParams.minDepth = m_settings->minDepth();
+        m_renderParams.maxDepth = m_settings->maxDepth();
     }
 
-    m_renderParams.frame[FrameParam_FrameNumber] = ++m_frameNumber;
+    m_renderParams.frameNumber = ++m_frameNumber;
+    m_renderParams.numEmitters = m_sceneManager->numEmitters();
 }
 
 void Renderer::releaseWindowSurface()
@@ -559,6 +562,7 @@ void Renderer::renderFrame()
         m_device->writeDescriptors({
             { currentFrame.renderDescriptorSet, Binding_Instances, 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, DescriptorBufferInfo(m_sceneManager->instanceBuffer()) },
             { currentFrame.renderDescriptorSet, Binding_Materials, 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, DescriptorBufferInfo(m_sceneManager->materialBuffer()) },
+            { currentFrame.renderDescriptorSet, Binding_Emitters,  0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, DescriptorBufferInfo(m_sceneManager->emitterBuffer()) },
         });
     }
 
@@ -893,9 +897,17 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::jobsToExecute(qint64 time)
 
     bool shouldUpdateRenderParameters = false;
     bool shouldUpdateInstanceBuffer = false;
+    bool shouldUpdateEmitters = false;
     bool shouldUpdateTLAS = false;
+    bool sceneEntitiesDirty = false;
 
+    m_updateRenderParametersJob->removeDependency(m_updateWorldTransformJob);
+
+    m_updateInstanceBufferJob->removeDependency(m_updateWorldTransformJob);
     m_updateInstanceBufferJob->removeDependency(Qt3DCore::QAspectJobPtr());
+
+    m_updateEmittersJob->removeDependency(m_updateWorldTransformJob);
+    m_updateEmittersJob->removeDependency(Qt3DCore::QAspectJobPtr());
 
     jobs.append(m_destroyExpiredResourcesJob);
 
@@ -904,23 +916,25 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::jobsToExecute(qint64 time)
     }
 
     if(m_dirtySet & DirtyFlag::EntityDirty || m_dirtySet & DirtyFlag::GeometryDirty) {
-        m_sceneManager->updateRenderables(&m_nodeManagers->entityManager);
         shouldUpdateInstanceBuffer = true;
+        shouldUpdateEmitters = true;
         shouldUpdateTLAS = true;
+        sceneEntitiesDirty = true;
+    }
+    if(m_dirtySet & DirtyFlag::LightDirty) {
+        shouldUpdateEmitters = true;
+        sceneEntitiesDirty = true;
     }
 
     if(m_dirtySet & DirtyFlag::TransformDirty) {
         jobs.append(m_updateWorldTransformJob);
         m_updateRenderParametersJob->addDependency(m_updateWorldTransformJob);
         m_updateInstanceBufferJob->addDependency(m_updateWorldTransformJob);
+        m_updateEmittersJob->addDependency(m_updateWorldTransformJob);
         shouldUpdateTLAS = true;
         shouldUpdateRenderParameters = true;
-        // TODO: Move basisObjectToWorld matrix update into dedicated job.
         shouldUpdateInstanceBuffer = true;
-    }
-    else {
-        m_updateRenderParametersJob->removeDependency(m_updateWorldTransformJob);
-        m_updateInstanceBufferJob->removeDependency(m_updateWorldTransformJob);
+        shouldUpdateEmitters = true;
     }
 
     QVector<Qt3DCore::QAspectJobPtr> geometryJobs;
@@ -929,6 +943,7 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::jobsToExecute(qint64 time)
         jobs.append(geometryJobs);
         shouldUpdateTLAS = true;
         shouldUpdateInstanceBuffer = true;
+        shouldUpdateEmitters = true;
     }
 
     QVector<Qt3DCore::QAspectJobPtr> materialJobs;
@@ -936,6 +951,7 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::jobsToExecute(qint64 time)
         materialJobs = createMaterialJobs();
         jobs.append(materialJobs);
         shouldUpdateInstanceBuffer = true;
+        shouldUpdateEmitters = true;
     }
 
     if(m_dirtySet & DirtyFlag::CameraDirty) {
@@ -949,6 +965,9 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::jobsToExecute(qint64 time)
         jobs.append(m_updateRenderParametersJob);
     }
 
+    if(sceneEntitiesDirty) {
+        m_sceneManager->gatherEntities(&m_nodeManagers->entityManager);
+    }
     if(m_sceneManager->renderables().size() == 0) {
         return jobs;
     }
@@ -969,6 +988,15 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::jobsToExecute(qint64 time)
             m_updateInstanceBufferJob->addDependency(job);
         }
         jobs.append(m_updateInstanceBufferJob);
+    }
+    if(shouldUpdateEmitters) {
+        for(const auto &job : geometryJobs) {
+            m_updateEmittersJob->addDependency(job);
+        }
+        for(const auto &job : materialJobs) {
+            m_updateEmittersJob->addDependency(job);
+        }
+        jobs.append(m_updateEmittersJob);
     }
 
     return jobs;

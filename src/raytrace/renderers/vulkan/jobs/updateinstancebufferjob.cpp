@@ -61,8 +61,8 @@ void UpdateInstanceBufferJob::run()
         instanceData[instanceIndex].geometryIndex = sceneManager->lookupGeometryIndex(geometryNodeId);
         instanceData[instanceIndex].materialIndex = sceneManager->lookupMaterialIndex(materialNodeId);
 
-        const QMatrix3x3 basisObjectToWorld = renderable->worldTransformMatrix.toQMatrix4x4().normalMatrix();
-        instanceData[instanceIndex].basisObjectToWorld = basisObjectToWorld;
+        const QMatrix3x3 basisTransform = renderable->worldTransformMatrix.toQMatrix4x4().normalMatrix();
+        instanceData[instanceIndex].basisTransform = basisTransform;
     }
 
     TransientCommandBuffer commandBuffer = commandBufferManager->acquireCommandBuffer();

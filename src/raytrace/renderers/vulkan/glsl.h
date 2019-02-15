@@ -94,14 +94,10 @@ struct mat4 : glsl::vec<float, 16>
     }
 };
 
-struct mat4x3 : glsl::vec<float, 12>
+struct mat3x4 : glsl::vec<float, 12>
 {
-    mat4x3() = default;
-    mat4x3(const QMatrix4x3 &m)
-    {
-        std::memcpy(data, m.constData(), sizeof(*this));
-    }
-    mat4x3(const QMatrix4x4 &m)
+    mat3x4() = default;
+    mat3x4(const QMatrix3x4 &m)
     {
         std::memcpy(data, m.constData(), sizeof(*this));
     }

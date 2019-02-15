@@ -101,14 +101,14 @@ QVector<GeometryInstance> BuildSceneTopLevelAccelerationStructureJob::gatherGeom
         const Raytrace::GeometryRenderer *geometryRenderer = renderable->geometryRendererComponent();
         Q_ASSERT(geometryRenderer);
 
-        uint64_t blasHandle;
-        uint32_t geometryIndex = sceneManager->lookupGeometryBLAS(geometryRenderer->geometryId(), blasHandle);
+        Geometry geometry;
+        uint32_t geometryIndex = sceneManager->lookupGeometry(geometryRenderer->geometryId(), geometry);
         if(geometryIndex != ~0u) {
             const QMatrix4x4 worldTransformRowMajor = renderable->worldTransformMatrix.transposed().toQMatrix4x4();
             GeometryInstance geometryInstance = {};
             std::memcpy(geometryInstance.transform, worldTransformRowMajor.constData(), sizeof(geometryInstance.transform));
             geometryInstance.mask = 0xFF;
-            geometryInstance.blasHandle = blasHandle;
+            geometryInstance.blasHandle = geometry.blasHandle;
             geometryInstance.instanceCustomIndex = geometryIndex;
             instances.append(geometryInstance);
         }

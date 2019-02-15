@@ -11,14 +11,13 @@
 #include "lib/common.glsl"
 #include "lib/raygen.glsl"
 
-layout(push_constant) uniform RenderParametersBlock
-{
-    RenderParameters renderParams;
-};
+layout(set=DS_Render, binding=Binding_Emitters, std430) readonly buffer EmitterBuffer {
+    Emitter emitters[];
+} emitterBuffer;
 
 rayPayloadInNV RayPayload payload;
 
 void main()
 {
-    payload.L = step(payload.depth, 0) * renderParams.skyRadiance.rgb;
+    payload.L = step(payload.depth, 0) * emitterBuffer.emitters[0].radiance;
 }

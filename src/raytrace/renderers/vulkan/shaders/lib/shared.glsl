@@ -16,7 +16,7 @@ struct Material
 struct Emitter
 {
     vec3 radiance;
-    mat4x3 transform;
+    mat3x4 transform;
     uint geometryIndex;
     uint geometryFaceCount;
     float _padding[2];

@@ -22,9 +22,11 @@ const uint Binding_Emitters = 3;
 const uint Binding_RenderBuffer = 4;
 const uint Binding_PrevRenderBuffer = 5;
 
-const uint Shader_PathTraceHit    = 0;
-const uint Shader_PathTraceMiss   = 0;
-const uint Shader_SampleLightHit  = 1;
-const uint Shader_SampleLightMiss = 1;
+const uint Shader_PathTraceHit = 0;
+const uint Shader_PathTraceMiss = 0;
+const uint Shader_QueryEmissionHit = 1;
+const uint Shader_QueryEmissionMiss = 1;
+const uint Shader_QueryVisibilityHit = 2;
+const uint Shader_QueryVisibilityMiss = 2;
 
 #endif // QUARTZ_SHADERS_BINDINGS_H

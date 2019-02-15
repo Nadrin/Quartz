@@ -6,8 +6,10 @@ set(GLSL_SOURCES
     pathtrace.rgen.glsl
     pathtrace.rmiss.glsl
     pathtrace.rchit.glsl
-    samplelight.rchit.glsl
-    samplelight.rmiss.glsl
+    queryemission.rchit.glsl
+    queryemission.rmiss.glsl
+    queryvisibility.rchit.glsl
+    queryvisibility.rmiss.glsl
 )
 
 find_program(GLSLANG NAMES glslangValidator glslangValidator.exe

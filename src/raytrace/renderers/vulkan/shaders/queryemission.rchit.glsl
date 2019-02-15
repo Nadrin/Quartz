@@ -12,10 +12,10 @@
 #include "lib/common.glsl"
 #include "lib/resources.glsl"
 
-rayPayloadInNV vec3 Le;
+rayPayloadInNV vec3 pEmission;
 
 void main()
 {
     Material material = fetchMaterial();
-    Le = material.emission.rgb;
+    pEmission = material.emission.rgb;
 }

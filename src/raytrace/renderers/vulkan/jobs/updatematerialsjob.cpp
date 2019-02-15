@@ -40,7 +40,7 @@ void UpdateMaterialsJob::run()
         material->albedo().writeToBuffer(materialData.albedo.data);
         material->emission().writeToBuffer(materialData.emission.data);
 
-        // TODO: Reduce lock contention on mutex.
+        // TODO: Reduce lock contention on rwlock.
         sceneManager->addOrUpdateMaterial(material->peerId(), materialData);
     }
     m_dirtyMaterialHandles.clear();

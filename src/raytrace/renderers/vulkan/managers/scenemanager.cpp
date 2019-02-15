@@ -45,6 +45,12 @@ void SceneManager::addOrUpdateMaterial(Qt3DCore::QNodeId materialNodeId, const M
     m_materials.addOrUpdateResource(materialNodeId, material);
 }
 
+void SceneManager::updateEmitters(QVector<Emitter> &emitters)
+{
+    QWriteLocker lock(&m_rwlock);
+    m_emitters = std::move(emitters);
+}
+
 void SceneManager::updateSceneTLAS(const AccelerationStructure &tlas)
 {
     QWriteLocker lock(&m_rwlock);
@@ -57,10 +63,22 @@ void SceneManager::updateMaterialBuffer(const Buffer &buffer)
     m_materialBuffer.update(buffer, m_renderer->numConcurrentFrames());
 }
 
+void SceneManager::updateEmitterBuffer(const Buffer &buffer)
+{
+    QWriteLocker lock(&m_rwlock);
+    m_emitterBuffer.update(buffer, m_renderer->numConcurrentFrames());
+}
+
 void SceneManager::updateInstanceBuffer(const Buffer &buffer)
 {
     QWriteLocker lock(&m_rwlock);
     m_instanceBuffer.update(buffer, m_renderer->numConcurrentFrames());
+}
+
+uint32_t SceneManager::lookupGeometry(Qt3DCore::QNodeId geometryNodeId, Geometry &geometry) const
+{
+    QReadLocker lock(&m_rwlock);
+    return m_geometry.lookupResource(geometryNodeId, geometry);
 }
 
 uint32_t SceneManager::lookupGeometryIndex(Qt3DCore::QNodeId geometryNodeId) const
@@ -69,31 +87,31 @@ uint32_t SceneManager::lookupGeometryIndex(Qt3DCore::QNodeId geometryNodeId) con
     return m_geometry.lookupIndex(geometryNodeId);
 }
 
+uint32_t SceneManager::lookupMaterial(Qt3DCore::QNodeId materialNodeId, Material &material) const
+{
+    QReadLocker lock(&m_rwlock);
+    return m_materials.lookupResource(materialNodeId, material);
+}
+
 uint32_t SceneManager::lookupMaterialIndex(Qt3DCore::QNodeId materialNodeId) const
 {
     QReadLocker lock(&m_rwlock);
     return m_materials.lookupIndex(materialNodeId);
 }
 
-uint32_t SceneManager::lookupGeometryBLAS(Qt3DCore::QNodeId geometryNodeId, uint64_t &blasHandle) const
-{
-    QReadLocker lock(&m_rwlock);
-
-    Geometry geometry;
-    uint32_t geometryIndex = m_geometry.lookupResource(geometryNodeId, geometry);
-    blasHandle = geometry.blasHandle;
-    return geometryIndex;
-}
-
-void SceneManager::updateRenderables(Raytrace::EntityManager *entityManager)
+void SceneManager::gatherEntities(Raytrace::EntityManager *entityManager)
 {
     Q_ASSERT(entityManager);
 
     // NO LOCK: Access from render/aspect thread only.
     m_renderables.clear();
+    m_emissives.clear();
     for(const auto &entity : entityManager->activeHandles()) {
         if(entity->isRenderable()) {
             m_renderables.append(entity->handle());
+        }
+        if(entity->isEmissive()) {
+            m_emissives.append(entity->handle());
         }
     }
 }
@@ -104,6 +122,7 @@ void SceneManager::updateRetiredResources()
     m_tlas.updateRetiredTTL();
     m_instanceBuffer.updateRetiredTTL();
     m_materialBuffer.updateRetiredTTL();
+    m_emitterBuffer.updateRetiredTTL();
 }
 
 void SceneManager::destroyResources()
@@ -134,6 +153,13 @@ void SceneManager::destroyResources()
         }
         m_materialBuffer.reset();
     }
+    if(m_emitterBuffer.resource) {
+        device->destroyBuffer(m_emitterBuffer.resource);
+        for(auto &retiredBuffer : m_emitterBuffer.retired()) {
+            device->destroyBuffer(retiredBuffer);
+        }
+        m_emitterBuffer.reset();
+    }
 
     for(auto &geometry : m_geometry.takeResources()) {
         device->destroyGeometry(geometry);
@@ -150,6 +176,7 @@ void SceneManager::destroyExpiredResources()
     QVarLengthArray<AccelerationStructure> expiredTLAS = m_tlas.takeExpired();
     QVarLengthArray<Buffer> expiredInstanceBuffers = m_instanceBuffer.takeExpired();
     QVarLengthArray<Buffer> expiredMaterialBuffers = m_materialBuffer.takeExpired();
+    QVarLengthArray<Buffer> expiredEmitterBuffers = m_emitterBuffer.takeExpired();
     lock.unlock();
 
     for(auto &tlas : expiredTLAS) {
@@ -161,18 +188,30 @@ void SceneManager::destroyExpiredResources()
     for(auto &buffer : expiredMaterialBuffers) {
         device->destroyBuffer(buffer);
     }
+    for(auto &buffer : expiredEmitterBuffers) {
+        device->destroyBuffer(buffer);
+    }
 }
 
 bool SceneManager::isReadyToRender() const
 {
     // NO LOCK: Access from render/aspect thread only.
-    return m_tlas.resource && m_instanceBuffer.resource && m_materialBuffer.resource;
+    return m_tlas.resource &&
+           m_instanceBuffer.resource &&
+           m_materialBuffer.resource &&
+           m_emitterBuffer.resource;
 }
 
 const QVector<Raytrace::HEntity> &SceneManager::renderables() const
 {
     // NO LOCK: Access from render/aspect thread only.
     return m_renderables;
+}
+
+const QVector<Raytrace::HEntity> &SceneManager::emissives() const
+{
+    // NO LOCK: Access from render/aspect thread only.
+    return m_emissives;
 }
 
 AccelerationStructure SceneManager::sceneTLAS() const
@@ -193,16 +232,52 @@ Buffer SceneManager::materialBuffer() const
     return m_materialBuffer.resource;
 }
 
+Buffer SceneManager::emitterBuffer() const
+{
+    // NO LOCK: Access from render/aspect thread only.
+    return m_emitterBuffer.resource;
+}
+
 QVector<Material> SceneManager::materials() const
 {
     QReadLocker lock(&m_rwlock);
-    return m_materials.resources();
+    auto result = m_materials.resources();
+    result.detach();
+    return result;
 }
 
 QVector<Geometry> SceneManager::geometry() const
 {
     QReadLocker lock(&m_rwlock);
-    return m_geometry.resources();
+    auto result = m_geometry.resources();
+    result.detach();
+    return result;
+}
+
+QVector<Emitter> SceneManager::emitters() const
+{
+    QReadLocker lock(&m_rwlock);
+    auto result = m_emitters;
+    result.detach();
+    return result;
+}
+
+uint32_t SceneManager::numMaterials() const
+{
+    QReadLocker lock(&m_rwlock);
+    return uint32_t(m_materials.resources().size());
+}
+
+uint32_t SceneManager::numGeometry() const
+{
+    QReadLocker lock(&m_rwlock);
+    return uint32_t(m_geometry.resources().size());
+}
+
+uint32_t SceneManager::numEmitters() const
+{
+    QReadLocker lock(&m_rwlock);
+    return uint32_t(m_emitters.size());
 }
 
 } // Vulkan

@@ -24,43 +24,118 @@ layout(push_constant) uniform RenderParametersBlock
 rayPayloadInNV RayPayload payload;
 hitAttributeNV vec2 hitBarycentrics;
 
-layout(location=1) rayPayloadNV vec3 directLi;
-layout(location=2) rayPayloadNV RayPayload indirectPayload;
+layout(location=1) rayPayloadNV float pVisibility;
+layout(location=2) rayPayloadNV vec3 pEmission;
+layout(location=3) rayPayloadNV RayPayload pIndirect;
+
+// MIS power heuristic for two samples taken from two different distributions
+// pdfA and pdfB. The Beta parameter is assumed to be 2.
+float powerHeuristic(float pdfA, float pdfB)
+{
+    float f = pdfA * pdfA;
+    float g = pdfB * pdfB;
+    return f / (f + g);
+}
 
 vec3 sampleBRDF(Material material, vec3 wo, vec3 wi)
 {
     return material.albedo.rgb * InvPI;
 }
 
-vec3 directLighting(vec3 p, vec3 wo, TangentBasis basis, Material material)
+vec3 sampleEmitterLi(vec3 p, TangentBasis basis, out vec3 wiWorld, out vec3 wiTangent, out float pdf)
 {
-    vec3 wi = sampleHemisphereCosine(nextVec2(payload.rng));
-    float cosTheta = cosThetaTangent(wi);
-    float pdf = pdfHemisphereCosine(cosTheta);
+    const uint emitterIndex = nextUInt(payload.rng, params.numEmitters);
+    const Emitter emitter = fetchEmitter(emitterIndex);
+
+    if(emitterIndex == 0) {
+        // Sky emitter.
+        wiTangent = sampleHemisphereCosine(nextVec2(payload.rng));
+        wiWorld   = tangentToWorld(basis, wiTangent);
+        pdf       = pdfHemisphereCosine(cosThetaTangent(wiTangent));
+    }
+    else if(emitter.geometryIndex == ~0u) {
+        // Distant light emitter.
+        wiWorld   = -emitter.transform[0].xyz;
+        //wiWorld = vec3(0.0, 1.0, 0.0);
+        wiTangent = worldToTangent(basis, wiWorld);
+        pdf       = 0.0;
+    }
+    else {
+        // Area emitter.
+        // TODO: Implement
+    }
+
+    traceNV(scene, gl_RayFlagsTerminateOnFirstHitNV, 0xFF, Shader_QueryVisibilityHit, 1, Shader_QueryVisibilityMiss, p, Epsilon, wiWorld, Infinity, 1);
+    return emitter.radiance * pVisibility;
+}
+
+vec3 sampleScatteringDirection(vec3 p, Material material, out float pdf)
+{
+    vec3 wiTangent = sampleHemisphereCosine(nextVec2(payload.rng));
+    float cosTheta = cosThetaTangent(wiTangent);
+    pdf = pdfHemisphereCosine(cosTheta);
+    return wiTangent;
+}
+
+vec3 sampleScatteringLi(vec3 p, Material material, TangentBasis basis, out vec3 wiTangent, out float pdf)
+{
+    wiTangent = sampleScatteringDirection(p, material, pdf);
     if(pdf < Epsilon) {
         return vec3(0.0);
     }
 
-    vec3 brdf = sampleBRDF(material, wo, wi);
+    vec3 wiWorld = tangentToWorld(basis, wiTangent);
+    traceNV(scene, gl_RayFlagsNoneNV, 0xFF, Shader_QueryEmissionHit, 1, Shader_QueryEmissionMiss, p, Epsilon, wiWorld, Infinity, 2);
+    return pEmission;
+}
 
-    Ray ray;
-    ray.p = p;
-    ray.d = tangentToWorld(basis, wi);
-    traceNV(scene, gl_RayFlagsNoneNV, 0xFF, Shader_SampleLightHit, 1, Shader_SampleLightMiss, ray.p, Epsilon, ray.d, Infinity, 1);
+vec3 directLighting(vec3 p, vec3 wo, TangentBasis basis, Material material)
+{
+    vec3 L = vec3(0.0);
 
-    vec3 Li = (directLi * brdf * cosTheta) / pdf;
-    return payload.T * Li;
+    vec3  emitterWiWorld, emitterWiTangent;
+    float emitterPdf;
+    vec3  emitterLi = sampleEmitterLi(p, basis, emitterWiWorld, emitterWiTangent, emitterPdf);
+    if(!isblack(emitterLi)) {
+        vec3 wi = emitterWiTangent;
+        float cosTheta = cosThetaTangent(wi);
+        vec3 brdf = sampleBRDF(material, wo, wi);
+        if(emitterPdf != 0.0) {
+            // Area emitter: Add contribution with MIS heuristic.
+            float scatteringPdf = pdfHemisphereCosine(cosTheta);
+            float weight = powerHeuristic(emitterPdf, scatteringPdf);
+            L += (emitterLi * brdf * cosTheta * weight) / emitterPdf;
+        }
+        else {
+            // Delta-distribution emitter: add contribution directly.
+            L += emitterLi * brdf * cosTheta;
+        }
+    }
+
+    if(emitterPdf != 0.0) {
+        vec3  scatteringWiTangent;
+        float scatteringPdf;
+        vec3  scatteringLi = sampleScatteringLi(p, material, basis, scatteringWiTangent, scatteringPdf);
+        if(!isblack(scatteringLi)) {
+            vec3 wi = scatteringWiTangent;
+            float cosTheta = cosThetaTangent(wi);
+            vec3 brdf = sampleBRDF(material, wo, wi);
+            float weight = powerHeuristic(scatteringPdf, emitterPdf);
+            L += (scatteringLi * brdf * cosTheta * weight) / scatteringPdf;
+        }
+    }
+    return payload.T * params.numEmitters * L;
 }
 
 vec3 indirectLighting(vec3 p, vec3 wo, TangentBasis basis, Material material, uint minDepth)
 {
-    vec3 wi = sampleHemisphereCosine(nextVec2(payload.rng));
-    float cosTheta = cosThetaTangent(wi);
-    float pdf = pdfHemisphereCosine(cosTheta);
+    float pdf;
+    vec3 wi = sampleScatteringDirection(p, material, pdf);
     if(pdf < Epsilon) {
         return vec3(0.0);
     }
 
+    float cosTheta = cosThetaTangent(wi);
     vec3 brdf = sampleBRDF(material, wo, wi);
     vec3 pathThroughput = payload.T * (brdf * cosTheta) / pdf;
 
@@ -72,16 +147,13 @@ vec3 indirectLighting(vec3 p, vec3 wo, TangentBasis basis, Material material, ui
         pathThroughput /= 1.0 - terminationThreshold;
     }
 
-    indirectPayload.L     = vec3(0.0);
-    indirectPayload.T     = pathThroughput;
-    indirectPayload.rng   = payload.rng;
-    indirectPayload.depth = payload.depth + 1;
+    pIndirect.T     = pathThroughput;
+    pIndirect.rng   = payload.rng;
+    pIndirect.depth = payload.depth + 1;
 
-    Ray ray;
-    ray.p = p;
-    ray.d = tangentToWorld(basis, wi);
-    traceNV(scene, gl_RayFlagsNoneNV, 0xFF, Shader_PathTraceHit, 1, Shader_PathTraceMiss, ray.p, Epsilon, ray.d, Infinity, 2);
-    return indirectPayload.L;
+    vec3 wiWorld = tangentToWorld(basis, wi);
+    traceNV(scene, gl_RayFlagsNoneNV, 0xFF, Shader_PathTraceHit, 1, Shader_PathTraceMiss, p, Epsilon, wiWorld, Infinity, 3);
+    return pIndirect.L;
 }
 
 void main()
@@ -98,7 +170,7 @@ void main()
 
     TangentBasis basis = getTangentBasis(triangle, hitBarycentrics, instance.basisTransform);
 
-    payload.L += step(payload.depth, 0) * material.emission.rgb;
+    payload.L  = step(payload.depth, 0) * material.emission.rgb;
     payload.L += directLighting(p, wo, basis, material);
     if(payload.depth + 1 <= params.maxDepth) {
         payload.L += indirectLighting(p, wo, basis, material, params.minDepth);

@@ -32,6 +32,8 @@ target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/jobs/buildscenetlasjob.h
     renderers/vulkan/jobs/updatematerialsjob.cpp
     renderers/vulkan/jobs/updatematerialsjob.h
+    renderers/vulkan/jobs/updateemittersjob.cpp
+    renderers/vulkan/jobs/updateemittersjob.h
     renderers/vulkan/jobs/updateinstancebufferjob.cpp
     renderers/vulkan/jobs/updateinstancebufferjob.h
     renderers/vulkan/jobs/updaterenderparametersjob.cpp

@@ -19,6 +19,10 @@ layout(set=DS_Render, binding=Binding_Materials, std430) readonly buffer Materia
     Material materials[];
 } materialBuffer;
 
+layout(set=DS_Render, binding=Binding_Emitters, std430) readonly buffer EmitterBuffer {
+    Emitter emitters[];
+} emitterBuffer;
+
 layout(set=DS_AttributeBuffer, binding=0, std430) readonly buffer AttributeBuffer {
     Attributes attributes[];
 } attributeBuffer[];
@@ -47,6 +51,11 @@ Material fetchMaterial()
 {
     uint materialIndex = instanceBuffer.instances[gl_InstanceID].materialIndex;
     return materialBuffer.materials[materialIndex];
+}
+
+Emitter fetchEmitter(uint index)
+{
+    return emitterBuffer.emitters[index];
 }
 
 #endif // QUARTZ_SHADERS_RESOURCES_H

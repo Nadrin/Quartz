@@ -10,14 +10,14 @@
 
 #include "lib/common.glsl"
 
-layout(push_constant) uniform RenderParametersBlock
-{
-    RenderParameters renderParams;
-};
+layout(set=DS_Render, binding=Binding_Emitters, std430) readonly buffer EmitterBuffer {
+    Emitter emitters[];
+} emitterBuffer;
 
-rayPayloadInNV vec3 Le;
+rayPayloadInNV vec3 pEmission;
 
 void main()
 {
-    Le = renderParams.skyRadiance.rgb;
+    // Emitter #0 is always sky.
+    pEmission = emitterBuffer.emitters[0].radiance;
 }

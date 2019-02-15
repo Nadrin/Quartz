@@ -34,16 +34,19 @@ public:
 
     void addOrUpdateGeometry(Qt3DCore::QNodeId geometryNodeId, const Geometry &geometry);
     void addOrUpdateMaterial(Qt3DCore::QNodeId materialNodeId, const Material &material);
+    void updateEmitters(QVector<Emitter> &emitters);
 
     void updateSceneTLAS(const AccelerationStructure &tlas);
     void updateMaterialBuffer(const Buffer &buffer);
+    void updateEmitterBuffer(const Buffer &buffer);
     void updateInstanceBuffer(const Buffer &buffer);
 
+    uint32_t lookupGeometry(Qt3DCore::QNodeId geometryNodeId, Geometry &geometry) const;
     uint32_t lookupGeometryIndex(Qt3DCore::QNodeId geometryNodeId) const;
+    uint32_t lookupMaterial(Qt3DCore::QNodeId materialNodeId, Material &material) const;
     uint32_t lookupMaterialIndex(Qt3DCore::QNodeId materialNodeId) const;
-    uint32_t lookupGeometryBLAS(Qt3DCore::QNodeId geometryNodeId, uint64_t &blasHandle) const;
 
-    void updateRenderables(Raytrace::EntityManager *entityManager);
+    void gatherEntities(Raytrace::EntityManager *entityManager);
     void updateRetiredResources();
 
     void destroyResources();
@@ -54,20 +57,31 @@ public:
     AccelerationStructure sceneTLAS() const;
     Buffer instanceBuffer() const;
     Buffer materialBuffer() const;
+    Buffer emitterBuffer() const;
 
     const QVector<Raytrace::HEntity> &renderables() const;
+    const QVector<Raytrace::HEntity> &emissives() const;
+
     QVector<Material> materials() const;
     QVector<Geometry> geometry() const;
+    QVector<Emitter> emitters() const;
+
+    uint32_t numMaterials() const;
+    uint32_t numGeometry() const;
+    uint32_t numEmitters() const;
 
 private:
     QVector<Raytrace::HEntity> m_renderables;
+    QVector<Raytrace::HEntity> m_emissives;
 
     SceneResourceSet<Geometry> m_geometry;
     SceneResourceSet<Material> m_materials;
+    QVector<Emitter> m_emitters;
 
     ManagedResource<AccelerationStructure> m_tlas;
     ManagedResource<Buffer> m_instanceBuffer;
     ManagedResource<Buffer> m_materialBuffer;
+    ManagedResource<Buffer> m_emitterBuffer;
 
     Renderer *m_renderer;
 

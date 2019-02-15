@@ -21,7 +21,7 @@ layout(set=DS_Render, binding=Binding_TLAS) uniform accelerationStructureNV scen
 layout(set=DS_Render, binding=Binding_RenderBuffer, rgba16f) restrict writeonly uniform image2D renderBuffer;
 layout(set=DS_Render, binding=Binding_PrevRenderBuffer, rgba16f) restrict readonly uniform image2D prevRenderBuffer;
 
-layout(location=0) rayPayloadNV RayPayload payload;
+layout(location=0) rayPayloadNV RayPayload pPathTrace;
 
 Ray generateCameraRay(vec2 pixelLocation)
 {
@@ -47,15 +47,14 @@ void main()
 
     vec3 prevColor = imageLoad(prevRenderBuffer, ivec2(gl_LaunchIDNV)).rgb;
 
-    payload.rng   = rngInit(gl_LaunchIDNV.xy, params.frameNumber);
-    payload.L     = vec3(0.0);
-    payload.T     = vec3(1.0);
-    payload.depth = 0;
+    pPathTrace.rng   = rngInit(gl_LaunchIDNV.xy, params.frameNumber);
+    pPathTrace.depth = 0;
+    pPathTrace.T     = vec3(1.0);
 
-    vec2 delta = sampleRectangle(nextVec2(payload.rng), -0.5 * pixelSize, 0.5 * pixelSize);
+    vec2 delta = sampleRectangle(nextVec2(pPathTrace.rng), -0.5 * pixelSize, 0.5 * pixelSize);
     Ray ray = generateCameraRay(pixelLocation + delta);
     traceNV(scene, gl_RayFlagsNoneNV, 0xFF, Shader_PathTraceHit, 1, Shader_PathTraceMiss, ray.p, 0.0, ray.d, Infinity, 0);
 
-    vec3 currentColor = prevColor + (payload.L - prevColor) / float(params.frameNumber);
+    vec3 currentColor = prevColor + (pPathTrace.L - prevColor) / float(params.frameNumber);
     imageStore(renderBuffer, ivec2(gl_LaunchIDNV), vec4(currentColor, 1.0));
 }

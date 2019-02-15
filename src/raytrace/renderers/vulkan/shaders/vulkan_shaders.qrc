@@ -6,7 +6,9 @@
         <file>spv/pathtrace.rgen.spv</file>
         <file>spv/pathtrace.rchit.spv</file>
         <file>spv/pathtrace.rmiss.spv</file>
-        <file>spv/samplelight.rchit.spv</file>
-        <file>spv/samplelight.rmiss.spv</file>
+        <file>spv/queryemission.rchit.spv</file>
+        <file>spv/queryemission.rmiss.spv</file>
+        <file>spv/queryvisibility.rchit.spv</file>
+        <file>spv/queryvisibility.rmiss.spv</file>
     </qresource>
 </RCC>

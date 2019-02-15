@@ -15,6 +15,12 @@ float nextFloat(inout RNG rng)
     return uintBitsToFloat(u) - 1.0;
 }
 
+uint nextUInt(inout RNG rng, uint nmax)
+{
+    float f = nextFloat(rng);
+    return uint(floor(f * nmax));
+}
+
 vec2 nextVec2(inout RNG rng)
 {
     return vec2(nextFloat(rng), nextFloat(rng));

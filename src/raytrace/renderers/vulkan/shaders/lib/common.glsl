@@ -25,4 +25,9 @@ float maxcomp3(vec3 v)
     return max(max(v.x, v.y), v.z);
 }
 
+bool isblack(vec3 v)
+{
+    return dot(v, v) < Epsilon;
+}
+
 #endif // QUARTZ_SHADERS_COMMON_H
