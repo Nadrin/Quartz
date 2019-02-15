@@ -16,6 +16,7 @@
 
 #include <Qt3DRaytrace/qgeometryrenderer.h>
 #include <Qt3DRaytrace/qmaterial.h>
+#include <Qt3DRaytrace/qdistantlight.h>
 #include <Qt3DRaytrace/qcameralens.h>
 
 using namespace Qt3DCore;
@@ -133,6 +134,9 @@ void Entity::addComponent(QNodeIdTypePair idAndType)
     else if(type->inherits(&Qt3DRaytrace::QMaterial::staticMetaObject)) {
         m_materialComponent = id;
     }
+    else if(type->inherits(&Qt3DRaytrace::QDistantLight::staticMetaObject)) {
+        m_distantLightComponent = id;
+    }
     else if(type->inherits(&Qt3DRaytrace::QCameraLens::staticMetaObject)) {
         m_cameraLensComponent = id;
     }
@@ -148,6 +152,9 @@ void Entity::removeComponent(QNodeId nodeId)
     }
     else if(nodeId == m_materialComponent) {
         m_materialComponent = QNodeId{};
+    }
+    else if(nodeId == m_distantLightComponent) {
+        m_distantLightComponent = QNodeId{};
     }
     else if(nodeId == m_cameraLensComponent) {
         m_cameraLensComponent = QNodeId{};
@@ -172,6 +179,12 @@ Material *Entity::materialComponent() const
     return m_nodeManagers->materialManager.lookupResource(m_materialComponent);
 }
 
+DistantLight *Entity::distantLightComponent() const
+{
+    Q_ASSERT(m_nodeManagers);
+    return m_nodeManagers->distantLightManager.lookupResource(m_distantLightComponent);
+}
+
 CameraLens *Entity::cameraLensComponent() const
 {
     Q_ASSERT(m_nodeManagers);
@@ -184,6 +197,21 @@ bool Entity::isRenderable() const
         return false;
     }
     return !geometryRendererComponent()->geometryId().isNull();
+}
+
+bool Entity::isEmissive() const
+{
+    if(!m_distantLightComponent.isNull()) {
+        if(!distantLightComponent()->radiance().isBlack()) {
+            return true;
+        }
+    }
+    if(isRenderable()) {
+        if(!materialComponent()->emission().isBlack()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool Entity::isCamera() const
@@ -237,6 +265,7 @@ void Entity::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
     m_transformComponent = QNodeId{};
     m_geometryRendererComponent = QNodeId{};
     m_materialComponent = QNodeId{};
+    m_distantLightComponent = QNodeId{};
     m_cameraLensComponent = QNodeId{};
 
     for(const auto &idAndType : qAsConst(data.componentIdsAndTypes)) {

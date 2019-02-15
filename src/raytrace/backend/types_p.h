@@ -27,6 +27,12 @@ struct LinearColor
         , b(float(c.blueF()) * intensity)
     {}
 
+    bool isBlack() const
+    {
+        float maxComponent = std::max(std::max(r, g), b);
+        return qFuzzyIsNull(maxComponent);
+    }
+
     void writeToBuffer(float *buffer) const
     {
         buffer[0] = r;

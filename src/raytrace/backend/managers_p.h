@@ -13,6 +13,7 @@
 #include <backend/geometry_p.h>
 #include <backend/geometryrenderer_p.h>
 #include <backend/material_p.h>
+#include <backend/distantlight_p.h>
 #include <backend/cameralens_p.h>
 
 #include <QVector>
@@ -57,6 +58,7 @@ class TransformManager : public Qt3DCore::QResourceManager<Transform, Qt3DCore::
 class GeometryManager : public ComponentManager<Geometry> {};
 class GeometryRendererManager : public ComponentManager<GeometryRenderer> {};
 class MaterialManager : public ComponentManager<Material> {};
+class DistantLightManager : public ComponentManager<DistantLight> {};
 class CameraManager : public ComponentManager<CameraLens> {};
 
 struct NodeManagers
@@ -66,6 +68,7 @@ struct NodeManagers
     GeometryManager geometryManager;
     GeometryRendererManager geometryRendererManager;
     MaterialManager materialManager;
+    DistantLightManager distantLightManager;
     CameraManager cameraManager;
 };
 

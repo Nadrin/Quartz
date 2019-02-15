@@ -26,6 +26,7 @@ class AbstractRenderer;
 class Transform;
 class GeometryRenderer;
 class Material;
+class DistantLight;
 class CameraLens;
 
 class Entity : public BackendNode
@@ -54,14 +55,17 @@ public:
     Transform *transformComponent() const;
     GeometryRenderer *geometryRendererComponent() const;
     Material *materialComponent() const;
+    DistantLight *distantLightComponent() const;
     CameraLens *cameraLensComponent() const;
 
     Qt3DCore::QNodeId transformComponentId() const { return m_transformComponent; }
     Qt3DCore::QNodeId geometryRendererComponentId() const { return m_geometryRendererComponent; }
     Qt3DCore::QNodeId materialComponentId() const { return m_materialComponent; }
+    Qt3DCore::QNodeId distantLightComponentId() const { return m_distantLightComponent; }
     Qt3DCore::QNodeId cameraLensComponentId() const { return m_cameraLensComponent; }
 
     bool isRenderable() const;
+    bool isEmissive() const;
     bool isCamera() const;
 
     // TODO: Store via manager.
@@ -81,6 +85,7 @@ private:
     Qt3DCore::QNodeId m_transformComponent;
     Qt3DCore::QNodeId m_geometryRendererComponent;
     Qt3DCore::QNodeId m_materialComponent;
+    Qt3DCore::QNodeId m_distantLightComponent;
     Qt3DCore::QNodeId m_cameraLensComponent;
 };
 

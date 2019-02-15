@@ -33,7 +33,8 @@ public:
         TransformDirty = 1 << 1,
         GeometryDirty  = 1 << 2,
         MaterialDirty  = 1 << 3,
-        CameraDirty    = 1 << 4,
+        LightDirty     = 1 << 4,
+        CameraDirty    = 1 << 5,
         NoneDirty      = 0,
         AllDirty       = 0xffffff,
     };
