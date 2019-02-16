@@ -16,7 +16,7 @@ struct QLightData
 {
     QColor color = Qt::GlobalColor::white;
     float intensity = 1.0f;
-    QVector3D direction{1.0f, 0.0f, 0.0f};
+    QVector3D direction{0.0f, -1.0f, 0.0f};
 };
 
 class QDistantLightPrivate : public Qt3DCore::QComponentPrivate
