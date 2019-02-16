@@ -26,10 +26,10 @@ QColor QMaterial::emission() const
     return d->m_data.emission;
 }
 
-float QMaterial::emissionPower() const
+float QMaterial::emissionIntensity() const
 {
     Q_D(const QMaterial);
-    return d->m_data.emissionPower;
+    return d->m_data.emissionIntensity;
 }
 
 void QMaterial::setAlbedo(const QColor &albedo)
@@ -50,12 +50,12 @@ void QMaterial::setEmission(const QColor &emission)
     }
 }
 
-void QMaterial::setEmissionPower(float power)
+void QMaterial::setEmissionIntensity(float intensity)
 {
     Q_D(QMaterial);
-    if(!qFuzzyCompare(d->m_data.emissionPower, power)) {
-        d->m_data.emissionPower = power;
-        emit emissionPowerChanged(power);
+    if(!qFuzzyCompare(d->m_data.emissionIntensity, intensity)) {
+        d->m_data.emissionIntensity = intensity;
+        emit emissionIntensityChanged(intensity);
     }
 }
 

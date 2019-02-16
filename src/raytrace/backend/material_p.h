@@ -29,7 +29,7 @@ public:
     }
     LinearColor emission() const
     {
-        return LinearColor(m_emission, m_emissionPower);
+        return LinearColor(m_emission, m_emissionIntensity);
     }
 
 private:
@@ -38,7 +38,7 @@ private:
     MaterialManager *m_manager;
     QColor m_albedo;
     QColor m_emission;
-    float m_emissionPower;
+    float m_emissionIntensity;
 };
 
 class MaterialNodeMapper final : public BackendNodeMapper<Material, MaterialManager>

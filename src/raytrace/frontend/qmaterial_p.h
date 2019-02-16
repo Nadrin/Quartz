@@ -16,7 +16,7 @@ struct QMaterialData
 {
     QColor albedo = Qt::GlobalColor::gray;
     QColor emission = Qt::GlobalColor::white;
-    float emissionPower = 0.0f;
+    float emissionIntensity = 0.0f;
 };
 
 class QMaterialPrivate : public Qt3DCore::QComponentPrivate
