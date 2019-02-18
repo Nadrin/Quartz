@@ -15,11 +15,11 @@ struct Material
 
 struct Emitter
 {
-    vec3 radiance;
-    mat3x4 transform;
+    uint instanceIndex;
     uint geometryIndex;
-    uint geometryFaceCount;
     float _padding[2];
+    vec3 radiance;
+    vec3 direction;
 };
 
 struct Attributes
@@ -36,12 +36,15 @@ struct Face
     uint vertices[3];
 };
 
+// TODO: Switch to mat3x4 for transform to save space.
 struct EntityInstance
 {
     uint materialIndex;
     uint geometryIndex;
-    float _padding[2];
-    mat3 basisTransform;
+    uint geometryNumFaces;
+    float _padding[1];
+    mat4x4 transform;
+    mat3x3 basisTransform;
 };
 
 struct RenderParameters

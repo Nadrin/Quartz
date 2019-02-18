@@ -59,6 +59,9 @@ public:
     Buffer materialBuffer() const;
     Buffer emitterBuffer() const;
 
+    uint32_t lookupRenderableIndex(Qt3DCore::QNodeId entityNodeId) const;
+    uint32_t lookupEmissiveIndex(Qt3DCore::QNodeId entityNodeId) const;
+
     const QVector<Raytrace::HEntity> &renderables() const;
     const QVector<Raytrace::HEntity> &emissives() const;
 
@@ -71,8 +74,8 @@ public:
     uint32_t numEmitters() const;
 
 private:
-    QVector<Raytrace::HEntity> m_renderables;
-    QVector<Raytrace::HEntity> m_emissives;
+    SceneResourceSet<Raytrace::HEntity> m_renderables;
+    SceneResourceSet<Raytrace::HEntity> m_emissives;
 
     SceneResourceSet<Geometry> m_geometry;
     SceneResourceSet<Material> m_materials;

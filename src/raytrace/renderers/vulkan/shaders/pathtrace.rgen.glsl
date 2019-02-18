@@ -21,7 +21,7 @@ layout(set=DS_Render, binding=Binding_TLAS) uniform accelerationStructureNV scen
 layout(set=DS_Render, binding=Binding_RenderBuffer, rgba16f) restrict writeonly uniform image2D renderBuffer;
 layout(set=DS_Render, binding=Binding_PrevRenderBuffer, rgba16f) restrict readonly uniform image2D prevRenderBuffer;
 
-layout(location=0) rayPayloadNV RayPayload pPathTrace;
+layout(location=0) rayPayloadNV PathTracePayload pPathTrace;
 
 Ray generateCameraRay(vec2 pixelLocation)
 {

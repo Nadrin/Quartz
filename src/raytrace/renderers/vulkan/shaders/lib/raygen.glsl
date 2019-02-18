@@ -15,7 +15,7 @@ struct Ray {
     vec3 d; // Direction
 };
 
-struct RayPayload {
+struct PathTracePayload {
     vec3 L; // Radiance
     vec3 T; // Path throughput
     RNG rng;

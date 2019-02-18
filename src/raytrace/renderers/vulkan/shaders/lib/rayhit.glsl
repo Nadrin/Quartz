@@ -28,26 +28,46 @@ Ray rayGetHit(out float t)
     return ray;
 }
 
-vec3 blerp(vec2 t, vec3 p1, vec3 p2, vec3 p3)
+vec3 blerp(vec2 b, vec3 p1, vec3 p2, vec3 p3)
 {
-    return (1.0 - t.x - t.y) * p1 + t.x * p2 + t.y * p3;
+    return (1.0 - b.x - b.y) * p1 + b.x * p2 + b.y * p3;
 }
 
-vec3 getNormal(Triangle triangle, vec2 hit)
+vec3 getPosition(Triangle triangle, vec2 b)
 {
-    return blerp(hit, triangle.v1.normal, triangle.v2.normal, triangle.v3.normal);
+    return blerp(b, triangle.v1.position, triangle.v2.position, triangle.v3.position);
 }
 
-vec3 getTangent(Triangle triangle, vec2 hit)
+vec3 getPositionWorld(Triangle triangle, mat4x4 objectToWorld, vec2 b)
 {
-    return blerp(hit, triangle.v1.tangent, triangle.v2.tangent, triangle.v3.tangent);
+    return vec3(objectToWorld * vec4(getPosition(triangle, b), 1.0));
 }
 
-TangentBasis getTangentBasis(Triangle triangle, vec2 hit, mat3 basisObjectToWorld)
+vec3 getNormal(Triangle triangle, vec2 b)
+{
+    return blerp(b, triangle.v1.normal, triangle.v2.normal, triangle.v3.normal);
+}
+
+vec3 getNormalWorld(Triangle triangle, mat3x3 basisObjectToWorld, vec2 b)
+{
+    return normalize(basisObjectToWorld * getNormal(triangle, b));
+}
+
+vec3 getTangent(Triangle triangle, vec2 b)
+{
+    return blerp(b, triangle.v1.tangent, triangle.v2.tangent, triangle.v3.tangent);
+}
+
+vec3 getTangentWorld(Triangle triangle, mat3x3 basisObjectToWorld, vec2 b)
+{
+    return normalize(basisObjectToWorld * getTangent(triangle, b));
+}
+
+TangentBasis getTangentBasis(Triangle triangle, mat3x3 basisObjectToWorld, vec2 b)
 {
     TangentBasis basis;
-    basis.N = normalize(basisObjectToWorld * getNormal(triangle, hit));
-    basis.T = normalize(basisObjectToWorld * getTangent(triangle, hit));
+    basis.N = getNormalWorld(triangle, basisObjectToWorld, b);
+    basis.T = getTangentWorld(triangle, basisObjectToWorld, b);
     basis.B = cross(basis.N, basis.T);
     return basis;
 }

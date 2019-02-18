@@ -16,6 +16,6 @@ rayPayloadInNV vec3 pEmission;
 
 void main()
 {
-    Material material = fetchMaterial();
+    Material material = fetchMaterial(gl_InstanceID);
     pEmission = material.emission.rgb;
 }

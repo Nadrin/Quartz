@@ -51,18 +51,19 @@ void UpdateInstanceBufferJob::run()
     EntityInstance *instanceData = stagingBuffer.memory<EntityInstance>();
     for(uint32_t instanceIndex=0; instanceIndex < instanceCount; ++instanceIndex) {
         const Raytrace::Entity *renderable = renderables[int(instanceIndex)].data();
+        const Raytrace::GeometryRenderer *geometryRenderer = renderable->geometryRendererComponent();
+        Q_ASSERT(geometryRenderer);
 
-        QNodeId geometryNodeId, materialNodeId;
-        if(Raytrace::GeometryRenderer *geometryRenderer = renderable->geometryRendererComponent()) {
-            geometryNodeId = geometryRenderer->geometryId();
-        }
-        materialNodeId = renderable->materialComponentId();
+        EntityInstance &instance = instanceData[instanceIndex];
+        instance.materialIndex = sceneManager->lookupMaterialIndex(renderable->materialComponentId());
 
-        instanceData[instanceIndex].geometryIndex = sceneManager->lookupGeometryIndex(geometryNodeId);
-        instanceData[instanceIndex].materialIndex = sceneManager->lookupMaterialIndex(materialNodeId);
+        Geometry renderableGeometry;
+        instance.geometryIndex = sceneManager->lookupGeometry(geometryRenderer->geometryId(), renderableGeometry);
+        instance.geometryNumFaces = renderableGeometry.numIndices / 3;
 
-        const QMatrix3x3 basisTransform = renderable->worldTransformMatrix.toQMatrix4x4().normalMatrix();
-        instanceData[instanceIndex].basisTransform = basisTransform;
+        const QMatrix4x4 entityTransform = renderable->worldTransformMatrix.toQMatrix4x4();
+        instance.transform = entityTransform;
+        instance.basisTransform = entityTransform.normalMatrix();
     }
 
     TransientCommandBuffer commandBuffer = commandBufferManager->acquireCommandBuffer();

@@ -108,10 +108,10 @@ void SceneManager::gatherEntities(Raytrace::EntityManager *entityManager)
     m_emissives.clear();
     for(const auto &entity : entityManager->activeHandles()) {
         if(entity->isRenderable()) {
-            m_renderables.append(entity->handle());
+            m_renderables.addResource(entity->peerId(), entity->handle());
         }
         if(entity->isEmissive()) {
-            m_emissives.append(entity->handle());
+            m_emissives.addResource(entity->peerId(), entity->handle());
         }
     }
 }
@@ -164,7 +164,7 @@ void SceneManager::destroyResources()
     for(auto &geometry : m_geometry.takeResources()) {
         device->destroyGeometry(geometry);
     }
-    m_materials.reset();
+    m_materials.clear();
 }
 
 void SceneManager::destroyExpiredResources()
@@ -205,13 +205,13 @@ bool SceneManager::isReadyToRender() const
 const QVector<Raytrace::HEntity> &SceneManager::renderables() const
 {
     // NO LOCK: Access from render/aspect thread only.
-    return m_renderables;
+    return m_renderables.resources();
 }
 
 const QVector<Raytrace::HEntity> &SceneManager::emissives() const
 {
     // NO LOCK: Access from render/aspect thread only.
-    return m_emissives;
+    return m_emissives.resources();
 }
 
 AccelerationStructure SceneManager::sceneTLAS() const
@@ -236,6 +236,18 @@ Buffer SceneManager::emitterBuffer() const
 {
     // NO LOCK: Access from render/aspect thread only.
     return m_emitterBuffer.resource;
+}
+
+uint32_t SceneManager::lookupRenderableIndex(Qt3DCore::QNodeId entityNodeId) const
+{
+    QReadLocker lock(&m_rwlock);
+    return m_renderables.lookupIndex(entityNodeId);
+}
+
+uint32_t SceneManager::lookupEmissiveIndex(Qt3DCore::QNodeId entityNodeId) const
+{
+    QReadLocker lock(&m_rwlock);
+    return m_emissives.lookupIndex(entityNodeId);
 }
 
 QVector<Material> SceneManager::materials() const

@@ -21,12 +21,12 @@ layout(push_constant) uniform RenderParametersBlock
     RenderParameters params;
 };
 
-rayPayloadInNV RayPayload payload;
+rayPayloadInNV PathTracePayload payload;
 hitAttributeNV vec2 hitBarycentrics;
 
 layout(location=1) rayPayloadNV float pVisibility;
 layout(location=2) rayPayloadNV vec3 pEmission;
-layout(location=3) rayPayloadNV RayPayload pIndirect;
+layout(location=3) rayPayloadNV PathTracePayload pIndirect;
 
 // MIS power heuristic for two samples taken from two different distributions
 // pdfA and pdfB. The Beta parameter is assumed to be 2.
@@ -46,6 +46,7 @@ vec3 sampleEmitterLi(vec3 p, TangentBasis basis, out vec3 wiWorld, out vec3 wiTa
 {
     const uint emitterIndex = nextUInt(payload.rng, params.numEmitters);
     const Emitter emitter = fetchEmitter(emitterIndex);
+    float emitterDistance = Infinity;
 
     if(emitterIndex == 0) {
         // Sky emitter.
@@ -53,19 +54,50 @@ vec3 sampleEmitterLi(vec3 p, TangentBasis basis, out vec3 wiWorld, out vec3 wiTa
         wiWorld   = tangentToWorld(basis, wiTangent);
         pdf       = pdfHemisphereCosine(cosThetaTangent(wiTangent));
     }
-    else if(emitter.geometryIndex == ~0u) {
+    else if(emitter.instanceIndex == ~0u) {
         // Distant light emitter.
-        wiWorld   = -emitter.transform[0].xyz;
-        //wiWorld = vec3(0.0, 1.0, 0.0);
+        wiWorld   = -emitter.direction;
         wiTangent = worldToTangent(basis, wiWorld);
         pdf       = 0.0;
     }
     else {
         // Area emitter.
-        // TODO: Implement
+        EntityInstance emitterInstance = fetchInstance(emitter.instanceIndex);
+        uint faceIndex = nextUInt(payload.rng, emitterInstance.geometryNumFaces);
+        vec2 faceBarycentrics = sampleTriangle(nextVec2(payload.rng));
+
+        Triangle triangle = fetchTriangle(emitter.geometryIndex, faceIndex);
+        vec3 p1 = vec3(emitterInstance.transform * vec4(triangle.v1.position, 1.0));
+        vec3 p2 = vec3(emitterInstance.transform * vec4(triangle.v2.position, 1.0));
+        vec3 p3 = vec3(emitterInstance.transform * vec4(triangle.v3.position, 1.0));
+
+        vec3 emitterP  = blerp(faceBarycentrics, p1, p2, p3);
+        vec3 emitterN  = getNormalWorld(triangle, emitterInstance.basisTransform, faceBarycentrics);
+        vec3 emitterWo = p - emitterP;
+
+        float triangleArea = 0.5 * length(cross(p2 - p1, p3 - p1));
+        float distanceSqr = dot(emitterWo, emitterWo);
+        if(triangleArea == 0.0 || distanceSqr == 0.0) {
+            pdf = 0.0;
+            return vec3(0.0);
+        }
+
+        emitterDistance = sqrt(distanceSqr);
+        emitterWo /= emitterDistance;
+        emitterDistance = max(0.0, emitterDistance - Epsilon);
+
+        float cosTheta = cosThetaWorld(emitterN, emitterWo);
+        if(cosTheta == 0.0) {
+            pdf = 0.0;
+            return vec3(0.0);
+        }
+
+        wiWorld   = -emitterWo;
+        wiTangent = worldToTangent(basis, wiWorld);
+        pdf       = distanceSqr / (cosTheta * triangleArea);
     }
 
-    traceNV(scene, gl_RayFlagsTerminateOnFirstHitNV, 0xFF, Shader_QueryVisibilityHit, 1, Shader_QueryVisibilityMiss, p, Epsilon, wiWorld, Infinity, 1);
+    traceNV(scene, gl_RayFlagsTerminateOnFirstHitNV, 0xFF, Shader_QueryVisibilityHit, 1, Shader_QueryVisibilityMiss, p, Epsilon, wiWorld, emitterDistance, 1);
     return emitter.radiance * pVisibility;
 }
 
@@ -111,7 +143,6 @@ vec3 directLighting(vec3 p, vec3 wo, TangentBasis basis, Material material)
             L += emitterLi * brdf * cosTheta;
         }
     }
-
     if(emitterPdf != 0.0) {
         vec3  scatteringWiTangent;
         float scatteringPdf;
@@ -158,9 +189,9 @@ vec3 indirectLighting(vec3 p, vec3 wo, TangentBasis basis, Material material, ui
 
 void main()
 {
-    EntityInstance instance = fetchInstance();
-    Triangle triangle = fetchTriangle();
-    Material material = fetchMaterial();
+    EntityInstance instance = fetchInstance(gl_InstanceID);
+    Triangle triangle = fetchTriangle(gl_InstanceCustomIndexNV, gl_PrimitiveID);
+    Material material = fetchMaterial(gl_InstanceID);
 
     float hitT;
     Ray hitRay = rayGetHit(hitT);
@@ -168,7 +199,7 @@ void main()
     vec3 p  = hitRay.p + hitT * hitRay.d;
     vec3 wo = -hitRay.d;
 
-    TangentBasis basis = getTangentBasis(triangle, hitBarycentrics, instance.basisTransform);
+    TangentBasis basis = getTangentBasis(triangle, instance.basisTransform, hitBarycentrics);
 
     payload.L  = step(payload.depth, 0) * material.emission.rgb;
     payload.L += directLighting(p, wo, basis, material);

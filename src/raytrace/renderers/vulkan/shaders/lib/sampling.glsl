@@ -109,4 +109,15 @@ float pdfHemisphereCosine(float cosTheta)
     return cosTheta * InvPI;
 }
 
+vec2 sampleTriangle(vec2 u)
+{
+    float uxsqrt = sqrt(u.x);
+    return vec2(1.0 - uxsqrt, u.y * uxsqrt);
+}
+
+float pdfTriangle(float area)
+{
+    return 1.0 / area;
+}
+
 #endif // QUARTZ_SHADERS_SAMPLING_H

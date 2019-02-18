@@ -36,7 +36,7 @@ void UpdateEmittersJob::run()
     QVector<Emitter> emitters;
     {
         Emitter skyEmitter = {};
-        skyEmitter.geometryIndex = ~0u;
+        skyEmitter.instanceIndex = ~0u;
         if(m_renderer->settings()) {
             m_renderer->settings()->skyRadiance().writeToBuffer(skyEmitter.radiance.data);
         }
@@ -52,11 +52,9 @@ void UpdateEmittersJob::run()
             const QVector3D worldDirection = entityTransform.mapVector(light->direction()).normalized();
 
             Emitter emitter = {};
+            emitter.instanceIndex = ~0u;
+            emitter.direction = worldDirection;
             light->radiance().writeToBuffer(emitter.radiance.data);
-            emitter.transform.data[0] = worldDirection.x();
-            emitter.transform.data[1] = worldDirection.y();
-            emitter.transform.data[2] = worldDirection.z();
-            emitter.geometryIndex = ~0u;
             emitters.append(emitter);
         }
         if(entity->isRenderable()) {
@@ -64,16 +62,10 @@ void UpdateEmittersJob::run()
             const Raytrace::GeometryRenderer *geometryRenderer = entity->geometryRendererComponent();
             Q_ASSERT(material && geometryRenderer);
 
-            Geometry geometry;
-            uint32_t geometryIndex = sceneManager->lookupGeometry(geometryRenderer->geometryId(), geometry);
-            Q_ASSERT(geometryIndex != ~0u);
-
             Emitter emitter = {};
+            emitter.instanceIndex = sceneManager->lookupRenderableIndex(entity->peerId());
+            emitter.geometryIndex = sceneManager->lookupGeometryIndex(geometryRenderer->geometryId());
             material->emission().writeToBuffer(emitter.radiance.data);
-            // No need to transpose since QMatrix4x4::constData() returns column-major order.
-            emitter.transform = QMatrix3x4(entityTransform.constData());
-            emitter.geometryIndex = geometryIndex;
-            emitter.geometryFaceCount = geometry.numIndices / 3;
             emitters.append(emitter);
         }
     }

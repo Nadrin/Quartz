@@ -15,7 +15,7 @@ layout(set=DS_Render, binding=Binding_Emitters, std430) readonly buffer EmitterB
     Emitter emitters[];
 } emitterBuffer;
 
-rayPayloadInNV RayPayload payload;
+rayPayloadInNV PathTracePayload payload;
 
 void main()
 {

@@ -17,6 +17,15 @@ template<typename T>
 class SceneResourceSet
 {
 public:
+    uint32_t addResource(Qt3DCore::QNodeId nodeId, const T &resource)
+    {
+        Q_ASSERT(!m_nodeToIndexMap.contains(nodeId));
+        uint32_t index = uint32_t(m_resources.size());
+        m_resources.append(resource);
+        m_nodeToIndexMap.insert(nodeId, index);
+        return index;
+    }
+
     uint32_t addOrUpdateResource(Qt3DCore::QNodeId nodeId, const T &resource)
     {
         uint32_t index;
@@ -59,7 +68,7 @@ public:
         return result;
     }
 
-    void reset()
+    void clear()
     {
         m_resources.clear();
         m_nodeToIndexMap.clear();
