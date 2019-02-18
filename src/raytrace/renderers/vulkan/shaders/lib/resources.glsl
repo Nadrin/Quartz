@@ -7,9 +7,8 @@
 #ifndef QUARTZ_SHADERS_RESOURCES_H
 #define QUARTZ_SHADERS_RESOURCES_H
 
-#include "bindings.glsl"
-#include "shared.glsl"
-#include "rayhit.glsl"
+#include "common.glsl"
+#include "geometry.glsl"
 
 layout(set=DS_Render, binding=Binding_Instances, std430) readonly buffer InstanceBuffer {
     EntityInstance instances[];

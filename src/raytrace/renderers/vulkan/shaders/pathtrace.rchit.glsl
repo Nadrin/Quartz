@@ -10,8 +10,7 @@
 #extension GL_NV_ray_tracing : require
 
 #include "lib/common.glsl"
-#include "lib/rayhit.glsl"
-#include "lib/sampling.glsl"
+#include "lib/geometry.glsl"
 #include "lib/resources.glsl"
 
 layout(set=DS_Render, binding=Binding_TLAS) uniform accelerationStructureNV scene;
@@ -193,11 +192,8 @@ void main()
     Triangle triangle = fetchTriangle(gl_InstanceCustomIndexNV, gl_PrimitiveID);
     Material material = fetchMaterial(gl_InstanceID);
 
-    float hitT;
-    Ray hitRay = rayGetHit(hitT);
-
-    vec3 p  = hitRay.p + hitT * hitRay.d;
-    vec3 wo = -hitRay.d;
+    vec3 p  = gl_WorldRayOriginNV + gl_RayTmaxNV * gl_WorldRayDirectionNV;
+    vec3 wo = -gl_WorldRayDirectionNV;
 
     TangentBasis basis = getTangentBasis(triangle, instance.basisTransform, hitBarycentrics);
 

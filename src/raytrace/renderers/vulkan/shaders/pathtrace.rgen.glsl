@@ -9,7 +9,6 @@
 #extension GL_NV_ray_tracing : require
 
 #include "lib/common.glsl"
-#include "lib/raygen.glsl"
 #include "lib/sampling.glsl"
 
 layout(push_constant) uniform RenderParametersBlock
@@ -23,7 +22,7 @@ layout(set=DS_Render, binding=Binding_PrevRenderBuffer, rgba16f) restrict readon
 
 layout(location=0) rayPayloadNV PathTracePayload pPathTrace;
 
-Ray generateCameraRay(vec2 pixelLocation)
+void generateCameraRay(vec2 pixelLocation, out vec3 p, out vec3 wo)
 {
     const vec3 upVector = params.cameraUpVectorAndTanHalfFOV.xyz;
     const vec3 rightVector = params.cameraRightVector.xyz;
@@ -34,10 +33,8 @@ Ray generateCameraRay(vec2 pixelLocation)
     float tx = (2.0 * pixelLocation.x - 1.0) * tanHalfFOV * aspect;
     float ty = (2.0 * pixelLocation.y - 1.0) * tanHalfFOV;
 
-    Ray ray;
-    ray.p = params.cameraPositionAndAspect.xyz;
-    ray.d = normalize(rightVector * tx + upVector * ty + forwardVector);
-    return ray;
+    p  = params.cameraPositionAndAspect.xyz;
+    wo = normalize(rightVector * tx + upVector * ty + forwardVector);
 }
 
 void main()
@@ -51,9 +48,11 @@ void main()
     pPathTrace.depth = 0;
     pPathTrace.T     = vec3(1.0);
 
-    vec2 delta = sampleRectangle(nextVec2(pPathTrace.rng), -0.5 * pixelSize, 0.5 * pixelSize);
-    Ray ray = generateCameraRay(pixelLocation + delta);
-    traceNV(scene, gl_RayFlagsNoneNV, 0xFF, Shader_PathTraceHit, 1, Shader_PathTraceMiss, ray.p, 0.0, ray.d, Infinity, 0);
+    vec2 jitter = sampleRectangle(nextVec2(pPathTrace.rng), -0.5 * pixelSize, 0.5 * pixelSize);
+
+    vec3 p, wo;
+    generateCameraRay(pixelLocation + jitter, p, wo);
+    traceNV(scene, gl_RayFlagsNoneNV, 0xFF, Shader_PathTraceHit, 1, Shader_PathTraceMiss, p, 0.0, wo, Infinity, 0);
 
     vec3 currentColor = prevColor + (pPathTrace.L - prevColor) / float(params.frameNumber);
     imageStore(renderBuffer, ivec2(gl_LaunchIDNV), vec4(currentColor, 1.0));

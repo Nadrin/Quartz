@@ -7,8 +7,6 @@
 #ifndef QUARTZ_SHADERS_RAYHIT_H
 #define QUARTZ_SHADERS_RAYHIT_H
 
-#include "raygen.glsl"
-
 struct Triangle {
     Attributes v1;
     Attributes v2;
@@ -18,15 +16,6 @@ struct Triangle {
 struct TangentBasis {
     vec3 T, N, B;
 };
-
-Ray rayGetHit(out float t)
-{
-    Ray ray;
-    ray.p = gl_WorldRayOriginNV;
-    ray.d = gl_WorldRayDirectionNV;
-    t = gl_RayTmaxNV;
-    return ray;
-}
 
 vec3 blerp(vec2 b, vec3 p1, vec3 p2, vec3 p3)
 {

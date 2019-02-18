@@ -9,7 +9,6 @@
 #extension GL_GOOGLE_include_directive : require
 
 #include "lib/common.glsl"
-#include "lib/raygen.glsl"
 
 layout(set=DS_Render, binding=Binding_Emitters, std430) readonly buffer EmitterBuffer {
     Emitter emitters[];
