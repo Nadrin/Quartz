@@ -24,6 +24,9 @@ public:
     unsigned int minDepth() const { return m_minDepth; }
     unsigned int maxDepth() const { return m_maxDepth; }
 
+    float directRadianceClamp() const;
+    float indirectRadianceClamp() const;
+
     LinearColor skyRadiance() const
     {
         return LinearColor(m_skyColor, m_skyIntensity);
@@ -39,6 +42,8 @@ private:
     unsigned int m_secondarySamples;
     unsigned int m_minDepth;
     unsigned int m_maxDepth;
+    float m_directRadianceClamp;
+    float m_indirectRadianceClamp;
     QColor m_skyColor;
     float m_skyIntensity;
 };

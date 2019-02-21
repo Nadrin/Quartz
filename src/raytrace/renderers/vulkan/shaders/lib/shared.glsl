@@ -55,7 +55,8 @@ struct RenderParameters
     uint numEmitters;
     uint numPrimarySamples;
     uint numSecondarySamples;
-    uint _reserved[2];
+    float directRadianceClamp;
+    float indirectRadianceClamp;
     vec4 cameraPositionAndAspect;
     vec4 cameraUpVectorAndTanHalfFOV;
     vec4 cameraRightVector;

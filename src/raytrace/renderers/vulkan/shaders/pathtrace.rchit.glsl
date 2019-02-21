@@ -142,7 +142,7 @@ vec3 directLighting(vec3 p, vec3 wo, TangentBasis basis, Material material)
             L += (scatteringLi * cosTheta * weight) / scatteringPdf;
         }
     }
-    return payload.T * params.numEmitters * L;
+    return min(payload.T * params.numEmitters * L, vec3(params.directRadianceClamp));
 }
 
 vec3 indirectLighting(vec3 p, vec3 wo, TangentBasis basis, Material material, uint minDepth)
@@ -171,7 +171,7 @@ vec3 indirectLighting(vec3 p, vec3 wo, TangentBasis basis, Material material, ui
 
     vec3 wiWorld = tangentToWorld(basis, wi);
     traceNV(scene, gl_RayFlagsNoneNV, 0xFF, Shader_PathTraceHit, 1, Shader_PathTraceMiss, p, Epsilon, wiWorld, Infinity, 3);
-    return pIndirect.L;
+    return min(pIndirect.L, vec3(params.indirectRadianceClamp));
 }
 
 void main()

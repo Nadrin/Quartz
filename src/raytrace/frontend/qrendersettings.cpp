@@ -49,6 +49,18 @@ int QRenderSettings::maxDepth() const
     return d->m_settings.maxDepth;
 }
 
+float QRenderSettings::directRadianceClamp() const
+{
+    Q_D(const QRenderSettings);
+    return d->m_settings.directRadianceClamp;
+}
+
+float QRenderSettings::indirectRadianceClamp() const
+{
+    Q_D(const QRenderSettings);
+    return d->m_settings.indirectRadianceClamp;
+}
+
 QColor QRenderSettings::skyColor() const
 {
     Q_D(const QRenderSettings);
@@ -121,6 +133,24 @@ void QRenderSettings::setMaxDepth(int maxDepth)
     if(d->m_settings.maxDepth != maxDepth) {
         d->m_settings.maxDepth = maxDepth;
         emit maxDepthChanged(maxDepth);
+    }
+}
+
+void QRenderSettings::setDirectRadianceClamp(float clamp)
+{
+    Q_D(QRenderSettings);
+    if(!qFuzzyCompare(d->m_settings.directRadianceClamp, clamp)) {
+        d->m_settings.directRadianceClamp = clamp;
+        emit directRadianceClampChanged(clamp);
+    }
+}
+
+void QRenderSettings::setIndirectRadianceClamp(float clamp)
+{
+    Q_D(QRenderSettings);
+    if(!qFuzzyCompare(d->m_settings.indirectRadianceClamp, clamp)) {
+        d->m_settings.indirectRadianceClamp = clamp;
+        emit indirectRadianceClampChanged(clamp);
     }
 }
 

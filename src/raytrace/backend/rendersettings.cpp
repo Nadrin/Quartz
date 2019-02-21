@@ -9,6 +9,8 @@
 
 #include <Qt3DCore/QPropertyUpdatedChange>
 
+#include <limits>
+
 using namespace Qt3DCore;
 
 namespace Qt3DRaytrace {
@@ -17,6 +19,20 @@ namespace Raytrace {
 RenderSettings::RenderSettings()
     : BackendNode(BackendNode::ReadOnly)
 {}
+
+float RenderSettings::directRadianceClamp() const
+{
+    return (m_directRadianceClamp > 0.0f)
+            ? m_directRadianceClamp
+            : std::numeric_limits<float>::infinity();
+}
+
+float RenderSettings::indirectRadianceClamp() const
+{
+    return (m_indirectRadianceClamp > 0.0f)
+            ? m_indirectRadianceClamp
+            : std::numeric_limits<float>::infinity();
+}
 
 void RenderSettings::sceneChangeEvent(const QSceneChangePtr &change)
 {
@@ -36,6 +52,12 @@ void RenderSettings::sceneChangeEvent(const QSceneChangePtr &change)
         }
         else if(propertyChange->propertyName() == QByteArrayLiteral("maxDepth")) {
             m_maxDepth = propertyChange->value().value<unsigned int>();
+        }
+        else if(propertyChange->propertyName() == QByteArrayLiteral("directRadianceClamp")) {
+            m_directRadianceClamp = propertyChange->value().value<float>();
+        }
+        else if(propertyChange->propertyName() == QByteArrayLiteral("indirectRadianceClamp")) {
+            m_indirectRadianceClamp = propertyChange->value().value<float>();
         }
         else if(propertyChange->propertyName() == QByteArrayLiteral("skyColor")) {
             m_skyColor = propertyChange->value().value<QColor>();
@@ -59,6 +81,9 @@ void RenderSettings::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
     m_secondarySamples = static_cast<unsigned int>(data.secondarySamples);
     m_minDepth = static_cast<unsigned int>(data.minDepth);
     m_maxDepth = static_cast<unsigned int>(data.maxDepth);
+    m_directRadianceClamp = data.directRadianceClamp;
+    m_indirectRadianceClamp = data.indirectRadianceClamp;
+
     m_skyColor = data.skyColor;
     m_skyIntensity = data.skyIntensity;
 

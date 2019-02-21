@@ -347,6 +347,8 @@ void Renderer::beginRenderIteration()
         m_renderParams.numSecondarySamples = m_settings->secondarySamples();
         m_renderParams.minDepth = m_settings->minDepth();
         m_renderParams.maxDepth = m_settings->maxDepth();
+        m_renderParams.directRadianceClamp = m_settings->directRadianceClamp();
+        m_renderParams.indirectRadianceClamp = m_settings->indirectRadianceClamp();
     }
 
     m_renderParams.frameNumber = ++m_frameNumber;

@@ -21,6 +21,9 @@ struct QRenderSettingsData
     int minDepth = 2;
     int maxDepth = 4;
 
+    float directRadianceClamp = 0.0f;
+    float indirectRadianceClamp = 0.0f;
+
     QColor skyColor = Qt::GlobalColor::black;
     float skyIntensity = 1.0f;
 };
