@@ -27,8 +27,7 @@ float D_ggx(float alphaSqr, float cos_wh)
 // Single term for separable Schlick-GGX below.
 float G1_shclick_ggx(float k, float cosTheta)
 {
-    // Numerator cancels out with cos_wi/cos_wo in GGX normalization factor.
-    return /* cosTheta */ 1.0 / (cosTheta * (1.0 - k) + k);
+    return cosTheta * (1.0 - k) + k;
 }
 
 // Schlick's approximation for Beckmann geometric shadowing function using Smith's method.
@@ -36,7 +35,8 @@ float G1_shclick_ggx(float k, float cosTheta)
 float G_schlick_ggx(float alpha, float cos_wo, float cos_wi)
 {
     float k = 0.5 * alpha;
-    return G1_shclick_ggx(k, cos_wi) * G1_shclick_ggx(k, cos_wo);
+    // Numerator cancels out with cos_wi & cos_wo in specular BRDF normalization factor.
+    return 1.0 /* cos_wi * cos_wo */ / (G1_shclick_ggx(k, cos_wi) * G1_shclick_ggx(k, cos_wo));
 }
 
 // Sample half-angle directions from GGX normal distribution function.
