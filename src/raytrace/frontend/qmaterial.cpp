@@ -20,6 +20,18 @@ QColor QMaterial::albedo() const
     return d->m_data.albedo;
 }
 
+float QMaterial::roughness() const
+{
+    Q_D(const QMaterial);
+    return d->m_data.roughness;
+}
+
+float QMaterial::metalness() const
+{
+    Q_D(const QMaterial);
+    return d->m_data.metalness;
+}
+
 QColor QMaterial::emission() const
 {
     Q_D(const QMaterial);
@@ -38,6 +50,24 @@ void QMaterial::setAlbedo(const QColor &albedo)
     if(d->m_data.albedo != albedo) {
         d->m_data.albedo = albedo;
         emit albedoChanged(albedo);
+    }
+}
+
+void QMaterial::setRoughness(float rougness)
+{
+    Q_D(QMaterial);
+    if(!qFuzzyCompare(d->m_data.roughness, rougness)) {
+        d->m_data.roughness = rougness;
+        emit roughnessChanged(rougness);
+    }
+}
+
+void QMaterial::setMetalness(float metalness)
+{
+    Q_D(QMaterial);
+    if(!qFuzzyCompare(d->m_data.metalness, metalness)) {
+        d->m_data.metalness = metalness;
+        emit metalnessChanged(metalness);
     }
 }
 

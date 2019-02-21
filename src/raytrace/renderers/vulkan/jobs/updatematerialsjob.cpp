@@ -39,6 +39,10 @@ void UpdateMaterialsJob::run()
         Material materialData;
         material->albedo().writeToBuffer(materialData.albedo.data);
         material->emission().writeToBuffer(materialData.emission.data);
+        // Pack roughness in albedo.a
+        materialData.albedo.data[3] = material->roughness();
+        // Pack metalness in emission.a
+        materialData.emission.data[3] = material->metalness();
 
         // TODO: Reduce lock contention on rwlock.
         sceneManager->addOrUpdateMaterial(material->peerId(), materialData);

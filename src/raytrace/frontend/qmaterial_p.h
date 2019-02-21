@@ -15,6 +15,8 @@ namespace Qt3DRaytrace {
 struct QMaterialData
 {
     QColor albedo = Qt::GlobalColor::gray;
+    float roughness = 1.0f;
+    float metalness = 0.0f;
     QColor emission = Qt::GlobalColor::white;
     float emissionIntensity = 0.0f;
 };

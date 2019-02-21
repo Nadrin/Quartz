@@ -28,7 +28,7 @@ void DistantLight::sceneChangeEvent(const QSceneChangePtr &change)
             m_color = propertyChange->value().value<QColor>();
         }
         else if(propertyName == QByteArrayLiteral("intensity")) {
-            m_intensity = propertyChange->value().value<float>();
+            m_intensity = qMax(propertyChange->value().value<float>(), 0.0f);
         }
         else if(propertyName == QByteArrayLiteral("direction")) {
             m_direction = propertyChange->value().value<QVector3D>();
@@ -45,7 +45,7 @@ void DistantLight::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
     const auto &data = typedChange->data;
 
     m_color = data.color;
-    m_intensity = data.intensity;
+    m_intensity = qMax(data.intensity, 0.0f);
     m_direction = data.direction;
 
     markDirty(AbstractRenderer::LightDirty);

@@ -9,8 +9,8 @@
 
 struct Material
 {
-    vec3 albedo;
-    vec3 emission;
+    vec4 albedo; // +roughness
+    vec4 emission; // +metalness
 };
 
 struct Emitter

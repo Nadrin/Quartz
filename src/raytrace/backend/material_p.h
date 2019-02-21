@@ -27,16 +27,28 @@ public:
     {
         return LinearColor(m_albedo);
     }
+    float roughness() const
+    {
+        return m_roughness;
+    }
+    float metalness() const
+    {
+        return m_metalness;
+    }
     LinearColor emission() const
     {
         return LinearColor(m_emission, m_emissionIntensity);
     }
+
+    static constexpr float MinRoughness = 0.02f;
 
 private:
     void initializeFromPeer(const Qt3DCore::QNodeCreatedChangeBasePtr &change) override;
 
     MaterialManager *m_manager;
     QColor m_albedo;
+    float m_roughness;
+    float m_metalness;
     QColor m_emission;
     float m_emissionIntensity;
 };

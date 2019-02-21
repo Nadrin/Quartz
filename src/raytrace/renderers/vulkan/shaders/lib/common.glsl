@@ -29,7 +29,7 @@ struct PathTracePayload {
     uint depth;
 };
 
-float maxcomp3(vec3 v)
+float maxcomp(vec3 v)
 {
     return max(max(v.x, v.y), v.z);
 }
@@ -37,6 +37,16 @@ float maxcomp3(vec3 v)
 bool isblack(vec3 v)
 {
     return dot(v, v) < Epsilon;
+}
+
+float pow2(float x)
+{
+    return x * x;
+}
+
+float pow5(float x)
+{
+    return (x * x) * (x * x) * x;
 }
 
 #endif // QUARTZ_SHADERS_COMMON_H
