@@ -25,7 +25,7 @@ public:
 
     LinearColor albedo() const
     {
-        return LinearColor(m_albedo);
+        return LinearColor::from_sRGB(m_albedo);
     }
     float roughness() const
     {
