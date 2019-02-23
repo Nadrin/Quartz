@@ -14,6 +14,8 @@
 
 #include <Qt3DRaytrace/qgeometry.h>
 #include <Qt3DRaytrace/qgeometryrenderer.h>
+#include <Qt3DRaytrace/qabstracttexture.h>
+#include <Qt3DRaytrace/qtextureimage.h>
 #include <Qt3DRaytrace/qmaterial.h>
 #include <Qt3DRaytrace/qdistantlight.h>
 #include <Qt3DRaytrace/qcamera.h>
@@ -23,12 +25,14 @@
 #include <renderers/vulkan/renderer.h>
 
 #include <jobs/loadgeometryjob_p.h>
+#include <jobs/loadtexturejob_p.h>
 
 using namespace Qt3DCore;
 
 namespace Qt3DRaytrace {
 
 Q_LOGGING_CATEGORY(logAspect, "raytrace.aspect")
+Q_LOGGING_CATEGORY(logImport, "raytrace.import")
 
 void QRaytraceAspectPrivate::registerBackendTypes()
 {
@@ -37,8 +41,12 @@ void QRaytraceAspectPrivate::registerBackendTypes()
     qRegisterMetaType<Qt3DRaytrace::QVertex>();
     qRegisterMetaType<Qt3DRaytrace::QTriangle>();
     qRegisterMetaType<Qt3DRaytrace::QGeometryData>();
+    qRegisterMetaType<Qt3DRaytrace::QImageData>();
 
     qRegisterMetaType<Qt3DRaytrace::QCamera*>();
+    qRegisterMetaType<Qt3DRaytrace::QGeometry*>();
+    qRegisterMetaType<Qt3DRaytrace::QAbstractTexture*>();
+    qRegisterMetaType<Qt3DRaytrace::QTextureImage*>();
 
     q->registerBackendType<Qt3DCore::QEntity>(QSharedPointer<Raytrace::EntityMapper>::create(m_nodeManagers.get(), m_renderer.get()));
 
@@ -53,6 +61,8 @@ void QRaytraceAspectPrivate::registerBackendTypes()
 
     q->registerBackendType<QGeometry>(QSharedPointer<Raytrace::GeometryNodeMapper>::create(&m_nodeManagers->geometryManager, m_renderer.get()));
     q->registerBackendType<QGeometryRenderer>(QSharedPointer<Raytrace::GeometryRendererNodeMapper>::create(&m_nodeManagers->geometryRendererManager, m_renderer.get()));
+    q->registerBackendType<QAbstractTexture>(QSharedPointer<Raytrace::TextureNodeMapper>::create(&m_nodeManagers->textureManager, m_renderer.get()));
+    q->registerBackendType<QTextureImage>(QSharedPointer<Raytrace::TextureImageNodeMapper>::create(&m_nodeManagers->textureImageManager, m_renderer.get()));
     q->registerBackendType<QMaterial>(QSharedPointer<Raytrace::MaterialNodeMapper>::create(&m_nodeManagers->materialManager, m_renderer.get()));
 
     q->registerBackendType<QRenderSettings>(QSharedPointer<Raytrace::RenderSettingsMapper>::create(m_renderer.get()));
@@ -86,6 +96,23 @@ QVector<QAspectJobPtr> QRaytraceAspectPrivate::createGeometryRendererJobs() cons
         }
     }
     return geometryRendererJobs;
+}
+
+QVector<QAspectJobPtr> QRaytraceAspectPrivate::createTextureJobs() const
+{
+    auto *textureManager = &m_nodeManagers->textureManager;
+    auto dirtyTextures = textureManager->acquireDirtyComponents();
+
+    QVector<QAspectJobPtr> textureJobs;
+    textureJobs.reserve(dirtyTextures.size());
+    for(const QNodeId &textureId : dirtyTextures) {
+        Raytrace::HAbstractTexture handle = textureManager->lookupHandle(textureId);
+        if(!handle.isNull()) {
+            auto job = Raytrace::LoadTextureJobPtr::create(m_nodeManagers.get(), handle);
+            textureJobs.append(job);
+        }
+    }
+    return textureJobs;
 }
 
 QRaytraceAspect::QRaytraceAspect(QObject *parent)
@@ -125,10 +152,13 @@ QVector<QAspectJobPtr> QRaytraceAspect::jobsToExecute(qint64 time)
     if(d->m_jobsSuspended) {
         return jobs;
     }
+
     jobs.append(d->createGeometryRendererJobs());
+    jobs.append(d->createTextureJobs());
     if(d->m_renderer) {
         jobs.append(d->m_renderer->jobsToExecute(time));
     }
+
     return jobs;
 }
 

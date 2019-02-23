@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Qt3DRaytrace/qt3draytrace_global.h>
+#include <Qt3DRaytrace/qabstracttexture.h>
 
 #include <Qt3DCore/QComponent>
 #include <QColor>
@@ -23,6 +24,9 @@ class QT3DRAYTRACESHARED_EXPORT QMaterial : public Qt3DCore::QComponent
     Q_PROPERTY(float metalness READ metalness WRITE setMetalness NOTIFY metalnessChanged)
     Q_PROPERTY(QColor emission READ emission WRITE setEmission NOTIFY emissionChanged)
     Q_PROPERTY(float emissionIntensity READ emissionIntensity WRITE setEmissionIntensity NOTIFY emissionIntensityChanged)
+    Q_PROPERTY(Qt3DRaytrace::QAbstractTexture* albedoTexture READ albedoTexture WRITE setAlbedoTexture NOTIFY albedoTextureChanged)
+    Q_PROPERTY(Qt3DRaytrace::QAbstractTexture* roughnessTexture READ roughnessTexture WRITE setRoughnessTexture NOTIFY roughnessTextureChanged)
+    Q_PROPERTY(Qt3DRaytrace::QAbstractTexture* metalnessTexture READ metalnessTexture WRITE setMetalnessTexture NOTIFY metalnessTextureChanged)
 public:
     explicit QMaterial(Qt3DCore::QNode *parent = nullptr);
 
@@ -32,6 +36,10 @@ public:
     QColor emission() const;
     float emissionIntensity() const;
 
+    QAbstractTexture *albedoTexture() const;
+    QAbstractTexture *roughnessTexture() const;
+    QAbstractTexture *metalnessTexture() const;
+
 public slots:
     void setAlbedo(const QColor &albedo);
     void setRoughness(float rougness);
@@ -39,12 +47,20 @@ public slots:
     void setEmission(const QColor &emission);
     void setEmissionIntensity(float intensity);
 
+    void setAlbedoTexture(QAbstractTexture *texture);
+    void setRoughnessTexture(QAbstractTexture *texture);
+    void setMetalnessTexture(QAbstractTexture *texture);
+
 signals:
     void albedoChanged(const QColor &albedo);
     void roughnessChanged(float roughness);
     void metalnessChanged(float metalness);
     void emissionChanged(const QColor &emission);
     void emissionIntensityChanged(float intensity);
+
+    void albedoTextureChanged(QAbstractTexture *texture);
+    void roughnessTextureChanged(QAbstractTexture *texture);
+    void metalnessTextureChanged(QAbstractTexture *texture);
 
 protected:
     explicit QMaterial(QMaterialPrivate &dd, Qt3DCore::QNode *parent = nullptr);

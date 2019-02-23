@@ -12,6 +12,8 @@
 #include <backend/transform_p.h>
 #include <backend/geometry_p.h>
 #include <backend/geometryrenderer_p.h>
+#include <backend/abstracttexture_p.h>
+#include <backend/textureimage_p.h>
 #include <backend/material_p.h>
 #include <backend/distantlight_p.h>
 #include <backend/cameralens_p.h>
@@ -49,6 +51,10 @@ public:
         QVector<Qt3DCore::QNodeId> result(std::move(m_dirtyComponents));
         return result;
     }
+    void clearDirtyComponents()
+    {
+        m_dirtyComponents.clear();
+    }
 
 private:
     QVector<Qt3DCore::QNodeId> m_dirtyComponents;
@@ -57,6 +63,8 @@ private:
 class TransformManager : public Qt3DCore::QResourceManager<Transform, Qt3DCore::QNodeId> {};
 class GeometryManager : public ComponentManager<Geometry> {};
 class GeometryRendererManager : public ComponentManager<GeometryRenderer> {};
+class TextureManager : public ComponentManager<AbstractTexture> {};
+class TextureImageManager : public ComponentManager<TextureImage> {};
 class MaterialManager : public ComponentManager<Material> {};
 class DistantLightManager : public ComponentManager<DistantLight> {};
 class CameraManager : public ComponentManager<CameraLens> {};
@@ -67,6 +75,8 @@ struct NodeManagers
     TransformManager transformManager;
     GeometryManager geometryManager;
     GeometryRendererManager geometryRendererManager;
+    TextureManager textureManager;
+    TextureImageManager textureImageManager;
     MaterialManager materialManager;
     DistantLightManager distantLightManager;
     CameraManager cameraManager;

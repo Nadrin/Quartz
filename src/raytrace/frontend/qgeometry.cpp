@@ -42,14 +42,7 @@ void QGeometry::setData(const QGeometryData &geometryData)
 
 void QGeometry::clearData()
 {
-    Q_D(QGeometry);
-    d->m_data.vertices.clear();
-    d->m_data.vertices.shrink_to_fit();
-    d->m_data.faces.clear();
-    d->m_data.faces.shrink_to_fit();
-
-    QNodePrivate::get(this)->notifyPropertyChange("data", QVariant::fromValue(d->m_data));
-    emit dataChanged(d->m_data);
+    setData(QGeometryData());
 }
 
 QGeometry::QGeometry(QGeometryPrivate &dd, QNode *parent)

@@ -45,6 +45,15 @@ void Material::sceneChangeEvent(const QSceneChangePtr &change)
         else if(propertyName == QByteArrayLiteral("emissionIntensity")) {
             m_emissionIntensity = qMax(propertyChange->value().value<float>(), 0.0f);
         }
+        else if(propertyName == QByteArrayLiteral("albedoTexture")) {
+            m_albedoTextureId = propertyChange->value().value<QNodeId>();
+        }
+        else if(propertyName == QByteArrayLiteral("roughnessTexture")) {
+            m_roughnessTextureId = propertyChange->value().value<QNodeId>();
+        }
+        else if(propertyName == QByteArrayLiteral("metalnessTexture")) {
+            m_metalnessTextureId = propertyChange->value().value<QNodeId>();
+        }
 
         if(m_manager) {
             m_manager->markComponentDirty(peerId());
@@ -65,6 +74,10 @@ void Material::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
     m_metalness = qBound(0.0f, data.metalness, 1.0f);
     m_emission = data.emission;
     m_emissionIntensity = qMax(data.emissionIntensity, 0.0f);
+
+    m_albedoTextureId = data.albedoTextureId;
+    m_roughnessTextureId = data.roughnessTextureId;
+    m_metalnessTextureId = data.metalnessTextureId;
 
     if(m_manager) {
         m_manager->markComponentDirty(peerId());

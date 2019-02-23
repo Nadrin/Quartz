@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Qt3DRaytrace/qmesh.h>
+#include <Qt3DRaytrace/qgeometryfactory.h>
 #include <frontend/qgeometryrenderer_p.h>
 #include <io/meshimporter_p.h>
 

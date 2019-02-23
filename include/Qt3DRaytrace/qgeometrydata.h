@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Qt3DRaytrace/qt3draytrace_global.h>
+#include <QtCore/qmetatype.h>
 
 #include <QVector2D>
 #include <QVector3D>

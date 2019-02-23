@@ -54,19 +54,19 @@ QGeometry *MeshLoader::create()
     Q_ASSERT(m_importer);
 
     if(m_source.isEmpty()) {
-        qCWarning(logAspect) << Q_FUNC_INFO << "Mesh source path is empty";
+        qCWarning(logImport) << "Mesh source path is empty";
         return nullptr;
     }
 
     QGeometryData geometryData;
-    if(!m_importer->import(m_source, geometryData)) {
-        qCWarning(logAspect) << Q_FUNC_INFO << "Failed to import geometry data";
+    if(m_importer->import(m_source, geometryData)) {
+        QGeometry *geometry = new QGeometry;
+        geometry->setData(geometryData);
+        return geometry;
+    }
+    else {
         return nullptr;
     }
-
-    QGeometry *geometry = new QGeometry;
-    geometry->setData(geometryData);
-    return geometry;
 }
 
 } // Qt3DRaytrace

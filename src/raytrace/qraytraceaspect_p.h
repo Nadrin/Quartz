@@ -24,6 +24,7 @@ public:
     void updateServiceProviders();
 
     QVector<Qt3DCore::QAspectJobPtr> createGeometryRendererJobs() const;
+    QVector<Qt3DCore::QAspectJobPtr> createTextureJobs() const;
 
     QScopedPointer<Raytrace::AbstractRenderer> m_renderer;
     QScopedPointer<Raytrace::NodeManagers> m_nodeManagers;

@@ -17,38 +17,56 @@ QMaterial::QMaterial(Qt3DCore::QNode *parent)
 QColor QMaterial::albedo() const
 {
     Q_D(const QMaterial);
-    return d->m_data.albedo;
+    return d->m_albedo;
 }
 
 float QMaterial::roughness() const
 {
     Q_D(const QMaterial);
-    return d->m_data.roughness;
+    return d->m_roughness;
 }
 
 float QMaterial::metalness() const
 {
     Q_D(const QMaterial);
-    return d->m_data.metalness;
+    return d->m_metalness;
 }
 
 QColor QMaterial::emission() const
 {
     Q_D(const QMaterial);
-    return d->m_data.emission;
+    return d->m_emission;
 }
 
 float QMaterial::emissionIntensity() const
 {
     Q_D(const QMaterial);
-    return d->m_data.emissionIntensity;
+    return d->m_emissionIntensity;
+}
+
+QAbstractTexture *QMaterial::albedoTexture() const
+{
+    Q_D(const QMaterial);
+    return d->m_albedoTexture;
+}
+
+QAbstractTexture *QMaterial::roughnessTexture() const
+{
+    Q_D(const QMaterial);
+    return d->m_roughnessTexture;
+}
+
+QAbstractTexture *QMaterial::metalnessTexture() const
+{
+    Q_D(const QMaterial);
+    return d->m_metalnessTexture;
 }
 
 void QMaterial::setAlbedo(const QColor &albedo)
 {
     Q_D(QMaterial);
-    if(d->m_data.albedo != albedo) {
-        d->m_data.albedo = albedo;
+    if(d->m_albedo != albedo) {
+        d->m_albedo = albedo;
         emit albedoChanged(albedo);
     }
 }
@@ -56,8 +74,8 @@ void QMaterial::setAlbedo(const QColor &albedo)
 void QMaterial::setRoughness(float rougness)
 {
     Q_D(QMaterial);
-    if(!qFuzzyCompare(d->m_data.roughness, rougness)) {
-        d->m_data.roughness = rougness;
+    if(!qFuzzyCompare(d->m_roughness, rougness)) {
+        d->m_roughness = rougness;
         emit roughnessChanged(rougness);
     }
 }
@@ -65,8 +83,8 @@ void QMaterial::setRoughness(float rougness)
 void QMaterial::setMetalness(float metalness)
 {
     Q_D(QMaterial);
-    if(!qFuzzyCompare(d->m_data.metalness, metalness)) {
-        d->m_data.metalness = metalness;
+    if(!qFuzzyCompare(d->m_metalness, metalness)) {
+        d->m_metalness = metalness;
         emit metalnessChanged(metalness);
     }
 }
@@ -74,8 +92,8 @@ void QMaterial::setMetalness(float metalness)
 void QMaterial::setEmission(const QColor &emission)
 {
     Q_D(QMaterial);
-    if(d->m_data.emission != emission) {
-        d->m_data.emission = emission;
+    if(d->m_emission != emission) {
+        d->m_emission = emission;
         emit emissionChanged(emission);
     }
 }
@@ -83,9 +101,36 @@ void QMaterial::setEmission(const QColor &emission)
 void QMaterial::setEmissionIntensity(float intensity)
 {
     Q_D(QMaterial);
-    if(!qFuzzyCompare(d->m_data.emissionIntensity, intensity)) {
-        d->m_data.emissionIntensity = intensity;
+    if(!qFuzzyCompare(d->m_emissionIntensity, intensity)) {
+        d->m_emissionIntensity = intensity;
         emit emissionIntensityChanged(intensity);
+    }
+}
+
+void QMaterial::setAlbedoTexture(QAbstractTexture *texture)
+{
+    Q_D(QMaterial);
+    if(d->m_albedoTexture != texture) {
+        d->m_albedoTexture = texture;
+        emit albedoTextureChanged(texture);
+    }
+}
+
+void QMaterial::setRoughnessTexture(QAbstractTexture *texture)
+{
+    Q_D(QMaterial);
+    if(d->m_roughnessTexture != texture) {
+        d->m_roughnessTexture = texture;
+        emit roughnessTextureChanged(texture);
+    }
+}
+
+void QMaterial::setMetalnessTexture(QAbstractTexture *texture)
+{
+    Q_D(QMaterial);
+    if(d->m_metalnessTexture != texture) {
+        d->m_metalnessTexture = texture;
+        emit metalnessTextureChanged(texture);
     }
 }
 
@@ -98,7 +143,17 @@ QNodeCreatedChangeBasePtr QMaterial::createNodeCreationChange() const
     Q_D(const QMaterial);
 
     auto creationChange = QNodeCreatedChangePtr<QMaterialData>::create(this);
-    creationChange->data = d->m_data;
+    auto &data = creationChange->data;
+    data.albedo = d->m_albedo;
+    data.roughness = d->m_roughness;
+    data.metalness = d->m_metalness;
+    data.emission = d->m_emission;
+    data.emissionIntensity = d->m_emissionIntensity;
+
+    data.albedoTextureId = qIdForNode(d->m_albedoTexture);
+    data.roughnessTextureId = qIdForNode(d->m_roughnessTexture);
+    data.metalnessTextureId = qIdForNode(d->m_metalnessTexture);
+
     return creationChange;
 }
 

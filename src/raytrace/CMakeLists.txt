@@ -32,6 +32,14 @@ set(SOURCES_PRIVATE
     frontend/qcameralens_p.h
     frontend/qrendersettings.cpp
     frontend/qrendersettings_p.h
+    frontend/qabstracttexture.cpp
+    frontend/qabstracttexture_p.h
+    frontend/qtexture.cpp
+    frontend/qtexture_p.h
+    frontend/qtextureimage.cpp
+    frontend/qtextureimage_p.h
+    frontend/qtextureimage.cpp
+    frontend/qtextureimage_p.h
     backend/handles_p.h
     backend/types_p.h
     backend/abstractrenderer_p.h
@@ -54,11 +62,18 @@ set(SOURCES_PRIVATE
     backend/cameralens_p.h
     backend/rendersettings.cpp
     backend/rendersettings_p.h
+    backend/abstracttexture.cpp
+    backend/abstracttexture_p.h
+    backend/textureimage.cpp
+    backend/textureimage_p.h
     jobs/updateworldtransformjob.cpp
     jobs/updateworldtransformjob_p.h
     jobs/loadgeometryjob.cpp
     jobs/loadgeometryjob_p.h
+    jobs/loadtexturejob.cpp
+    jobs/loadtexturejob_p.h
     io/meshimporter_p.h
+    io/imageimporter_p.h
     io/defaultmeshimporter.cpp
     io/defaultmeshimporter_p.h
     utility/movingaverage.h
@@ -78,6 +93,11 @@ set(SOURCES_PUBLIC
     ${MODULE_API}/qcamera.h
     ${MODULE_API}/qcameralens.h
     ${MODULE_API}/qrendersettings.h
+    ${MODULE_API}/qabstracttexture.h
+    ${MODULE_API}/qtexture.h
+    ${MODULE_API}/qtextureimage.h
+    ${MODULE_API}/qtextureimagefactory.h
+    ${MODULE_API}/qimagedata.h
 )
 
 add_library(${MODULE_NAME} ${SOURCES_PRIVATE} ${SOURCES_PUBLIC})

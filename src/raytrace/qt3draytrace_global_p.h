@@ -11,4 +11,5 @@
 
 namespace Qt3DRaytrace {
 Q_DECLARE_LOGGING_CATEGORY(logAspect)
+Q_DECLARE_LOGGING_CATEGORY(logImport)
 } // Qt3DRaytrace

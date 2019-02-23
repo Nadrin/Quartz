@@ -32,9 +32,10 @@ public:
         EntityDirty    = 1 << 0,
         TransformDirty = 1 << 1,
         GeometryDirty  = 1 << 2,
-        MaterialDirty  = 1 << 3,
-        LightDirty     = 1 << 4,
-        CameraDirty    = 1 << 5,
+        TextureDirty   = 1 << 3,
+        MaterialDirty  = 1 << 4,
+        LightDirty     = 1 << 5,
+        CameraDirty    = 1 << 6,
         NoneDirty      = 0,
         AllDirty       = 0xffffff,
     };

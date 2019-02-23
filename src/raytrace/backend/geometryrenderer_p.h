@@ -18,7 +18,7 @@ class GeometryRendererManager;
 class GeometryRenderer : public BackendNode
 {
 public:
-    explicit GeometryRenderer();
+    GeometryRenderer();
 
     void setManager(GeometryRendererManager *manager);
     void sceneChangeEvent(const Qt3DCore::QSceneChangePtr &change) override;

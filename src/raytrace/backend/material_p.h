@@ -40,17 +40,35 @@ public:
         return LinearColor(m_emission, m_emissionIntensity);
     }
 
+    Qt3DCore::QNodeId albedoTextureId() const
+    {
+        return m_albedoTextureId;
+    }
+    Qt3DCore::QNodeId roughnessTextureId() const
+    {
+        return m_roughnessTextureId;
+    }
+    Qt3DCore::QNodeId metalnessTextureId() const
+    {
+        return m_metalnessTextureId;
+    }
+
     static constexpr float MinRoughness = 0.02f;
 
 private:
     void initializeFromPeer(const Qt3DCore::QNodeCreatedChangeBasePtr &change) override;
 
     MaterialManager *m_manager;
+
     QColor m_albedo;
     float m_roughness;
     float m_metalness;
     QColor m_emission;
     float m_emissionIntensity;
+
+    Qt3DCore::QNodeId m_albedoTextureId;
+    Qt3DCore::QNodeId m_roughnessTextureId;
+    Qt3DCore::QNodeId m_metalnessTextureId;
 };
 
 class MaterialNodeMapper final : public BackendNodeMapper<Material, MaterialManager>
