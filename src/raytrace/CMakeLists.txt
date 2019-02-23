@@ -76,6 +76,8 @@ set(SOURCES_PRIVATE
     io/imageimporter_p.h
     io/defaultmeshimporter.cpp
     io/defaultmeshimporter_p.h
+    io/defaultimageimporter.cpp
+    io/defaultimageimporter_p.h
     utility/movingaverage.h
 )
 
@@ -110,7 +112,7 @@ target_include_directories(${MODULE_NAME}
 
 target_compile_features(${MODULE_NAME} PUBLIC cxx_std_14)
 target_compile_definitions(${MODULE_NAME} PRIVATE VK_NO_PROTOTYPES)
-target_link_libraries(${MODULE_NAME} Qt5::Core Qt5::Gui Qt5::3DCorePrivate ${assimp_LIBRARIES})
+target_link_libraries(${MODULE_NAME} Qt5::Core Qt5::Gui Qt5::3DCorePrivate stb ${assimp_LIBRARIES})
 
 add_subdirectory(renderers)
 add_dependencies(${MODULE_NAME} RendererShaders)
