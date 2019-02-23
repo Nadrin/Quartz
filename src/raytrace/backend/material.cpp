@@ -34,7 +34,7 @@ void Material::sceneChangeEvent(const QSceneChangePtr &change)
             m_albedo = propertyChange->value().value<QColor>();
         }
         else if(propertyName == QByteArrayLiteral("roughness")) {
-            m_roughness = qBound(Material::MinRoughness, propertyChange->value().value<float>(), 1.0f);
+            m_roughness = qBound(0.0f, propertyChange->value().value<float>(), 1.0f);
         }
         else if(propertyName == QByteArrayLiteral("metalness")) {
             m_metalness = qBound(0.0f, propertyChange->value().value<float>(), 1.0f);
@@ -70,7 +70,7 @@ void Material::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
     const auto &data = typedChange->data;
 
     m_albedo = data.albedo;
-    m_roughness = qBound(Material::MinRoughness, data.roughness, 1.0f);
+    m_roughness = qBound(0.0f, data.roughness, 1.0f);
     m_metalness = qBound(0.0f, data.metalness, 1.0f);
     m_emission = data.emission;
     m_emissionIntensity = qMax(data.emissionIntensity, 0.0f);

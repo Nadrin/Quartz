@@ -179,13 +179,14 @@ void main()
     EntityInstance instance = fetchInstance(gl_InstanceID);
     Triangle triangle = fetchTriangle(gl_InstanceCustomIndexNV, gl_PrimitiveID);
     Material material = fetchMaterial(gl_InstanceID);
+    
     vec2 uv = getTexCoord(triangle, hitBarycentrics);
     
     DifferentialSurface surface;
-    surface.basis = getTangentBasis(triangle, instance.basisTransform, hitBarycentrics);
-    surface.albedo = textureSampleAlbedo(material, uv);
-    surface.roughness = textureSampleRoughness(material, uv);
-    surface.metalness = textureSampleMetalness(material, uv);
+    surface.basis     = getTangentBasis(triangle, instance.basisTransform, hitBarycentrics);
+    surface.albedo    = fetchMaterialAlbedo(material, uv);
+    surface.roughness = fetchMaterialRoughness(material, uv);
+    surface.metalness = fetchMaterialMetalness(material, uv);
 
     vec3 p  = gl_WorldRayOriginNV + gl_RayTmaxNV * gl_WorldRayDirectionNV;
     vec3 wo = worldToTangent(surface.basis, -gl_WorldRayDirectionNV);

@@ -59,7 +59,7 @@ Emitter fetchEmitter(uint emitterIndex)
     return emitterBuffer.emitters[emitterIndex];
 }
 
-vec3 textureSampleAlbedo(Material material, vec2 uv)
+vec3 fetchMaterialAlbedo(Material material, vec2 uv)
 {
     vec3 albedo = material.albedo.rgb;
     if(material.albedoTexture != ~0u) {
@@ -68,20 +68,20 @@ vec3 textureSampleAlbedo(Material material, vec2 uv)
     return albedo;
 }
 
-float textureSampleRoughness(Material material, vec2 uv)
+float fetchMaterialRoughness(Material material, vec2 uv)
 {
     float roughness = material.albedo.a;
     if(material.roughnessTexture != ~0u) {
-        roughness = texture(sampler2D(textures[nonuniformEXT(material.roughnessTexture)], textureSampler), uv).r;
+        roughness = 1.0 - min(1.0, texture(sampler2D(textures[nonuniformEXT(material.roughnessTexture)], textureSampler), uv).r);
     }
-    return roughness;
+    return max(MinRoughness, roughness);
 }
 
-float textureSampleMetalness(Material material, vec2 uv)
+float fetchMaterialMetalness(Material material, vec2 uv)
 {
     float metalness = material.emission.a;
     if(material.metalnessTexture != ~0u) {
-        metalness = texture(sampler2D(textures[nonuniformEXT(material.metalnessTexture)], textureSampler), uv).r;
+        metalness = 1.0 - min(1.0, texture(sampler2D(textures[nonuniformEXT(material.metalnessTexture)], textureSampler), uv).r);
     }
     return metalness;
 }

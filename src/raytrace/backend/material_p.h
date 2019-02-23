@@ -53,8 +53,6 @@ public:
         return m_metalnessTextureId;
     }
 
-    static constexpr float MinRoughness = 0.02f;
-
 private:
     void initializeFromPeer(const Qt3DCore::QNodeCreatedChangeBasePtr &change) override;
 

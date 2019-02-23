@@ -18,6 +18,7 @@ const float InvPI  = 1.0 / PI;
 const float Epsilon  = 0.0001;
 const float Infinity = 1000000.0;
 
+const float MinRoughness = 0.02;
 const float MinTerminationThreshold = 0.05;
 
 #include "sampling.glsl"
