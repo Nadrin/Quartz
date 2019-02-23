@@ -37,7 +37,7 @@ float powerHeuristic(float pdfA, float pdfB)
     return f / (f + g);
 }
 
-vec3 sampleEmitterLi(vec3 p, TangentBasis basis, out vec3 wiWorld, out vec3 wiTangent, out float pdf)
+vec3 sampleEmitterLi(vec3 p, DifferentialSurface surface, out vec3 wiWorld, out vec3 wiTangent, out float pdf)
 {
     const uint emitterIndex = nextUInt(payload.rng, params.numEmitters);
     const Emitter emitter = fetchEmitter(emitterIndex);
@@ -46,13 +46,13 @@ vec3 sampleEmitterLi(vec3 p, TangentBasis basis, out vec3 wiWorld, out vec3 wiTa
     if(emitterIndex == 0) {
         // Sky emitter.
         wiTangent = sampleHemisphereCosine(nextVec2(payload.rng));
-        wiWorld   = tangentToWorld(basis, wiTangent);
+        wiWorld   = tangentToWorld(surface.basis, wiTangent);
         pdf       = pdfHemisphereCosine(cosThetaTangent(wiTangent));
     }
     else if(emitter.instanceIndex == ~0u) {
         // Distant light emitter.
         wiWorld   = -emitter.direction;
-        wiTangent = worldToTangent(basis, wiWorld);
+        wiTangent = worldToTangent(surface.basis, wiWorld);
         pdf       = 0.0;
     }
     else {
@@ -88,7 +88,7 @@ vec3 sampleEmitterLi(vec3 p, TangentBasis basis, out vec3 wiWorld, out vec3 wiTa
         }
 
         wiWorld   = -emitterWo;
-        wiTangent = worldToTangent(basis, wiWorld);
+        wiTangent = worldToTangent(surface.basis, wiWorld);
         pdf       = distanceSqr / (cosTheta * triangleArea);
     }
 
@@ -96,33 +96,33 @@ vec3 sampleEmitterLi(vec3 p, TangentBasis basis, out vec3 wiWorld, out vec3 wiTa
     return emitter.radiance * pVisibility;
 }
 
-vec3 sampleScatteringLi(vec3 p, Material material, TangentBasis basis, vec3 wo, out vec3 wi, out float pdf)
+vec3 sampleScatteringLi(vec3 p, DifferentialSurface surface, vec3 wo, out vec3 wi, out float pdf)
 {
-    vec3 brdf = sampleBSDF(material, payload.rng, wo, wi, pdf);
+    vec3 brdf = sampleBSDF(surface, payload.rng, wo, wi, pdf);
     if(isblack(brdf) || pdf < Epsilon) {
         return vec3(0.0);
     }
 
-    vec3 wiWorld = tangentToWorld(basis, wi);
+    vec3 wiWorld = tangentToWorld(surface.basis, wi);
     traceNV(scene, gl_RayFlagsNoneNV, 0xFF, Shader_QueryEmissionHit, 1, Shader_QueryEmissionMiss, p, Epsilon, wiWorld, Infinity, 2);
     return pEmission * brdf;
 }
 
-vec3 directLighting(vec3 p, vec3 wo, TangentBasis basis, Material material)
+vec3 directLighting(vec3 p, vec3 wo, DifferentialSurface surface)
 {
     vec3 L = vec3(0.0);
 
     vec3  emitterWiWorld, emitterWi;
     float emitterPdf;
-    vec3  emitterLi = sampleEmitterLi(p, basis, emitterWiWorld, emitterWi, emitterPdf);
+    vec3  emitterLi = sampleEmitterLi(p, surface, emitterWiWorld, emitterWi, emitterPdf);
     if(!isblack(emitterLi)) {
         vec3 wi = emitterWi;
         vec3 wh = normalize(wi + wo);
         float cosTheta = cosThetaTangent(wi);
-        vec3 bsdf = evaluateBSDF(material, wo, wi, wh);
+        vec3 bsdf = evaluateBSDF(surface, wo, wi, wh);
         if(emitterPdf != 0.0) {
             // Area emitter: Add contribution with MIS heuristic.
-            float scatteringPdf = pdfBSDF(material, wo, wi, wh);
+            float scatteringPdf = pdfBSDF(surface, wo, wi, wh);
             float weight = powerHeuristic(emitterPdf, scatteringPdf);
             L += (emitterLi * bsdf * cosTheta * weight) / emitterPdf;
         }
@@ -134,7 +134,7 @@ vec3 directLighting(vec3 p, vec3 wo, TangentBasis basis, Material material)
     if(emitterPdf != 0.0) {
         vec3  scatteringWi;
         float scatteringPdf;
-        vec3  scatteringLi = sampleScatteringLi(p, material, basis, wo, scatteringWi, scatteringPdf);
+        vec3  scatteringLi = sampleScatteringLi(p, surface, wo, scatteringWi, scatteringPdf);
         if(!isblack(scatteringLi)) {
             vec3 wi = scatteringWi;
             float cosTheta = cosThetaTangent(wi);
@@ -145,11 +145,11 @@ vec3 directLighting(vec3 p, vec3 wo, TangentBasis basis, Material material)
     return min(payload.T * params.numEmitters * L, vec3(params.directRadianceClamp));
 }
 
-vec3 indirectLighting(vec3 p, vec3 wo, TangentBasis basis, Material material, uint minDepth)
+vec3 indirectLighting(vec3 p, vec3 wo, DifferentialSurface surface, uint minDepth)
 {
     vec3 wi;
     float pdf;
-    vec3 brdf = sampleBSDF(material, payload.rng, wo, wi, pdf);
+    vec3 brdf = sampleBSDF(surface, payload.rng, wo, wi, pdf);
     if(isblack(brdf) || pdf < Epsilon) {
         return vec3(0.0);
     }
@@ -169,7 +169,7 @@ vec3 indirectLighting(vec3 p, vec3 wo, TangentBasis basis, Material material, ui
     pIndirect.rng   = payload.rng;
     pIndirect.depth = payload.depth + 1;
 
-    vec3 wiWorld = tangentToWorld(basis, wi);
+    vec3 wiWorld = tangentToWorld(surface.basis, wi);
     traceNV(scene, gl_RayFlagsNoneNV, 0xFF, Shader_PathTraceHit, 1, Shader_PathTraceMiss, p, Epsilon, wiWorld, Infinity, 3);
     return min(pIndirect.L, vec3(params.indirectRadianceClamp));
 }
@@ -179,15 +179,20 @@ void main()
     EntityInstance instance = fetchInstance(gl_InstanceID);
     Triangle triangle = fetchTriangle(gl_InstanceCustomIndexNV, gl_PrimitiveID);
     Material material = fetchMaterial(gl_InstanceID);
+    vec2 uv = getTexCoord(triangle, hitBarycentrics);
     
-    TangentBasis basis = getTangentBasis(triangle, instance.basisTransform, hitBarycentrics);
+    DifferentialSurface surface;
+    surface.basis = getTangentBasis(triangle, instance.basisTransform, hitBarycentrics);
+    surface.albedo = textureSampleAlbedo(material, uv);
+    surface.roughness = textureSampleRoughness(material, uv);
+    surface.metalness = textureSampleMetalness(material, uv);
 
     vec3 p  = gl_WorldRayOriginNV + gl_RayTmaxNV * gl_WorldRayDirectionNV;
-    vec3 wo = worldToTangent(basis, -gl_WorldRayDirectionNV);
+    vec3 wo = worldToTangent(surface.basis, -gl_WorldRayDirectionNV);
 
     payload.L  = step(payload.depth, 0) * material.emission.rgb;
-    payload.L += directLighting(p, wo, basis, material);
+    payload.L += directLighting(p, wo, surface);
     if(payload.depth + 1 <= params.maxDepth) {
-        payload.L += indirectLighting(p, wo, basis, material, params.minDepth);
+        payload.L += indirectLighting(p, wo, surface, params.minDepth);
     }
 }

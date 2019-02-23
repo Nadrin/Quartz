@@ -31,6 +31,7 @@ public:
 
     DescriptorHandle allocateDescriptor(ResourceClass rclass);
     void updateBufferDescriptor(DescriptorHandle handle, const DescriptorBufferInfo &bufferInfo) const;
+    void updateImageDescriptor(DescriptorHandle handle, const DescriptorImageInfo &imageInfo) const;
 
     VkDescriptorSet descriptorSet(ResourceClass rclass) const;
     uint32_t descriptorPoolCapacity(ResourceClass rclass) const;

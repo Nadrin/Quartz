@@ -16,6 +16,7 @@ enum class ResourceClass
 {
     AttributeBuffer,
     IndexBuffer,
+    TextureImage,
 };
 
 struct DescriptorHandle

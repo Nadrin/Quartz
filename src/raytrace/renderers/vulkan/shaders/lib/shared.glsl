@@ -11,6 +11,10 @@ struct Material
 {
     vec4 albedo; // +roughness
     vec4 emission; // +metalness
+    uint albedoTexture;
+    uint roughnessTexture;
+    uint metalnessTexture;
+    float _padding[1];
 };
 
 struct Emitter

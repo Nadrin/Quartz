@@ -39,6 +39,7 @@ struct BufferTransition
 enum class ImageState
 {
     Undefined = 0,
+    Staging,
     ColorAttachment,
     DepthStencilAttachment,
     DepthStencilReadWrite,
@@ -96,6 +97,7 @@ namespace ResourceBarrier
     static constexpr int NumImageStates = static_cast<int>(ImageState::NumImageStates);
     static constexpr VkPipelineStageFlags ImageStateToStageFlags[NumImageStates] = {
         0, // Undefined
+        0, // Staging
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, // ColorAttachment
         VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, // DepthStencilAttachment
         VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, // DepthStencilReadWrite
@@ -107,6 +109,7 @@ namespace ResourceBarrier
     };
     static constexpr VkAccessFlags ImageStateToAccessMask[NumImageStates] = {
         0, // Undefined
+        0, // Staging
         VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, // ColorAttachment
         VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT, // DepthStencilAttachment
         VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, // DepthStencilReadWrite
@@ -118,6 +121,7 @@ namespace ResourceBarrier
     };
     static constexpr VkImageLayout ImageStateToImageLayout[NumImageStates] = {
         VK_IMAGE_LAYOUT_UNDEFINED, // Undefined
+        VK_IMAGE_LAYOUT_PREINITIALIZED, // Staging
         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, // ColorAttachment
         VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, // DepthStencilAttachment
         VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // DepthStencilReadWrite

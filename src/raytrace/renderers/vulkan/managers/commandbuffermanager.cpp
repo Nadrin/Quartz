@@ -65,13 +65,23 @@ TransientCommandBuffer CommandBufferManager::acquireCommandBuffer()
 
 bool CommandBufferManager::releaseCommandBuffer(TransientCommandBuffer &commandBuffer, const QVector<Buffer> &transientBuffers)
 {
+    return releaseCommandBuffer(commandBuffer, transientBuffers, {});
+}
+
+bool CommandBufferManager::releaseCommandBuffer(TransientCommandBuffer &commandBuffer, const QVector<Image> &transientImages)
+{
+    return releaseCommandBuffer(commandBuffer, {}, transientImages);
+}
+
+bool CommandBufferManager::releaseCommandBuffer(TransientCommandBuffer &commandBuffer, const QVector<Buffer> &transientBuffers, const QVector<Image> &transientImages)
+{
     if(!commandBuffer.buffer.end()) {
         qCWarning(logVulkan) << "Cannot end recoding transient command buffer";
         return false;
     }
 
     QMutexLocker lock(&m_commandBuffersMutex);
-    m_executableCommandBuffers.append({commandBuffer, transientBuffers});
+    m_executableCommandBuffers.append({commandBuffer, transientBuffers, transientImages});
     commandBuffer = {};
     return true;
 }
@@ -97,6 +107,7 @@ bool CommandBufferManager::submitCommandBuffers(VkQueue queue)
         pendingBatch.commandBuffers.append(executableCommandBuffer.commandBuffer.buffer);
         pendingBatch.parentCommandPools.append(executableCommandBuffer.commandBuffer.parentCommandPool);
         pendingBatch.transientBuffers.append(std::move(executableCommandBuffer.transientBuffers));
+        pendingBatch.transientImages.append(std::move(executableCommandBuffer.transientImages));
     }
 
     Result submitResult;
@@ -117,13 +128,18 @@ bool CommandBufferManager::submitCommandBuffers(VkQueue queue)
 void CommandBufferManager::destroyExpiredResources()
 {
     QVector<Buffer> expiredBuffers;
+    QVector<Image> expiredImages;
     {
         QMutexLocker lock(&m_retiredResourcesMutex);
         expiredBuffers = std::move(m_retiredBuffers);
+        expiredImages = std::move(m_retiredImages);
     }
 
     for(Buffer &buffer : expiredBuffers) {
         m_device->destroyBuffer(buffer);
+    }
+    for(Image &image : expiredImages) {
+        m_device->destroyImage(image);
     }
 }
 
@@ -135,6 +151,7 @@ void CommandBufferManager::proceedToNextFrame()
 void CommandBufferManager::cleanup(bool freeCommandBuffers)
 {
     QVector<Buffer> retiredBuffers;
+    QVector<Image> retiredImages;
 
     // TODO: Make this thread-safe once renderer is moved to a dedicated thread.
     QMutableVectorIterator<PendingCommandBuffersBatch> it(m_pendingCommandBuffers);
@@ -151,12 +168,14 @@ void CommandBufferManager::cleanup(bool freeCommandBuffers)
 
             m_device->destroyFence(pendingBatch.commandsExecutedFence);
             retiredBuffers.append(std::move(pendingBatch.transientBuffers));
+            retiredImages.append(std::move(pendingBatch.transientImages));
             it.remove();
         }
     }
 
     QMutexLocker lock(&m_retiredResourcesMutex);
     m_retiredBuffers.append(std::move(retiredBuffers));
+    m_retiredImages.append(std::move(retiredImages));
 }
 
 } // Vulkan

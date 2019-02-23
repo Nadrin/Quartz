@@ -220,6 +220,11 @@ Image Device::createImage(const ImageCreateInfo &createInfo, const AllocationCre
     }
     image.hostAddress = allocInfo.pMappedData;
 
+    if(createInfo.usage == VK_IMAGE_USAGE_TRANSFER_SRC_BIT) {
+        // Skip image view creation for staging images.
+        return image;
+    }
+
     VkImageViewType viewType;
     switch(createInfo.imageType) {
     case VK_IMAGE_TYPE_1D:
@@ -258,12 +263,17 @@ Image Device::createImage(const ImageCreateInfo &createInfo, const AllocationCre
     return image;
 }
 
-Image Device::createStagingImage(const ImageCreateInfo &createInfo)
+Image Device::createStagingImage(uint32_t width, uint32_t height, VkFormat format)
 {
-    ImageCreateInfo stagingCreateInfo = createInfo;
-    stagingCreateInfo.tiling = VK_IMAGE_TILING_LINEAR;
-    stagingCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-    return createImage(stagingCreateInfo, VMA_MEMORY_USAGE_CPU_ONLY);
+    ImageCreateInfo createInfo;
+    createInfo.imageType = VK_IMAGE_TYPE_2D;
+    createInfo.format = format;
+    createInfo.extent.width = width;
+    createInfo.extent.height = height;
+    createInfo.tiling = VK_IMAGE_TILING_LINEAR;
+    createInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+    createInfo.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
+    return createImage(createInfo, VMA_MEMORY_USAGE_CPU_ONLY);
 }
 
 void Device::destroyImage(Image &image)

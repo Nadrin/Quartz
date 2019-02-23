@@ -7,15 +7,12 @@
 #ifndef QUARTZ_SHADERS_RAYHIT_H
 #define QUARTZ_SHADERS_RAYHIT_H
 
-struct Triangle {
-    Attributes v1;
-    Attributes v2;
-    Attributes v3;
-};
+#include "common.glsl"
 
-struct TangentBasis {
-    vec3 T, N, B;
-};
+vec2 blerp(vec2 b, vec2 p1, vec2 p2, vec2 p3)
+{
+    return (1.0 - b.x - b.y) * p1 + b.x * p2 + b.y * p3;
+}
 
 vec3 blerp(vec2 b, vec3 p1, vec3 p2, vec3 p3)
 {
@@ -50,6 +47,11 @@ vec3 getTangent(Triangle triangle, vec2 b)
 vec3 getTangentWorld(Triangle triangle, mat3x3 basisObjectToWorld, vec2 b)
 {
     return normalize(basisObjectToWorld * getTangent(triangle, b));
+}
+
+vec2 getTexCoord(Triangle triangle, vec2 b)
+{
+    return blerp(b, triangle.v1.texcoord, triangle.v2.texcoord, triangle.v3.texcoord);
 }
 
 TangentBasis getTangentBasis(Triangle triangle, mat3x3 basisObjectToWorld, vec2 b)

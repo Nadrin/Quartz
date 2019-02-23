@@ -19,6 +19,8 @@ static VkDescriptorType resourceClassToDescriptorType(ResourceClass rclass)
     case ResourceClass::AttributeBuffer:
     case ResourceClass::IndexBuffer:
         return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    case ResourceClass::TextureImage:
+        return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
     }
 
 	Q_ASSERT_X(false, Q_FUNC_INFO, "Invalid resource class");
@@ -158,6 +160,17 @@ void DescriptorManager::updateBufferDescriptor(DescriptorHandle handle, const De
     uint32_t descriptorIndex = handle.index - 1;
     Q_ASSERT(descriptorIndex < pool.capacity);
     m_device->writeDescriptor({pool.set, 0, descriptorIndex, resourceClassToDescriptorType(handle.rclass), bufferInfo});
+}
+
+void DescriptorManager::updateImageDescriptor(DescriptorHandle handle, const DescriptorImageInfo &imageInfo) const
+{
+    Q_ASSERT(handle);
+    Q_ASSERT(m_pools.contains(handle.rclass));
+
+    const auto &pool = m_pools[handle.rclass];
+    uint32_t descriptorIndex = handle.index - 1;
+    Q_ASSERT(descriptorIndex < pool.capacity);
+    m_device->writeDescriptor({pool.set, 0, descriptorIndex, resourceClassToDescriptorType(handle.rclass), imageInfo});
 }
 
 VkDescriptorSet DescriptorManager::descriptorSet(ResourceClass rclass) const

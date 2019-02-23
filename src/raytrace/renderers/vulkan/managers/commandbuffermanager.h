@@ -50,7 +50,9 @@ public:
     ~CommandBufferManager();
 
     TransientCommandBuffer acquireCommandBuffer();
-    bool releaseCommandBuffer(TransientCommandBuffer &commandBuffer, const QVector<Buffer> &transientBuffers={});
+    bool releaseCommandBuffer(TransientCommandBuffer &commandBuffer, const QVector<Buffer> &transientBuffers);
+    bool releaseCommandBuffer(TransientCommandBuffer &commandBuffer, const QVector<Image>  &transientImages);
+    bool releaseCommandBuffer(TransientCommandBuffer &commandBuffer, const QVector<Buffer> &transientBuffers, const QVector<Image> &transientImages);
 
     bool submitCommandBuffers(VkQueue queue);
     void destroyExpiredResources();
@@ -66,11 +68,13 @@ private:
     struct ExecutableCommandBuffer {
         TransientCommandBuffer commandBuffer;
         QVector<Buffer> transientBuffers;
+        QVector<Image> transientImages;
     };
     struct PendingCommandBuffersBatch {
         QVector<VkCommandBuffer> commandBuffers;
         QVector<VkCommandPool> parentCommandPools;
         QVector<Buffer> transientBuffers;
+        QVector<Image> transientImages;
         Fence commandsExecutedFence;
     };
 
@@ -83,6 +87,7 @@ private:
 
     QMutex m_retiredResourcesMutex;
     QVector<Buffer> m_retiredBuffers;
+    QVector<Image> m_retiredImages;
 };
 
 } // Vulkan

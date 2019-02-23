@@ -81,6 +81,10 @@ public:
         const VkBool32 update = (src != VK_NULL_HANDLE) ? VK_TRUE : VK_FALSE;
         vkCmdBuildAccelerationStructureNV(handle, &info, VK_NULL_HANDLE, 0, update, dst, src, scratch, 0);
     }
+    void blitImage(VkImage srcImage, ImageState srcState, VkImage dstImage, ImageState dstState, const VkImageBlit &region, VkFilter filter) const
+    {
+        vkCmdBlitImage(handle, srcImage, ResourceBarrier::getImageLayoutFromState(srcState), dstImage, ResourceBarrier::getImageLayoutFromState(dstState), 1, &region, filter);
+    }
     void copyBuffer(VkBuffer src, VkDeviceSize srcOffset, VkBuffer dest, VkDeviceSize dstOffset, VkDeviceSize size) const
     {
         VkBufferCopy bufferCopy;

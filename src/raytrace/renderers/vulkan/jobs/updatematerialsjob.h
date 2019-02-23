@@ -13,6 +13,11 @@
 #include <QVector>
 
 namespace Qt3DRaytrace {
+
+namespace Raytrace {
+class TextureManager;
+} // Raytrace
+
 namespace Vulkan {
 
 class Renderer;
@@ -20,13 +25,14 @@ class Renderer;
 class UpdateMaterialsJob final : public Qt3DCore::QAspectJob
 {
 public:
-    explicit UpdateMaterialsJob(Renderer *renderer);
+    UpdateMaterialsJob(Renderer *renderer, Raytrace::TextureManager *textureManager);
 
     void setDirtyMaterialHandles(QVector<Raytrace::HMaterial> &materialHandles);
     void run() override;
 
 private:
     Renderer *m_renderer;
+    Raytrace::TextureManager *m_textureManager;
     QVector<Raytrace::HMaterial> m_dirtyMaterialHandles;
 };
 

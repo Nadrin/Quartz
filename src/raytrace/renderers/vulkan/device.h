@@ -45,7 +45,7 @@ public:
     void destroySwapchain(Swapchain& swapchain);
 
     Image createImage(const ImageCreateInfo &createInfo, const AllocationCreateInfo &allocCreateInfo);
-    Image createStagingImage(const ImageCreateInfo &createInfo);
+    Image createStagingImage(uint32_t width, uint32_t height, VkFormat format);
     void destroyImage(Image &image);
 
     Buffer createBuffer(const BufferCreateInfo &createInfo, const AllocationCreateInfo &allocCreateInfo);

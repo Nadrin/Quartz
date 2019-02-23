@@ -45,6 +45,19 @@ void SceneManager::addOrUpdateMaterial(Qt3DCore::QNodeId materialNodeId, const M
     m_materials.addOrUpdateResource(materialNodeId, material);
 }
 
+void SceneManager::addOrUpdateTexture(Qt3DCore::QNodeId textureImageNodeId, const Image &textureImage)
+{
+    DescriptorManager *descriptorManager = m_renderer->descriptorManager();
+    Q_ASSERT(descriptorManager);
+
+    QWriteLocker lock(&m_rwlock);
+
+    DescriptorHandle textureImageDescriptor = descriptorManager->allocateDescriptor(ResourceClass::TextureImage);
+    descriptorManager->updateImageDescriptor(textureImageDescriptor, DescriptorImageInfo(textureImage.view, ImageState::ShaderRead));
+
+    m_textures.addOrUpdateResource(textureImageNodeId, textureImage);
+}
+
 void SceneManager::updateEmitters(QVector<Emitter> &emitters)
 {
     QWriteLocker lock(&m_rwlock);
@@ -97,6 +110,12 @@ uint32_t SceneManager::lookupMaterialIndex(Qt3DCore::QNodeId materialNodeId) con
 {
     QReadLocker lock(&m_rwlock);
     return m_materials.lookupIndex(materialNodeId);
+}
+
+uint32_t SceneManager::lookupTextureIndex(Qt3DCore::QNodeId textureImageNodeId) const
+{
+    QReadLocker lock(&m_rwlock);
+    return m_textures.lookupIndex(textureImageNodeId);
 }
 
 void SceneManager::gatherEntities(Raytrace::EntityManager *entityManager)
@@ -163,6 +182,9 @@ void SceneManager::destroyResources()
 
     for(auto &geometry : m_geometry.takeResources()) {
         device->destroyGeometry(geometry);
+    }
+    for(auto &texture : m_textures.takeResources()) {
+        device->destroyImage(texture);
     }
     m_materials.clear();
 }
@@ -284,6 +306,12 @@ uint32_t SceneManager::numGeometry() const
 {
     QReadLocker lock(&m_rwlock);
     return uint32_t(m_geometry.resources().size());
+}
+
+uint32_t SceneManager::numTextures() const
+{
+    QReadLocker lock(&m_rwlock);
+    return uint32_t(m_textures.resources().size());
 }
 
 uint32_t SceneManager::numEmitters() const

@@ -71,7 +71,7 @@ void UpdateInstanceBufferJob::run()
         commandBuffer->copyBuffer(stagingBuffer, 0, instanceBuffer, 0, instanceBufferSize);
         commandBuffer->resourceBarrier({instanceBuffer, BufferState::CopyDest, BufferState::ShaderRead});
     }
-    commandBufferManager->releaseCommandBuffer(commandBuffer, {stagingBuffer});
+    commandBufferManager->releaseCommandBuffer(commandBuffer, QVector<Buffer>{stagingBuffer});
 
     sceneManager->updateInstanceBuffer(instanceBuffer);
 }

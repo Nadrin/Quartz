@@ -17,6 +17,7 @@
 #include <renderers/vulkan/jobs/buildgeometryjob.h>
 #include <renderers/vulkan/jobs/updateinstancebufferjob.h>
 #include <renderers/vulkan/jobs/updatematerialsjob.h>
+#include <renderers/vulkan/jobs/uploadtexturejob.h>
 
 #include <renderers/vulkan/shaders/lib/bindings.glsl>
 
@@ -171,24 +172,52 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::createGeometryJobs()
     return geometryJobs;
 }
 
-QVector<Qt3DCore::QAspectJobPtr> Renderer::createMaterialJobs()
+QVector<Qt3DCore::QAspectJobPtr> Renderer::createTextureJobs()
 {
-    auto *materialManager = &m_nodeManagers->materialManager;
-    auto dirtyMaterials = materialManager->acquireDirtyComponents();
+    QVector<Qt3DCore::QAspectJobPtr> textureJobs;
 
-    QVector<Raytrace::HMaterial> dirtyMaterialHandles;
-    dirtyMaterialHandles.reserve(dirtyMaterials.size());
-    for(const Qt3DCore::QNodeId &materialId : dirtyMaterials) {
-        Raytrace::HMaterial handle = materialManager->lookupHandle(materialId);
+    auto *textureImageManager = &m_nodeManagers->textureImageManager;
+    auto dirtyTextureImages = textureImageManager->acquireDirtyComponents();
+
+    QVector<Qt3DCore::QAspectJobPtr> uploadTextureJobs;
+    uploadTextureJobs.reserve(dirtyTextureImages.size());
+    for(const Qt3DCore::QNodeId &textureImageId : dirtyTextureImages) {
+        Raytrace::HTextureImage handle = textureImageManager->lookupHandle(textureImageId);
         if(!handle.isNull()) {
-            dirtyMaterialHandles.append(handle);
+            auto job = UploadTextureJobPtr::create(this, handle);
+            uploadTextureJobs.append(job);
         }
     }
 
-    auto updateMaterialsJob = UpdateMaterialsJobPtr::create(this);
+    textureJobs.append(uploadTextureJobs);
+    return textureJobs;
+}
+
+QVector<Qt3DCore::QAspectJobPtr> Renderer::createMaterialJobs(bool forceAllDirty)
+{
+    auto *materialManager = &m_nodeManagers->materialManager;
+
+    QVector<Raytrace::HMaterial> dirtyMaterialHandles;
+    if(forceAllDirty) {
+        dirtyMaterialHandles = materialManager->activeHandles();
+        materialManager->clearDirtyComponents();
+    }
+    else {
+        auto dirtyMaterials = materialManager->acquireDirtyComponents();
+        dirtyMaterialHandles.reserve(dirtyMaterials.size());
+        for(const Qt3DCore::QNodeId &materialId : dirtyMaterials) {
+            Raytrace::HMaterial handle = materialManager->lookupHandle(materialId);
+            if(!handle.isNull()) {
+                dirtyMaterialHandles.append(handle);
+            }
+        }
+    }
+
+    auto updateMaterialsJob = UpdateMaterialsJobPtr::create(this, &m_nodeManagers->textureManager);
     updateMaterialsJob->setDirtyMaterialHandles(dirtyMaterialHandles);
     return { updateMaterialsJob };
 }
+
 
 bool Renderer::createResources()
 {
@@ -198,6 +227,10 @@ bool Renderer::createResources()
     }
     if(!m_descriptorManager->createDescriptorPool(ResourceClass::IndexBuffer, Config::DescriptorPoolCapacity)) {
         qCCritical(logVulkan) << "Failed to create index buffer descriptor pool";
+        return false;
+    }
+    if(!m_descriptorManager->createDescriptorPool(ResourceClass::TextureImage, Config::DescriptorPoolCapacity)) {
+        qCCritical(logVulkan) << "Failed to create texture image descriptor pool";
         return false;
     }
 
@@ -226,21 +259,25 @@ bool Renderer::createResources()
         m_frameDescriptorPool = m_device->createDescriptorPool({ descriptorPoolCapacity, descriptorPoolSizes});
     }
 
-    m_defaultSampler = m_device->createSampler({VK_FILTER_NEAREST});
     m_defaultQueryPool = m_device->createQueryPool({VK_QUERY_TYPE_TIMESTAMP, 2 * numConcurrentFrames()});
+
+    m_displaySampler = m_device->createSampler({VK_FILTER_NEAREST});
+    m_textureSampler = m_device->createSampler({VK_FILTER_LINEAR});
 
     m_displayRenderPass = createDisplayRenderPass(m_swapchainFormat.format);
     m_displayPipeline = GraphicsPipelineBuilder(m_device.get(), m_displayRenderPass)
             .shaders({"display.vert", "display.frag"})
-            .defaultSampler(m_defaultSampler)
+            .defaultSampler(m_displaySampler)
             .build();
 
     m_renderPipeline = RayTracingPipelineBuilder(m_device.get())
             .shaders({"pathtrace.rgen", "pathtrace.rmiss", "pathtrace.rchit"})
             .shaders({"queryemission.rchit", "queryemission.rmiss"})
             .shaders({"queryvisibility.rchit", "queryvisibility.rmiss"})
+            .defaultSampler(m_textureSampler)
             .descriptorBindingManager(DS_AttributeBuffer, 0, m_descriptorManager.get(), ResourceClass::AttributeBuffer)
             .descriptorBindingManager(DS_IndexBuffer, 0, m_descriptorManager.get(), ResourceClass::IndexBuffer)
+            .descriptorBindingManager(DS_TextureImage, 0, m_descriptorManager.get(), ResourceClass::TextureImage)
             .maxRecursionDepth(Config::GlobalMaxRecursionDepth)
             .build();
 
@@ -264,9 +301,10 @@ void Renderer::releaseResources()
 
     m_device->destroyCommandPool(m_frameCommandPool);
     m_device->destroyDescriptorPool(m_frameDescriptorPool);
-
-    m_device->destroySampler(m_defaultSampler);
     m_device->destroyQueryPool(m_defaultQueryPool);
+
+    m_device->destroySampler(m_displaySampler);
+    m_device->destroySampler(m_textureSampler);
 
     m_device->destroyRenderPass(m_displayRenderPass);
     m_device->destroyPipeline(m_displayPipeline);
@@ -605,6 +643,7 @@ void Renderer::renderFrame()
                 currentFrame.renderDescriptorSet,
                 m_descriptorManager->descriptorSet(ResourceClass::AttributeBuffer),
                 m_descriptorManager->descriptorSet(ResourceClass::IndexBuffer),
+                m_descriptorManager->descriptorSet(ResourceClass::TextureImage)
             };
 
             commandBuffer.bindPipeline(m_renderPipeline);
@@ -948,10 +987,22 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::jobsToExecute(qint64 time)
         shouldUpdateEmitters = true;
     }
 
+    QVector<Qt3DCore::QAspectJobPtr> textureJobs;
+    if(m_dirtySet & DirtyFlag::TextureDirty) {
+        textureJobs = createTextureJobs();
+        jobs.append(textureJobs);
+    }
+
     QVector<Qt3DCore::QAspectJobPtr> materialJobs;
-    if(m_dirtySet & DirtyFlag::MaterialDirty) {
-        materialJobs = createMaterialJobs();
+    if(m_dirtySet & DirtyFlag::MaterialDirty || m_dirtySet & DirtyFlag::TextureDirty) {
+        bool forceUpdateAllMaterials = (m_dirtySet & DirtyFlag::TextureDirty);
+        materialJobs = createMaterialJobs(forceUpdateAllMaterials);
         jobs.append(materialJobs);
+        for(const auto &materialJob : materialJobs) {
+            for(const auto &textureJob : textureJobs) {
+                materialJob->addDependency(textureJob);
+            }
+        }
         shouldUpdateInstanceBuffer = true;
         shouldUpdateEmitters = true;
     }

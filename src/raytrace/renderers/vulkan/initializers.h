@@ -74,7 +74,7 @@ struct CommandPoolCreateInfo : Initializer<VkCommandPoolCreateInfo>
 
 struct ImageCreateInfo : Initializer<VkImageCreateInfo>
 {
-    ImageCreateInfo(VkImageType imageType_, VkFormat format_, const VkExtent3D &extent_, uint32_t mipLevels_=1, uint32_t arrayLayers_=1)
+    ImageCreateInfo(VkImageType imageType_=VK_IMAGE_TYPE_2D, VkFormat format_=VK_FORMAT_UNDEFINED, const VkExtent3D &extent_={1, 1, 1}, uint32_t mipLevels_=1, uint32_t arrayLayers_=1)
         : Initializer(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO)
     {
         imageType = imageType_;
@@ -88,7 +88,7 @@ struct ImageCreateInfo : Initializer<VkImageCreateInfo>
         sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     }
-    ImageCreateInfo(VkImageType imageType_, VkFormat format_, const QSize &extent_, uint32_t mipLevels_=1, uint32_t arrayLayers_=1)
+    ImageCreateInfo(VkImageType imageType_, VkFormat format_=VK_FORMAT_UNDEFINED, const QSize &extent_={1, 1}, uint32_t mipLevels_=1, uint32_t arrayLayers_=1)
         : ImageCreateInfo(imageType_, format_, VkExtent3D{}, mipLevels_, arrayLayers_)
     {
         extent.width  = uint32_t(extent_.width());

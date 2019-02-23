@@ -29,6 +29,23 @@ struct PathTracePayload {
     uint depth;
 };
 
+struct Triangle {
+    Attributes v1;
+    Attributes v2;
+    Attributes v3;
+};
+
+struct TangentBasis {
+    vec3 T, N, B;
+};
+
+struct DifferentialSurface {
+    TangentBasis basis;
+    vec3 albedo;
+    float roughness;
+    float metalness;
+};
+
 float maxcomp(vec3 v)
 {
     return max(max(v.x, v.y), v.z);

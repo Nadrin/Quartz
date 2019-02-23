@@ -85,11 +85,9 @@ vec3 evaluateBSDF(vec3 wo, vec3 wi, vec3 wh, vec3 albedo, float alpha, float met
     return diffuse + specular;
 }
 
-vec3 evaluateBSDF(Material material, vec3 wo, vec3 wi, vec3 wh)
+vec3 evaluateBSDF(DifferentialSurface surface, vec3 wo, vec3 wi, vec3 wh)
 {
-    const float roughness = material.albedo.a;
-    const float metalness = material.emission.a;
-    return evaluateBSDF(wo, wi, wh, material.albedo.rgb, pow2(roughness), metalness);
+    return evaluateBSDF(wo, wi, wh, surface.albedo, pow2(surface.roughness), surface.metalness);
 }
 
 float pdfBSDF(vec3 wo, vec3 wi, vec3 wh, float alphaSqr)
@@ -101,19 +99,15 @@ float pdfBSDF(vec3 wo, vec3 wi, vec3 wh, float alphaSqr)
     return mix(pdfDiffuse, pdfSpecular, 0.5);
 }
 
-float pdfBSDF(Material material, vec3 wo, vec3 wi, vec3 wh)
+float pdfBSDF(DifferentialSurface surface, vec3 wo, vec3 wi, vec3 wh)
 {
-    const float roughness = material.albedo.a;
-    float alphaSqr = pow2(pow2(roughness));
+    float alphaSqr = pow2(pow2(surface.roughness));
     return pdfBSDF(wo, wi, wh, alphaSqr);
 }
 
-vec3 sampleBSDF(Material material, inout RNG rng, vec3 wo, out vec3 wi, out float pdf)
+vec3 sampleBSDF(DifferentialSurface surface, inout RNG rng, vec3 wo, out vec3 wi, out float pdf)
 {
-    const float roughness = material.albedo.a;
-    const float metalness = material.emission.a;
-
-    float alpha = pow2(roughness);
+    float alpha = pow2(surface.roughness);
     float alphaSqr = pow2(alpha);
 
     vec3 wh;
@@ -130,7 +124,7 @@ vec3 sampleBSDF(Material material, inout RNG rng, vec3 wo, out vec3 wi, out floa
     }
 
     pdf = pdfBSDF(wo, wi, wh, alphaSqr);
-    return evaluateBSDF(wo, wi, wh, material.albedo.rgb, alpha, metalness);
+    return evaluateBSDF(wo, wi, wh, surface.albedo, alpha, surface.metalness);
 }
 
 #endif // QUARTZ_SHADERS_BRDF_H

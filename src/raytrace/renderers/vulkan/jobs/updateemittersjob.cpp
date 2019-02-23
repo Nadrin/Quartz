@@ -96,7 +96,7 @@ void UpdateEmittersJob::run()
         commandBuffer->copyBuffer(stagingBuffer, 0, emitterBuffer, 0, emitterBufferSize);
         commandBuffer->resourceBarrier({emitterBuffer, BufferState::CopyDest, BufferState::ShaderRead});
     }
-    commandBufferManager->releaseCommandBuffer(commandBuffer, {stagingBuffer});
+    commandBufferManager->releaseCommandBuffer(commandBuffer, QVector<Buffer>{stagingBuffer});
 
     sceneManager->updateEmitters(emitters);
     sceneManager->updateEmitterBuffer(emitterBuffer);

@@ -34,6 +34,7 @@ public:
 
     void addOrUpdateGeometry(Qt3DCore::QNodeId geometryNodeId, const Geometry &geometry);
     void addOrUpdateMaterial(Qt3DCore::QNodeId materialNodeId, const Material &material);
+    void addOrUpdateTexture(Qt3DCore::QNodeId textureImageNodeId, const Image &textureImage);
     void updateEmitters(QVector<Emitter> &emitters);
 
     void updateSceneTLAS(const AccelerationStructure &tlas);
@@ -45,6 +46,7 @@ public:
     uint32_t lookupGeometryIndex(Qt3DCore::QNodeId geometryNodeId) const;
     uint32_t lookupMaterial(Qt3DCore::QNodeId materialNodeId, Material &material) const;
     uint32_t lookupMaterialIndex(Qt3DCore::QNodeId materialNodeId) const;
+    uint32_t lookupTextureIndex(Qt3DCore::QNodeId textureImageNodeId) const;
 
     void gatherEntities(Raytrace::EntityManager *entityManager);
     void updateRetiredResources();
@@ -71,6 +73,7 @@ public:
 
     uint32_t numMaterials() const;
     uint32_t numGeometry() const;
+    uint32_t numTextures() const;
     uint32_t numEmitters() const;
 
 private:
@@ -79,6 +82,7 @@ private:
 
     SceneResourceSet<Geometry> m_geometry;
     SceneResourceSet<Material> m_materials;
+    SceneResourceSet<Image> m_textures;
     QVector<Emitter> m_emitters;
 
     ManagedResource<AccelerationStructure> m_tlas;

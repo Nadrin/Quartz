@@ -38,6 +38,8 @@ target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/jobs/updateinstancebufferjob.h
     renderers/vulkan/jobs/updaterenderparametersjob.cpp
     renderers/vulkan/jobs/updaterenderparametersjob.h
+    renderers/vulkan/jobs/uploadtexturejob.cpp
+    renderers/vulkan/jobs/uploadtexturejob.h
     renderers/vulkan/jobs/destroyexpiredresourcesjob.cpp
     renderers/vulkan/jobs/destroyexpiredresourcesjob.h
     renderers/vulkan/managers/commandbuffermanager.cpp

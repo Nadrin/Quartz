@@ -85,7 +85,8 @@ private slots:
 
 private:
     QVector<Qt3DCore::QAspectJobPtr> createGeometryJobs();
-    QVector<Qt3DCore::QAspectJobPtr> createMaterialJobs();
+    QVector<Qt3DCore::QAspectJobPtr> createTextureJobs();
+    QVector<Qt3DCore::QAspectJobPtr> createMaterialJobs(bool forceAllDirty);
 
     bool createResources();
     void releaseResources();
@@ -134,7 +135,8 @@ private:
     Pipeline m_displayPipeline;
     RayTracingPipeline m_renderPipeline;
 
-    Sampler m_defaultSampler;
+    Sampler m_displaySampler;
+    Sampler m_textureSampler;
     QueryPool m_defaultQueryPool;
 
     Swapchain m_swapchain;
