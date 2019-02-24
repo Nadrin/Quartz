@@ -112,7 +112,16 @@ void QMaterial::setAlbedoTexture(QAbstractTexture *texture)
 {
     Q_D(QMaterial);
     if(d->m_albedoTexture != texture) {
+        if(d->m_albedoTexture) {
+            d->unregisterDestructionHelper(d->m_albedoTexture);
+        }
         d->m_albedoTexture = texture;
+        if(d->m_albedoTexture) {
+            if(!d->m_albedoTexture->parent()) {
+                d->m_albedoTexture->setParent(this);
+            }
+            d->registerDestructionHelper(d->m_albedoTexture, &QMaterial::setAlbedoTexture, d->m_albedoTexture);
+        }
         emit albedoTextureChanged(texture);
     }
 }
@@ -121,7 +130,16 @@ void QMaterial::setRoughnessTexture(QAbstractTexture *texture)
 {
     Q_D(QMaterial);
     if(d->m_roughnessTexture != texture) {
+        if(d->m_roughnessTexture) {
+            d->unregisterDestructionHelper(d->m_roughnessTexture);
+        }
         d->m_roughnessTexture = texture;
+        if(d->m_roughnessTexture) {
+            if(!d->m_roughnessTexture->parent()) {
+                d->m_roughnessTexture->setParent(this);
+            }
+            d->registerDestructionHelper(d->m_roughnessTexture, &QMaterial::setRoughnessTexture, d->m_roughnessTexture);
+        }
         emit roughnessTextureChanged(texture);
     }
 }
@@ -130,7 +148,16 @@ void QMaterial::setMetalnessTexture(QAbstractTexture *texture)
 {
     Q_D(QMaterial);
     if(d->m_metalnessTexture != texture) {
+        if(d->m_metalnessTexture) {
+            d->unregisterDestructionHelper(d->m_metalnessTexture);
+        }
         d->m_metalnessTexture = texture;
+        if(d->m_metalnessTexture) {
+            if(!d->m_metalnessTexture->parent()) {
+                d->m_metalnessTexture->setParent(this);
+            }
+            d->registerDestructionHelper(d->m_metalnessTexture, &QMaterial::setMetalnessTexture, d->m_metalnessTexture);
+        }
         emit metalnessTextureChanged(texture);
     }
 }
