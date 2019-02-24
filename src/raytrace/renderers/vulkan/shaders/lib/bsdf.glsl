@@ -95,7 +95,7 @@ float pdfBSDF(vec3 wo, vec3 wi, vec3 wh, float alphaSqr)
     // Specular pdf normalization term is due to change of variables.
     // We are integrating wi but GGX NDF describes distribution of microfacets in terms of wh.
     float pdfDiffuse  = pdfHemisphereCosine(cosThetaTangent(wi));
-    float pdfSpecular = pdfD_ggx(alphaSqr, cosThetaTangent(wh)) / (4.0 * dot(wi, wh));
+    float pdfSpecular = pdfD_ggx(alphaSqr, cosThetaTangent(wh)) / max(Epsilon, 4.0 * dot(wi, wh));
     return mix(pdfDiffuse, pdfSpecular, 0.5);
 }
 
