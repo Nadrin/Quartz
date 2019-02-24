@@ -5,6 +5,7 @@
  */
 
 #include <frontend/qmaterial_p.h>
+#include <frontend/qabstracttexture_p.h>
 
 using namespace Qt3DCore;
 

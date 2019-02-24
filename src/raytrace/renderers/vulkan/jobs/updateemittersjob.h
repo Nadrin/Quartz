@@ -12,6 +12,11 @@
 #include <Qt3DCore/QAspectJob>
 
 namespace Qt3DRaytrace {
+
+namespace Raytrace {
+class TextureManager;
+} // Raytrace
+
 namespace Vulkan {
 
 class Renderer;
@@ -21,10 +26,12 @@ class UpdateEmittersJob final : public Qt3DCore::QAspectJob
 public:
     explicit UpdateEmittersJob(Renderer *renderer);
 
+    void setTextureManager(Raytrace::TextureManager *textureManager);
     void run() override;
 
 private:
     Renderer *m_renderer;
+    Raytrace::TextureManager *m_textureManager;
 };
 
 using UpdateEmittersJobPtr = QSharedPointer<UpdateEmittersJob>;

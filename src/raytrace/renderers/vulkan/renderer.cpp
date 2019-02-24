@@ -904,7 +904,9 @@ void Renderer::setSettings(Raytrace::RenderSettings *settings)
 
 void Renderer::setNodeManagers(Raytrace::NodeManagers *nodeManagers)
 {
+    Q_ASSERT(nodeManagers);
     m_nodeManagers = nodeManagers;
+    m_updateEmittersJob->setTextureManager(&m_nodeManagers->textureManager);
 }
 
 Qt3DCore::QAbstractFrameAdvanceService *Renderer::frameAdvanceService() const
@@ -991,6 +993,7 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::jobsToExecute(qint64 time)
     if(m_dirtySet & DirtyFlag::TextureDirty) {
         textureJobs = createTextureJobs();
         jobs.append(textureJobs);
+        shouldUpdateEmitters = true;
     }
 
     QVector<Qt3DCore::QAspectJobPtr> materialJobs;
@@ -1047,6 +1050,9 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::jobsToExecute(qint64 time)
             m_updateEmittersJob->addDependency(job);
         }
         for(const auto &job : materialJobs) {
+            m_updateEmittersJob->addDependency(job);
+        }
+        for(const auto &job : textureJobs) {
             m_updateEmittersJob->addDependency(job);
         }
         jobs.append(m_updateEmittersJob);

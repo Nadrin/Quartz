@@ -41,6 +41,8 @@ vec3 sampleEmitterLi(vec3 p, DifferentialSurface surface, out vec3 wiWorld, out 
 {
     const uint emitterIndex = nextUInt(payload.rng, params.numEmitters);
     const Emitter emitter = fetchEmitter(emitterIndex);
+
+    vec3 emitterL = emitter.radiance;
     float emitterDistance = Infinity;
 
     if(emitterIndex == 0) {
@@ -48,6 +50,7 @@ vec3 sampleEmitterLi(vec3 p, DifferentialSurface surface, out vec3 wiWorld, out 
         wiTangent = sampleHemisphereCosine(nextVec2(payload.rng));
         wiWorld   = tangentToWorld(surface.basis, wiTangent);
         pdf       = pdfHemisphereCosine(cosThetaTangent(wiTangent));
+        emitterL  = fetchSkyRadiance(skyuv(wiWorld));
     }
     else if(emitter.instanceIndex == ~0u) {
         // Distant light emitter.
@@ -93,7 +96,7 @@ vec3 sampleEmitterLi(vec3 p, DifferentialSurface surface, out vec3 wiWorld, out 
     }
 
     traceNV(scene, gl_RayFlagsTerminateOnFirstHitNV, 0xFF, Shader_QueryVisibilityHit, 1, Shader_QueryVisibilityMiss, p, Epsilon, wiWorld, emitterDistance, 1);
-    return emitter.radiance * pVisibility;
+    return emitterL * pVisibility;
 }
 
 vec3 sampleScatteringLi(vec3 p, DifferentialSurface surface, vec3 wo, out vec3 wi, out float pdf)

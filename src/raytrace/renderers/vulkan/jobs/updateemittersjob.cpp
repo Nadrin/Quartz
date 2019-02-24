@@ -19,8 +19,15 @@ namespace Vulkan {
 
 UpdateEmittersJob::UpdateEmittersJob(Renderer *renderer)
     : m_renderer(renderer)
+    , m_textureManager(nullptr)
 {
     Q_ASSERT(m_renderer);
+}
+
+void UpdateEmittersJob::setTextureManager(Raytrace::TextureManager *textureManager)
+{
+    m_textureManager = textureManager;
+    Q_ASSERT(m_textureManager);
 }
 
 void UpdateEmittersJob::run()
@@ -28,6 +35,13 @@ void UpdateEmittersJob::run()
     auto *device = m_renderer->device();
     auto *commandBufferManager = m_renderer->commandBufferManager();
     auto *sceneManager = m_renderer->sceneManager();
+
+    auto lookupTextureImageIndex = [this, sceneManager](QNodeId textureId) -> uint32_t {
+        if(const auto *texture = m_textureManager->lookupResource(textureId)) {
+            return sceneManager->lookupTextureIndex(texture->imageId());
+        }
+        return ~0u;
+    };
 
     // TODO: Update only dirty emissive entities.
     // Currently there's no meaningful semantic determining which entities
@@ -37,8 +51,10 @@ void UpdateEmittersJob::run()
     {
         Emitter skyEmitter = {};
         skyEmitter.instanceIndex = ~0u;
-        if(m_renderer->settings()) {
-            m_renderer->settings()->skyRadiance().writeToBuffer(skyEmitter.radiance.data);
+        if(const Raytrace::RenderSettings *settings = m_renderer->settings()) {
+            settings->skyRadiance().writeToBuffer(skyEmitter.radiance.data);
+            skyEmitter.intensity = settings->skyIntensity();
+            skyEmitter.textureIndex = lookupTextureImageIndex(settings->skyTextureId());
         }
         emitters.append(skyEmitter);
     }

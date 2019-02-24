@@ -26,6 +26,7 @@ struct QRenderSettingsData
 
     QColor skyColor = Qt::GlobalColor::black;
     float skyIntensity = 1.0f;
+    Qt3DCore::QNodeId skyTextureId;
 };
 
 class QRenderSettingsPrivate : public Qt3DCore::QComponentPrivate
@@ -34,6 +35,7 @@ public:
     Q_DECLARE_PUBLIC(QRenderSettings)
     QRenderSettingsData m_settings;
     QCamera *m_camera = nullptr;
+    QAbstractTexture *m_skyTexture = nullptr;
 };
 
 } // Qt3DRaytrace

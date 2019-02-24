@@ -5,19 +5,17 @@
  * See LICENSE file for licensing information.
  */
 
-#extension GL_GOOGLE_include_directive : require
 #extension GL_NV_ray_tracing : require
+#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_GOOGLE_include_directive : require
 
 #include "lib/common.glsl"
-
-layout(set=DS_Render, binding=Binding_Emitters, std430) readonly buffer EmitterBuffer {
-    Emitter emitters[];
-} emitterBuffer;
+#include "lib/resources.glsl"
 
 rayPayloadInNV vec3 pEmission;
 
 void main()
 {
     // Emitter #0 is always sky.
-    pEmission = emitterBuffer.emitters[0].radiance;
+    pEmission = fetchSkyRadiance(skyuv(gl_WorldRayDirectionNV));
 }

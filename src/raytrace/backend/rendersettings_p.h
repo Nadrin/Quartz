@@ -32,6 +32,9 @@ public:
         return LinearColor(m_skyColor, m_skyIntensity);
     }
 
+    float skyIntensity() const { return m_skyIntensity; }
+    Qt3DCore::QNodeId skyTextureId() const { return m_skyTextureId; }
+
     void sceneChangeEvent(const Qt3DCore::QSceneChangePtr &change) override;
 
 private:
@@ -46,6 +49,7 @@ private:
     float m_indirectRadianceClamp;
     QColor m_skyColor;
     float m_skyIntensity;
+    Qt3DCore::QNodeId m_skyTextureId;
 };
 
 class RenderSettingsMapper final : public Qt3DCore::QBackendNodeMapper

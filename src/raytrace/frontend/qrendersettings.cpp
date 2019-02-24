@@ -6,6 +6,7 @@
 
 #include <frontend/qrendersettings_p.h>
 #include <frontend/qcamera_p.h>
+#include <frontend/qabstracttexture_p.h>
 
 using namespace Qt3DCore;
 
@@ -73,6 +74,12 @@ float QRenderSettings::skyIntensity() const
     return d->m_settings.skyIntensity;
 }
 
+QAbstractTexture *QRenderSettings::skyTexture() const
+{
+    Q_D(const QRenderSettings);
+    return d->m_skyTexture;
+}
+
 void QRenderSettings::setCamera(QCamera *camera)
 {
     Q_D(QRenderSettings);
@@ -80,18 +87,14 @@ void QRenderSettings::setCamera(QCamera *camera)
         if(d->m_camera) {
             d->unregisterDestructionHelper(d->m_camera);
         }
-
-        if(camera && camera->parent() != nullptr) {
-            camera->setParent(this);
-        }
-
         d->m_camera = camera;
-        d->m_settings.cameraId = qIdForNode(camera);
-
         if(d->m_camera) {
+            if(!d->m_camera->parent()) {
+                d->m_camera->setParent(this);
+            }
             d->registerDestructionHelper(d->m_camera, &QRenderSettings::setCamera, d->m_camera);
         }
-
+        d->m_settings.cameraId = qIdForNode(camera);
         emit cameraChanged(camera);
     }
 }
@@ -170,6 +173,25 @@ void QRenderSettings::setSkyIntensity(float skyIntensity)
     if(!qFuzzyCompare(d->m_settings.skyIntensity, skyIntensity)) {
         d->m_settings.skyIntensity = skyIntensity;
         emit skyIntensityChanged(skyIntensity);
+    }
+}
+
+void QRenderSettings::setSkyTexture(QAbstractTexture *texture)
+{
+    Q_D(QRenderSettings);
+    if(d->m_skyTexture != texture) {
+        if(d->m_skyTexture) {
+            d->unregisterDestructionHelper(d->m_skyTexture);
+        }
+        d->m_skyTexture = texture;
+        if(d->m_skyTexture) {
+            if(!d->m_skyTexture->parent()) {
+                d->m_skyTexture->setParent(this);
+            }
+            d->registerDestructionHelper(d->m_skyTexture, &QRenderSettings::setSkyTexture, d->m_skyTexture);
+        }
+        d->m_settings.skyTextureId = qIdForNode(texture);
+        emit skyTextureChanged(texture);
     }
 }
 

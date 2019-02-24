@@ -21,7 +21,8 @@ struct Emitter
 {
     uint instanceIndex;
     uint geometryIndex;
-    float _padding[2];
+    uint textureIndex;
+    float intensity;
     vec3 radiance;
     vec3 direction;
 };

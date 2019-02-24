@@ -10,10 +10,11 @@
 #include "bindings.glsl"
 #include "shared.glsl"
 
-const float PI     = 3.141592;
-const float HalfPI = 0.5 * PI;
-const float TwoPI  = 2.0 * PI;
-const float InvPI  = 1.0 / PI;
+const float PI       = 3.141592;
+const float HalfPI   = 0.5 * PI;
+const float TwoPI    = 2.0 * PI;
+const float InvPI    = 1.0 / PI;
+const float InvTwoPI = 1.0 / TwoPI;
 
 const float Epsilon  = 0.0001;
 const float Infinity = 1000000.0;
@@ -65,6 +66,20 @@ float pow2(float x)
 float pow5(float x)
 {
     return (x * x) * (x * x) * x;
+}
+
+vec2 spherical(vec3 w)
+{
+    return vec2(
+        atan(w.z, w.x) * InvTwoPI,
+        acos(w.y) * InvPI
+    );
+}
+
+vec2 skyuv(vec3 w)
+{
+    vec2 s = spherical(w);
+    return vec2(s.x, 1.0 - s.y);
 }
 
 #endif // QUARTZ_SHADERS_COMMON_H

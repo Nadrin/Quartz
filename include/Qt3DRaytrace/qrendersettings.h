@@ -14,6 +14,7 @@
 namespace Qt3DRaytrace {
 
 class QCamera;
+class QAbstractTexture;
 class QRenderSettingsPrivate;
 
 class QT3DRAYTRACESHARED_EXPORT QRenderSettings : public Qt3DCore::QComponent
@@ -29,6 +30,7 @@ class QT3DRAYTRACESHARED_EXPORT QRenderSettings : public Qt3DCore::QComponent
     Q_PROPERTY(float indirectRadianceClamp READ indirectRadianceClamp WRITE setIndirectRadianceClamp NOTIFY indirectRadianceClampChanged)
     Q_PROPERTY(QColor skyColor READ skyColor WRITE setSkyColor NOTIFY skyColorChanged)
     Q_PROPERTY(float skyIntensity READ skyIntensity WRITE setSkyIntensity NOTIFY skyIntensityChanged)
+    Q_PROPERTY(Qt3DRaytrace::QAbstractTexture* skyTexture READ skyTexture WRITE setSkyTexture NOTIFY skyTextureChanged)
 public:
     explicit QRenderSettings(Qt3DCore::QNode *parent = nullptr);
 
@@ -41,6 +43,7 @@ public:
     float indirectRadianceClamp() const;
     QColor skyColor() const;
     float skyIntensity() const;
+    QAbstractTexture *skyTexture() const;
 
 public slots:
     void setCamera(QCamera *camera);
@@ -52,6 +55,7 @@ public slots:
     void setIndirectRadianceClamp(float clamp);
     void setSkyColor(const QColor &skyColor);
     void setSkyIntensity(float skyIntensity);
+    void setSkyTexture(QAbstractTexture *texture);
 
 signals:
     void cameraChanged(QCamera *camera);
@@ -63,6 +67,7 @@ signals:
     void indirectRadianceClampChanged(float clamp);
     void skyColorChanged(const QColor &skyColor);
     void skyIntensityChanged(float skyIntensity);
+    void skyTextureChanged(QAbstractTexture *texture);
 
 protected:
     explicit QRenderSettings(QRenderSettingsPrivate &dd, QNode *parent = nullptr);

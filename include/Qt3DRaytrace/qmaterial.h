@@ -7,13 +7,13 @@
 #pragma once
 
 #include <Qt3DRaytrace/qt3draytrace_global.h>
-#include <Qt3DRaytrace/qabstracttexture.h>
 
 #include <Qt3DCore/QComponent>
 #include <QColor>
 
 namespace Qt3DRaytrace {
 
+class QAbstractTexture;
 class QMaterialPrivate;
 
 class QT3DRAYTRACESHARED_EXPORT QMaterial : public Qt3DCore::QComponent
