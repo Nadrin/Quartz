@@ -90,40 +90,42 @@ vec3 evaluateBSDF(DifferentialSurface surface, vec3 wo, vec3 wi, vec3 wh)
     return evaluateBSDF(wo, wi, wh, surface.albedo, pow2(surface.roughness), surface.metalness);
 }
 
-float pdfBSDF(vec3 wo, vec3 wi, vec3 wh, float alphaSqr)
+float pdfBSDF(vec3 wo, vec3 wi, vec3 wh, float r, float alphaSqr)
 {
     // Specular pdf normalization term is due to change of variables.
     // We are integrating wi but GGX NDF describes distribution of microfacets in terms of wh.
     float pdfDiffuse  = pdfHemisphereCosine(cosThetaTangent(wi));
     float pdfSpecular = pdfD_ggx(alphaSqr, cosThetaTangent(wh)) / max(Epsilon, 4.0 * dot(wi, wh));
-    return mix(pdfDiffuse, pdfSpecular, 0.5);
+    return mix(pdfDiffuse, pdfSpecular, 1.0 - r);
 }
 
 float pdfBSDF(DifferentialSurface surface, vec3 wo, vec3 wi, vec3 wh)
 {
-    float alphaSqr = pow2(pow2(surface.roughness));
-    return pdfBSDF(wo, wi, wh, alphaSqr);
+    float r = surface.roughness;
+    float alphaSqr = pow2(pow2(r));
+    return pdfBSDF(wo, wi, wh, r, alphaSqr);
 }
 
 vec3 sampleBSDF(DifferentialSurface surface, inout RNG rng, vec3 wo, out vec3 wi, out float pdf)
 {
-    float alpha = pow2(surface.roughness);
+    float r = surface.roughness;
+    float alpha = pow2(r);
     float alphaSqr = pow2(alpha);
 
     vec3 wh;
 
-    vec2 u = nextVec2(rng);
-    if(u.x < 0.5) {
-        wi = sampleHemisphereCosine(vec2(2.0 * u.x, u.y));
+    vec3 u = nextVec3(rng);
+    if(u.z < r) {
+        wi = sampleHemisphereCosine(u.xy);
         wh = normalize(wi + wo);
     }
     else {
         // TODO: Sample from both D & G terms (aligned *and* visible microfacets).
-        wh = sampleD_ggx(vec2(2.0 * (u.x-0.5), u.y), alphaSqr);
+        wh = sampleD_ggx(u.xy, alphaSqr);
         wi = -reflect(wo, wh);
     }
 
-    pdf = pdfBSDF(wo, wi, wh, alphaSqr);
+    pdf = pdfBSDF(wo, wi, wh, surface.roughness, alphaSqr);
     return evaluateBSDF(wo, wi, wh, surface.albedo, alpha, surface.metalness);
 }
 
