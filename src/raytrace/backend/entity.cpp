@@ -275,6 +275,8 @@ void Entity::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
     if(!data.parentEntityId.isNull()) {
         setParentHandle(m_nodeManagers->entityManager.lookupHandle(data.parentEntityId));
     }
+
+    markDirty(AbstractRenderer::AllDirty);
 }
 
 } // Raytrace
