@@ -13,8 +13,6 @@
 #include <assimp/DefaultLogger.hpp>
 
 static constexpr unsigned int ImportFlags =
-        aiProcess_GenNormals |
-        aiProcess_GenUVCoords |
         aiProcess_TransformUVCoords |
         aiProcess_JoinIdenticalVertices |
         aiProcess_ValidateDataStructure |
@@ -99,12 +97,16 @@ Entity *Importer::processScene(const aiScene *scene)
         m_scene.materials.append(materialComponent);
     }
 
-    return processSceneNode(scene->mRootNode);
+    Entity *rootNode = processSceneNode(scene->mRootNode);
+    if(!rootNode) {
+        qCritical() << "Error: Imported scene must contain at least one mesh";
+    }
+    return rootNode;
 }
 
 Entity *Importer::processSceneNode(const aiNode *node)
 {
-    Entity *entity = new Entity;
+    QScopedPointer<Entity> entity(new Entity);
     entity->name = QString::fromUtf8(node->mName.C_Str());
 
     if(!node->mTransformation.IsIdentity()) {
@@ -119,23 +121,30 @@ Entity *Importer::processSceneNode(const aiNode *node)
         for(unsigned int meshNodeIndex = 0; meshNodeIndex < node->mNumMeshes; ++meshNodeIndex) {
             QScopedPointer<Entity> meshEntity(new Entity);
             meshEntity->name = QString("%1_%2").arg(entity->name).arg(meshNodeIndex);
-            meshEntity->parent = entity;
+            meshEntity->parent = entity.get();
             if(processMeshReference(node->mMeshes[meshNodeIndex], meshEntity.get())) {
                 entity->children.append(meshEntity.take());
             }
         }
     }
     else if(node->mNumMeshes == 1) {
-        processMeshReference(node->mMeshes[0], entity);
+        processMeshReference(node->mMeshes[0], entity.get());
     }
 
     for(unsigned int childIndex=0; childIndex < node->mNumChildren; ++childIndex) {
-        Entity *childEntity = new Entity;
-        childEntity->parent = entity;
-        entity->children.append(processSceneNode(node->mChildren[childIndex]));
+        Entity *childEntity = processSceneNode(node->mChildren[childIndex]);
+        if(childEntity) {
+            childEntity->parent = entity.get();
+            entity->children.append(childEntity);
+        }
     }
 
-    return entity;
+    // Skip empty nodes/sub-trees.
+    if(entity->children.size() == 0 && entity->meshComponentIndex == -1) {
+        return nullptr;
+    }
+
+    return entity.take();
 }
 
 int Importer::processTextureReference(const aiMaterial *material, aiTextureType type)

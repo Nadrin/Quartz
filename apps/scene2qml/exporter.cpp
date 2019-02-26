@@ -41,6 +41,11 @@ static QString idForName(const QString &name, const QString &defaultId)
     }
 }
 
+static QString idPrintable(const QString &id)
+{
+    return QString("id_%1").arg(id);
+}
+
 } // qml
 
 Exporter::Exporter(const Scene &scene)
@@ -174,13 +179,11 @@ bool Exporter::exportQml(const QString &path)
 
 void Exporter::writeQmlHeader(QTextStream &out)
 {
-    const QString rootId = createUniqueId("root");
-
     out << "import QtQuick 2.0\n";
     out << "import Qt3D.Core 2.0\n";
     out << "import Qt3D.Raytrace 1.0\n\n";
     out << "Entity {\n";
-    out << qml::indent(1) << "id: " << rootId << "\n";
+    out << qml::indent(1) << "id: root\n";
 }
 
 void Exporter::writeQmlFooter(QTextStream &out)
@@ -194,7 +197,10 @@ void Exporter::writeQmlEntity(QTextStream &out, const Entity *entity, int depth)
     QVarLengthArray<QString, 3> componentIds;
 
     out << qml::indent(depth) << "Entity {\n";
-    out << qml::indent(depth+1) << "id: " << id << "\n";
+    out << qml::indent(depth+1) << "id: " << qml::idPrintable(id) << "\n";
+    if(entity->name.length() > 0) {
+        out << qml::indent(depth+1) << "objectName: \"" << entity->name << "\"\n";
+    }
 
     if(!entity->transform.isIdentity()) {
         componentIds.append(writeQmlTransform(out, entity, depth+1));
@@ -224,7 +230,7 @@ void Exporter::writeQmlEntity(QTextStream &out, const Entity *entity, int depth)
     if(componentIds.size() > 0) {
         out << qml::indent(depth+1) << "components: [";
         for(int i=0; i<componentIds.size(); ++i) {
-            out << componentIds[i];
+            out << qml::idPrintable(componentIds[i]);
             if(i+1 < componentIds.size()) {
                 out << ", ";
             }
@@ -244,7 +250,7 @@ QString Exporter::writeQmlMesh(QTextStream &out, const MeshComponent &mesh, cons
 {
     const QString id = getOrCreateComponentId(&mesh, "mesh", parentEntity);
     out << qml::indent(depth) << "Mesh {\n";
-    out << qml::indent(depth+1) << "id: " << id << "\n";
+    out << qml::indent(depth+1) << "id: " << qml::idPrintable(id) << "\n";
     out << qml::indent(depth+1) << "source: \"file:" << getMeshLogicalPath(mesh, m_prefix) << "\"\n";
     out << qml::indent(depth) << "}\n";
     return id;
@@ -268,14 +274,14 @@ QString Exporter::writeQmlMaterial(QTextStream &out, const MaterialComponent &ma
 
     const QString id = getOrCreateComponentId(&material, "material", parentEntity);
     out << qml::indent(depth) << "Material {\n";
-    out << qml::indent(depth+1) << "id: " << id << "\n";
+    out << qml::indent(depth+1) << "id: " << qml::idPrintable(id) << "\n";
 
     QString albedoTextureId = resolveTextureId(material.albedoTextureIndex);
     QString roughnessTextureId = resolveTextureId(material.roughnessTextureIndex);
     QString metalnessTextureId = resolveTextureId(material.metalnessTextureIndex);
 
     if(albedoTextureId.length() > 0) {
-        out << qml::indent(depth+1) << "albedoTexture: " << albedoTextureId << "\n";
+        out << qml::indent(depth+1) << "albedoTexture: " << qml::idPrintable(albedoTextureId) << "\n";
     }
     else {
         const auto &c = material.albedo;
@@ -283,14 +289,14 @@ QString Exporter::writeQmlMaterial(QTextStream &out, const MaterialComponent &ma
     }
 
     if(roughnessTextureId.length() > 0) {
-        out << qml::indent(depth+1) << "roughnessTexture: " << roughnessTextureId << "\n";
+        out << qml::indent(depth+1) << "roughnessTexture: " << qml::idPrintable(roughnessTextureId) << "\n";
     }
     else if(!qFuzzyCompare(material.roughness, 1.0f)) {
         out << qml::indent(depth+1) << "roughness: " << material.roughness << "\n";
     }
 
     if(metalnessTextureId.length() > 0) {
-        out << qml::indent(depth+1) << "metalnessTexture: " << metalnessTextureId << "\n";
+        out << qml::indent(depth+1) << "metalnessTexture: " << qml::idPrintable(metalnessTextureId) << "\n";
     }
     else if(!qFuzzyCompare(material.metalness, 0.0f)) {
         out << qml::indent(depth+1) << "metalness: " << material.metalness << "\n";
@@ -310,7 +316,7 @@ QString Exporter::writeQmlTexture(QTextStream &out, const TextureComponent &text
 {
     const QString id = getOrCreateComponentId(&texture, "texture", parentMaterial);
     out << qml::indent(depth) << "Texture {\n";
-    out << qml::indent(depth+1) << "id: " << id << "\n";
+    out << qml::indent(depth+1) << "id: " << qml::idPrintable(id) << "\n";
     out << qml::indent(depth+1) << "source: \"file:" << getTextureLogicalPath(texture, m_prefix) << "\"\n";
     out << qml::indent(depth) << "}\n";
     return id;
@@ -322,7 +328,7 @@ QString Exporter::writeQmlTransform(QTextStream &out, const Entity *entity, int 
     const Transform &transform = entity->transform;
 
     out << qml::indent(depth) << "Transform {\n";
-    out << qml::indent(depth+1) << "id: " << id << "\n";
+    out << qml::indent(depth+1) << "id: " << qml::idPrintable(id) << "\n";
     if(!transform.translation.isNull()) {
         const auto &t = transform.translation;
         out << qml::indent(depth+1) << "translation: Qt.vector3d(" << t.x << "," << t.y << "," << t.z << ")\n";
@@ -354,6 +360,11 @@ QString Exporter::writeQmlTransform(QTextStream &out, const Entity *entity, int 
 
 bool Exporter::writeMeshFile(const QString &targetPath, const MeshComponent &mesh) const
 {
+    const aiMesh *data = mesh.mesh;
+    if(!data->HasPositions()) {
+        return false;
+    }
+
     QFile outputFile(targetPath);
     if(!outputFile.open(QFile::WriteOnly | QFile::Truncate)) {
         qCritical() << "Error: Failed to open output file for writing:" << targetPath;
@@ -362,22 +373,24 @@ bool Exporter::writeMeshFile(const QString &targetPath, const MeshComponent &mes
 
     QTextStream out(&outputFile);
 
-    const aiMesh *data = mesh.mesh;
-    Q_ASSERT(data->mVertices);
-    Q_ASSERT(data->mNormals);
-    Q_ASSERT(data->mTextureCoords[0]);
+    bool hasNormals = data->HasNormals();
+    bool hasUVs = data->HasTextureCoords(0);
 
     for(unsigned int i=0; i<data->mNumVertices; ++i) {
         const auto &v = data->mVertices[i];
         out << "v " << v.x << ' ' << v.y << ' ' << v.z << '\n';
     }
-    for(unsigned int i=0; i<data->mNumVertices; ++i) {
-        const auto &n = data->mNormals[i];
-        out << "vn " << n.x << ' ' << n.y << ' ' << n.z << '\n';
+    if(hasNormals) {
+        for(unsigned int i=0; i<data->mNumVertices; ++i) {
+            const auto &n = data->mNormals[i];
+            out << "vn " << n.x << ' ' << n.y << ' ' << n.z << '\n';
+        }
     }
-    for(unsigned int i=0; i<data->mNumVertices; ++i) {
-        const auto &t = data->mTextureCoords[0][i];
-        out << "vt " << t.x << ' ' << t.y << '\n';
+    if(hasUVs) {
+        for(unsigned int i=0; i<data->mNumVertices; ++i) {
+            const auto &t = data->mTextureCoords[0][i];
+            out << "vt " << t.x << ' ' << t.y << '\n';
+        }
     }
 
     Q_ASSERT(data->mFaces);
@@ -385,8 +398,24 @@ bool Exporter::writeMeshFile(const QString &targetPath, const MeshComponent &mes
         const auto &f = data->mFaces[i];
         out << "f ";
         for(unsigned int j=0; j<f.mNumIndices; j++) {
-            unsigned int index = f.mIndices[j] + 1;
-            out << index << '/' << index << '/' << index << ' ';
+            const QString index = QString::number(f.mIndices[j] + 1);
+
+            if(hasNormals && hasUVs) {
+                out << index << '/' << index << '/' << index;
+            }
+            else if(hasUVs) {
+                out << index << '/' << index;
+            }
+            else if(hasNormals) {
+                out << index << "//" << index;
+            }
+            else {
+                out << index;
+            }
+
+            if(j+1 < f.mNumIndices) {
+                out << ' ';
+            }
         }
         out << '\n';
     }
