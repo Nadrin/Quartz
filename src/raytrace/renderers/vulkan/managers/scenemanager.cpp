@@ -15,6 +15,7 @@ namespace Vulkan {
 
 SceneManager::SceneManager(Renderer *renderer)
     : m_renderer(renderer)
+    , m_tlasInstanceCount(0)
 {
     Q_ASSERT(m_renderer);
 }
@@ -64,10 +65,11 @@ void SceneManager::updateEmitters(QVector<Emitter> &emitters)
     m_emitters = std::move(emitters);
 }
 
-void SceneManager::updateSceneTLAS(const AccelerationStructure &tlas)
+void SceneManager::updateSceneTLAS(const AccelerationStructure &tlas, uint32_t instanceCount)
 {
     QWriteLocker lock(&m_rwlock);
     m_tlas.update(tlas, m_renderer->numConcurrentFrames());
+    m_tlasInstanceCount = instanceCount;
 }
 
 void SceneManager::updateMaterialBuffer(const Buffer &buffer)
@@ -236,9 +238,12 @@ const QVector<Raytrace::HEntity> &SceneManager::emissives() const
     return m_emissives.resources();
 }
 
-AccelerationStructure SceneManager::sceneTLAS() const
+AccelerationStructure SceneManager::sceneTLAS(uint32_t *instanceCount) const
 {
-    // NO LOCK: Access from render/aspect thread or TLAS build job.
+    QReadLocker lock(&m_rwlock);
+    if(instanceCount) {
+        *instanceCount = m_tlasInstanceCount;
+    }
     return m_tlas.resource;
 }
 

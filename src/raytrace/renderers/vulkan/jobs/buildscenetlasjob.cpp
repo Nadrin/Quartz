@@ -63,10 +63,16 @@ void BuildSceneTopLevelAccelerationStructureJob::run()
         return;
     }
 
-    Device::ScratchBufferType scratchBufferType = Device::ScratchBufferType::Build;
-    AccelerationStructure previousTLAS = sceneManager->sceneTLAS();
-    if(previousTLAS) {
+    uint32_t previousNumInstances;
+    AccelerationStructure previousTLAS = sceneManager->sceneTLAS(&previousNumInstances);
+
+    Device::ScratchBufferType scratchBufferType;
+    if(previousTLAS && numInstances == previousNumInstances) {
         scratchBufferType = Device::ScratchBufferType::Update;
+    }
+    else {
+        scratchBufferType = Device::ScratchBufferType::Build;
+        previousTLAS = {};
     }
 
     Buffer scratchBuffer = device->createAccelerationStructureScratchBuffer(tlas, scratchBufferType);
@@ -85,7 +91,7 @@ void BuildSceneTopLevelAccelerationStructureJob::run()
     }
     commandBufferManager->releaseCommandBuffer(commandBuffer, {instanceBuffer, scratchBuffer});
 
-    sceneManager->updateSceneTLAS(tlas);
+    sceneManager->updateSceneTLAS(tlas, numInstances);
 }
 
 QVector<GeometryInstance> BuildSceneTopLevelAccelerationStructureJob::gatherGeometryInstances() const

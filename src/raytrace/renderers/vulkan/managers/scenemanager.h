@@ -37,7 +37,7 @@ public:
     void addOrUpdateTexture(Qt3DCore::QNodeId textureImageNodeId, const Image &textureImage);
     void updateEmitters(QVector<Emitter> &emitters);
 
-    void updateSceneTLAS(const AccelerationStructure &tlas);
+    void updateSceneTLAS(const AccelerationStructure &tlas, uint32_t instanceCount);
     void updateMaterialBuffer(const Buffer &buffer);
     void updateEmitterBuffer(const Buffer &buffer);
     void updateInstanceBuffer(const Buffer &buffer);
@@ -56,7 +56,7 @@ public:
 
     bool isReadyToRender() const;
 
-    AccelerationStructure sceneTLAS() const;
+    AccelerationStructure sceneTLAS(uint32_t *instanceCount=nullptr) const;
     Buffer instanceBuffer() const;
     Buffer materialBuffer() const;
     Buffer emitterBuffer() const;
@@ -86,6 +86,8 @@ private:
     QVector<Emitter> m_emitters;
 
     ManagedResource<AccelerationStructure> m_tlas;
+    uint32_t m_tlasInstanceCount;
+
     ManagedResource<Buffer> m_instanceBuffer;
     ManagedResource<Buffer> m_materialBuffer;
     ManagedResource<Buffer> m_emitterBuffer;
