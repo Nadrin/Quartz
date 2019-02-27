@@ -23,7 +23,7 @@ public:
     void setMeshDirectory(const QString &path);
     void setTexturesDirectory(const QString &path);
 
-    bool exportQml(const QString &path);
+    bool exportQml(const QString &path, const QString &sceneName);
     bool exportMeshes();
     bool exportTextures(const QString &basePath);
 
@@ -32,7 +32,7 @@ public:
     int numExportedTextures() const { return m_numExportedTextures; }
 
 private:
-    void writeQmlHeader(QTextStream &out);
+    void writeQmlHeader(QTextStream &out, const QString &sceneName);
     void writeQmlFooter(QTextStream &out);
     void writeQmlEntity(QTextStream &out, const Entity *entity, int depth);
     QString writeQmlMesh(QTextStream &out, const MeshComponent &mesh, const Entity *parentEntity, int depth);

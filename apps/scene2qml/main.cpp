@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
         exporter.setTexturesDirectory(QString("%1_textures").arg(targetBaseName));
     }
 
-    if(!exporter.exportQml(targetPath)) {
+    if(!exporter.exportQml(targetPath, QFileInfo(sourcePath).fileName())) {
         return 1;
     }
 
