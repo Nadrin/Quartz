@@ -30,7 +30,6 @@ static constexpr unsigned int ImportFlags =
         aiProcess_SortByPType |
         aiProcess_JoinIdenticalVertices |
         aiProcess_PreTransformVertices |
-        aiProcess_FixInfacingNormals |
         aiProcess_FindInvalidData |
         aiProcess_ValidateDataStructure;
 
