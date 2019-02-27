@@ -13,12 +13,12 @@
 #include <assimp/DefaultLogger.hpp>
 
 static constexpr unsigned int ImportFlags =
+        aiProcess_GenUVCoords |
         aiProcess_TransformUVCoords |
         aiProcess_JoinIdenticalVertices |
         aiProcess_ValidateDataStructure |
         aiProcess_FindInvalidData |
-        aiProcess_FindInstances |
-        aiProcess_FixInfacingNormals;
+        aiProcess_FindInstances;
 
 Importer::Importer()
 {
