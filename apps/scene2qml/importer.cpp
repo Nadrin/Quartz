@@ -174,9 +174,12 @@ int Importer::processTextureReference(const aiMaterial *material, aiTextureType 
         else {
             TextureComponent textureComponent;
             textureComponent.name = texturePath;
+            textureComponent.refcount = 1;
+
+            int textureIndex = m_scene.textures.size();
             m_scene.textures.append(textureComponent);
-            m_texturesByPath.insert(texturePath, m_scene.textures.size());
-            return m_scene.textures.size();
+            m_texturesByPath.insert(texturePath, textureIndex);
+            return textureIndex;
         }
     }
 }

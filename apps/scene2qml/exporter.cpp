@@ -131,6 +131,8 @@ bool Exporter::exportTextures(const QString &basePath)
         }
         else {
             const QString sourcePath = QDir::cleanPath(basePath + QDir::separator() + texture.name);
+
+            QFile::remove(targetPath);
             if(QFile::copy(sourcePath, targetPath)) {
                 ++m_numExportedTextures;
             }
