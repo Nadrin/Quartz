@@ -4,7 +4,7 @@
  * See LICENSE file for licensing information.
  */
 
-#include <renderers/vulkan/frameadvanceservice.h>
+#include <renderers/vulkan/services/frameadvanceservice.h>
 
 namespace Qt3DRaytrace {
 namespace Vulkan {

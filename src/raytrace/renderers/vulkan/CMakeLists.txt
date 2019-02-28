@@ -7,8 +7,6 @@ target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/commandbuffer.h
     renderers/vulkan/renderer.cpp
     renderers/vulkan/renderer.h
-    renderers/vulkan/frameadvanceservice.cpp
-    renderers/vulkan/frameadvanceservice.h
     renderers/vulkan/shadermodule.cpp
     renderers/vulkan/shadermodule.h
     renderers/vulkan/initializers.h
@@ -16,6 +14,8 @@ target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/resourcebarrier.h
     renderers/vulkan/geometry.h
     renderers/vulkan/glsl.h
+    renderers/vulkan/services/frameadvanceservice.cpp
+    renderers/vulkan/services/frameadvanceservice.h
     renderers/vulkan/shaders/lib/bindings.glsl
     renderers/vulkan/shaders/lib/shared.glsl
     renderers/vulkan/pipeline/pipeline.cpp

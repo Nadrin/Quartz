@@ -12,7 +12,7 @@
 #include <renderers/vulkan/initializers.h>
 #include <renderers/vulkan/device.h>
 #include <renderers/vulkan/commandbuffer.h>
-#include <renderers/vulkan/frameadvanceservice.h>
+#include <renderers/vulkan/services/frameadvanceservice.h>
 #include <renderers/vulkan/managers/commandbuffermanager.h>
 #include <renderers/vulkan/managers/descriptormanager.h>
 #include <renderers/vulkan/managers/scenemanager.h>
