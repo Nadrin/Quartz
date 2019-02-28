@@ -91,8 +91,11 @@ private:
 
     bool createResources();
     void releaseResources();
-    void createSwapchainResources();
+    bool createSwapchainResources(const QSize &size);
     void releaseSwapchainResources();
+    bool createRenderBufferResources(const QSize &size, VkFormat format);
+    void releaseRenderBufferResources();
+
     void releaseWindowSurface();
 
     void beginRenderIteration();
@@ -104,7 +107,8 @@ private:
     void resizeSwapchain();
 
     bool acquireNextSwapchainImage(uint32_t &imageIndex) const;
-    bool submitFrameCommandsAndPresent(uint32_t imageIndex);
+    bool presentSwapchainImage(uint32_t imageIndex);
+    bool submitFrameCommands();
 
     VkPhysicalDevice choosePhysicalDevice(const QByteArrayList &requiredExtensions, uint32_t &queueFamilyIndex) const;
     RenderPass createDisplayRenderPass(VkFormat swapchainFormat) const;
@@ -146,6 +150,7 @@ private:
     VkSurfaceFormatKHR m_swapchainFormat;
     VkPresentModeKHR m_swapchainPresentMode;
     QSize m_swapchainSize;
+    QSize m_renderBufferSize;
 
     struct SwapchainAttachment {
         Image image;

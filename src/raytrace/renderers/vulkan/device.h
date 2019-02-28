@@ -42,6 +42,7 @@ public:
     void freeCommandBuffers(const CommandPool &commandPool, const QVector<CommandBuffer> &commandBuffers);
 
     Swapchain createSwapchain(QWindow *window, VkSurfaceFormatKHR format, VkPresentModeKHR presentMode, uint32_t minImageCount, Swapchain oldSwapchain);
+    bool querySwapchainSize(QWindow *window, QSize &size) const;
     void destroySwapchain(Swapchain& swapchain);
 
     Image createImage(const ImageCreateInfo &createInfo, const AllocationCreateInfo &allocCreateInfo);

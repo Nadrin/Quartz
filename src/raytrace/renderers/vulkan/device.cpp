@@ -202,6 +202,22 @@ Swapchain Device::createSwapchain(QWindow *window, VkSurfaceFormatKHR format, Vk
     return swapchain;
 }
 
+bool Device::querySwapchainSize(QWindow *window, QSize &size) const
+{
+    VkSurfaceKHR surface = QVulkanInstance::surfaceForWindow(window);
+
+    Result result;
+    VkSurfaceCapabilitiesKHR surfaceCaps;
+    if(VKFAILED(result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, surface, &surfaceCaps))) {
+        qCCritical(logVulkan) << "Failed to query swapchain surface capabilities:" << result.toString();
+        return false;
+    }
+
+    size.setWidth(int(surfaceCaps.currentExtent.width));
+    size.setHeight(int(surfaceCaps.currentExtent.height));
+    return true;
+}
+
 void Device::destroySwapchain(Swapchain &swapchain)
 {
     vkDestroySwapchainKHR(m_device, swapchain, nullptr);

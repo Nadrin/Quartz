@@ -131,6 +131,7 @@ void Renderer::shutdown()
             m_device->destroySwapchain(m_swapchain);
         }
 
+        releaseRenderBufferResources();
         releaseResources();
 
         m_sceneManager.reset();
@@ -311,12 +312,12 @@ void Renderer::releaseResources()
     m_descriptorManager->destroyAllDescriptorPools();
 }
 
-void Renderer::createSwapchainResources()
+bool Renderer::createSwapchainResources(const QSize &size)
 {
     Result result;
 
-    const uint32_t swapchainWidth = uint32_t(m_swapchainSize.width());
-    const uint32_t swapchainHeight = uint32_t(m_swapchainSize.height());
+    const uint32_t swapchainWidth = uint32_t(size.width());
+    const uint32_t swapchainHeight = uint32_t(size.height());
 
     QVector<VkImage> swapchainImages;
     uint32_t numSwapchainImages = 0;
@@ -324,7 +325,7 @@ void Renderer::createSwapchainResources()
     swapchainImages.resize(int(numSwapchainImages));
     if(VKFAILED(result = vkGetSwapchainImagesKHR(*m_device, m_swapchain, &numSwapchainImages, swapchainImages.data()))) {
         qCWarning(logVulkan) << "Failed to obtain swapchain image handles:" << result.toString();
-        return;
+        return false;
     }
 
     m_swapchainAttachments.resize(int(numSwapchainImages));
@@ -335,12 +336,29 @@ void Renderer::createSwapchainResources()
         attachment.framebuffer = m_device->createFramebuffer({m_displayRenderPass, { attachment.image.view }, swapchainWidth, swapchainHeight});
     }
 
+    m_swapchainSize = size;
+    return true;
+}
+
+void Renderer::releaseSwapchainResources()
+{
+    for(auto &attachment : m_swapchainAttachments) {
+        m_device->destroyImageView(attachment.image.view);
+        m_device->destroyFramebuffer(attachment.framebuffer);
+    }
+    m_swapchainAttachments.clear();
+    m_lastSwapchainImage = nullptr;
+    m_swapchainSize = QSize();
+}
+
+bool Renderer::createRenderBufferResources(const QSize &size, VkFormat format)
+{
     for(auto &frame : m_frameResources) {
-        ImageCreateInfo renderBufferCreateInfo{VK_IMAGE_TYPE_2D, Config::RenderBufferFormat, m_swapchainSize};
+        ImageCreateInfo renderBufferCreateInfo{VK_IMAGE_TYPE_2D, format, size};
         renderBufferCreateInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
         if(!(frame.renderBuffer = m_device->createImage(renderBufferCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY))) {
             qCCritical(logVulkan) << "Failed to create render buffer";
-            return;
+            return false;
         }
     }
 
@@ -354,23 +372,19 @@ void Renderer::createSwapchainResources()
         previousFrame = &frame;
     }
 
+    m_renderBufferSize = size;
     resetRenderProgress();
+    return true;
 }
 
-void Renderer::releaseSwapchainResources()
+void Renderer::releaseRenderBufferResources()
 {
-    for(auto &attachment : m_swapchainAttachments) {
-        m_device->destroyImageView(attachment.image.view);
-        m_device->destroyFramebuffer(attachment.framebuffer);
-    }
-    m_swapchainAttachments.clear();
-
     for(auto &frame : m_frameResources) {
         m_device->destroyImage(frame.renderBuffer);
     }
+    m_renderBufferSize   = QSize();
     m_renderBuffersReady = false;
     m_lastRenderBuffer   = nullptr;
-    m_lastSwapchainImage = nullptr;
 }
 
 void Renderer::beginRenderIteration()
@@ -390,10 +404,12 @@ void Renderer::beginRenderIteration()
 
 void Renderer::releaseWindowSurface()
 {
-    if(m_device && m_window && m_swapchain) {
+    if(m_device && m_window) {
         m_device->waitIdle();
-        releaseSwapchainResources();
-        m_device->destroySwapchain(m_swapchain);
+        if(m_swapchain) {
+            releaseSwapchainResources();
+            m_device->destroySwapchain(m_swapchain);
+        }
     }
     m_window = nullptr;
 }
@@ -487,20 +503,36 @@ void Renderer::resizeSwapchain()
     Q_ASSERT(m_device);
     Q_ASSERT(m_window);
 
-    if(m_swapchainSize != m_window->size()) {
+    QSize currentSwapchainSize;
+    if(!m_device->querySwapchainSize(m_window, currentSwapchainSize)) {
+        qCWarning(logVulkan) << "Failed to retrieve current swapchain size";
+        return;
+    }
+
+    if(currentSwapchainSize != m_swapchainSize) {
         m_device->waitIdle();
+
         if(m_swapchain) {
             releaseSwapchainResources();
         }
-        Swapchain newSwapchain = m_device->createSwapchain(m_window, m_swapchainFormat, m_swapchainPresentMode, uint32_t(numConcurrentFrames()), m_swapchain);
-        if(newSwapchain) {
-            m_device->destroySwapchain(m_swapchain);
-            m_swapchain = newSwapchain;
-            m_swapchainSize = m_window->size();
-            createSwapchainResources();
+        if(!currentSwapchainSize.isNull()) {
+            Swapchain newSwapchain = m_device->createSwapchain(m_window, m_swapchainFormat, m_swapchainPresentMode, uint32_t(numConcurrentFrames()), m_swapchain);
+            if(newSwapchain) {
+                m_device->destroySwapchain(m_swapchain);
+                m_swapchain = newSwapchain;
+
+                createSwapchainResources(currentSwapchainSize);
+                if(m_swapchainSize != m_renderBufferSize) {
+                    releaseRenderBufferResources();
+                    createRenderBufferResources(m_swapchainSize, Config::RenderBufferFormat);
+                }
+            }
+            else {
+                qCWarning(logVulkan) << "Failed to resize swapchain";
+            }
         }
         else {
-            qCWarning(logVulkan) << "Failed to resize swapchain";
+            m_device->destroySwapchain(m_swapchain);
         }
     }
 }
@@ -517,28 +549,12 @@ bool Renderer::acquireNextSwapchainImage(uint32_t &imageIndex) const
     return true;
 }
 
-bool Renderer::submitFrameCommandsAndPresent(uint32_t imageIndex)
+bool Renderer::presentSwapchainImage(uint32_t imageIndex)
 {
-    const FrameResources &frame = m_frameResources[m_frameIndex];
+    Q_ASSERT(m_swapchain);
+    Q_ASSERT(m_swapchainSize.isValid());
 
     Result result;
-
-    VkPipelineStageFlags submitWaitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-    VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = &m_presentationFinishedSemaphore.handle;
-    submitInfo.pWaitDstStageMask = &submitWaitStage;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &frame.commandBuffer.handle;
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = &m_renderingFinishedSemaphore.handle;
-    if(VKFAILED(result = vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, frame.commandBuffersExecutedFence))) {
-        qCCritical(logVulkan) << "Failed to submit frame commands to the graphics queue:" << result.toString();
-        return false;
-    }
-
-    m_frameIndex = (m_frameIndex + 1) % int(numConcurrentFrames());
 
     VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
     presentInfo.waitSemaphoreCount = 1;
@@ -559,6 +575,33 @@ bool Renderer::submitFrameCommandsAndPresent(uint32_t imageIndex)
     return true;
 }
 
+bool Renderer::submitFrameCommands()
+{
+    const FrameResources &frame = m_frameResources[m_frameIndex];
+
+    Result result;
+
+    VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &frame.commandBuffer.handle;
+    if(m_swapchainSize.isValid()) {
+        VkPipelineStageFlags submitWaitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = &m_presentationFinishedSemaphore.handle;
+        submitInfo.pWaitDstStageMask = &submitWaitStage;
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = &m_renderingFinishedSemaphore.handle;
+    }
+    if(VKFAILED(result = vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, frame.commandBuffersExecutedFence))) {
+        qCCritical(logVulkan) << "Failed to submit frame commands to the graphics queue:" << result.toString();
+        return false;
+    }
+
+    m_frameIndex = (m_frameIndex + 1) % int(numConcurrentFrames());
+
+    return true;
+}
+
 void Renderer::renderFrame()
 {
     Q_ASSERT(m_device);
@@ -574,7 +617,7 @@ void Renderer::renderFrame()
     QElapsedTimer frameTimer;
     frameTimer.start();
 
-    const QRect renderRect = { {0, 0}, m_swapchainSize };
+    const QRect renderRect = { {0, 0}, m_renderBufferSize };
     const uint32_t currentFrameQueryIndex = uint32_t(currentFrameIndex() * 2);
     const uint32_t previousFrameQueryIndex = uint32_t(previousFrameIndex() * 2);
 
@@ -650,7 +693,7 @@ void Renderer::renderFrame()
 
         commandBuffer.resourceBarrier({currentFrame.renderBuffer, ImageState::ShaderReadWrite, ImageState::ShaderRead});
 
-        if(acquireNextSwapchainImage(swapchainImageIndex)) {
+        if(m_swapchainSize.isValid() && acquireNextSwapchainImage(swapchainImageIndex)) {
             const auto &attachment = m_swapchainAttachments[int(swapchainImageIndex)];
             commandBuffer.beginRenderPass({m_displayRenderPass, attachment.framebuffer, renderRect}, VK_SUBPASS_CONTENTS_INLINE);
             commandBuffer.bindPipeline(m_displayPipeline);
@@ -668,7 +711,14 @@ void Renderer::renderFrame()
     }
     commandBuffer.end();
 
-    submitFrameCommandsAndPresent(swapchainImageIndex);
+    if(submitFrameCommands()) {
+        if(m_swapchainSize.isValid()) {
+            presentSwapchainImage(swapchainImageIndex);
+        }
+    }
+    else {
+        qCWarning(logVulkan) << "Failed to submit frame commands to the graphics queue";
+    }
 
     m_commandBufferManager->proceedToNextFrame();
     m_frameAdvanceService->proceedToNextFrame();
@@ -1135,17 +1185,19 @@ uint32_t Renderer::numConcurrentFrames() const
 
 QImageData Renderer::grabImage(QRenderImage type)
 {
-    uint32_t width  = uint32_t(m_swapchainSize.width());
-    uint32_t height = uint32_t(m_swapchainSize.height());
-
+    uint32_t width, height;
     switch(type) {
     case QRenderImage::HDR:
+        width  = uint32_t(m_renderBufferSize.width());
+        height = uint32_t(m_renderBufferSize.height());
         if(!m_lastRenderBuffer) {
             qCWarning(logVulkan) << "Cannot grab render buffer: image not ready";
             return QImageData{};
         }
         return grabImage(m_lastRenderBuffer, ImageState::ShaderReadWrite, width, height, Config::RenderBufferFormat);
     case QRenderImage::FinalLDR:
+        width  = uint32_t(m_swapchainSize.width());
+        height = uint32_t(m_swapchainSize.height());
         if(!m_lastSwapchainImage) {
             qCWarning(logVulkan) << "Cannot grab swapchain: image not ready";
             return QImageData{};
