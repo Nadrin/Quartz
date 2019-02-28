@@ -7,10 +7,14 @@
 #pragma once
 
 #include <qt3draytrace_global_p.h>
-#include <Qt3DRaytrace/qrendererinterface.h>
+#include <Qt3DRaytrace/qimagedata.h>
+#include <Qt3DRaytrace/qrenderimage.h>
 
 #include <QVector>
 #include <Qt3DCore/QAspectJob>
+
+class QObject;
+class QSurface;
 
 namespace Qt3DCore {
 class QAbstractFrameAdvanceService;
@@ -25,7 +29,7 @@ class RenderSettings;
 
 struct NodeManagers;
 
-class AbstractRenderer : public QRendererInterface
+class AbstractRenderer
 {
 public:
     enum DirtyFlag {
@@ -48,12 +52,17 @@ public:
 
     virtual void markDirty(DirtySet changes, BackendNode *node) = 0;
 
+    virtual QSurface *surface() const = 0;
     virtual Entity *sceneRoot() const = 0;
     virtual RenderSettings *settings() const = 0;
+    virtual QRenderStatistics statistics() const = 0;
 
+    virtual void setSurface(QObject *surfaceObject) = 0;
     virtual void setSceneRoot(Entity *rootEntity) = 0;
     virtual void setSettings(RenderSettings *settings) = 0;
     virtual void setNodeManagers(NodeManagers *nodeManagers) = 0;
+
+    virtual QImageData grabImage(QRenderImage type) = 0;
 
     virtual Qt3DCore::QAbstractFrameAdvanceService *frameAdvanceService() const = 0;
 

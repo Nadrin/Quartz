@@ -54,7 +54,10 @@ public:
     bool releaseCommandBuffer(TransientCommandBuffer &commandBuffer, const QVector<Image>  &transientImages);
     bool releaseCommandBuffer(TransientCommandBuffer &commandBuffer, const QVector<Buffer> &transientBuffers, const QVector<Image> &transientImages);
 
+    bool executeCommandBufferImmediate(VkQueue queue, TransientCommandBuffer &commandBuffer);
+
     bool submitCommandBuffers(VkQueue queue);
+
     void destroyExpiredResources();
     void proceedToNextFrame();
 

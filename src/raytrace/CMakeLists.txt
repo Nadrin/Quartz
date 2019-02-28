@@ -84,7 +84,6 @@ set(SOURCES_PRIVATE
 set(SOURCES_PUBLIC
     ${MODULE_API}/qt3draytrace_global.h
     ${MODULE_API}/qraytraceaspect.h
-    ${MODULE_API}/qrendererinterface.h
     ${MODULE_API}/qgeometryrenderer.h
     ${MODULE_API}/qgeometry.h
     ${MODULE_API}/qgeometrydata.h
@@ -94,6 +93,7 @@ set(SOURCES_PUBLIC
     ${MODULE_API}/qdistantlight.h
     ${MODULE_API}/qcamera.h
     ${MODULE_API}/qcameralens.h
+    ${MODULE_API}/qrenderimage.h
     ${MODULE_API}/qrendersettings.h
     ${MODULE_API}/qabstracttexture.h
     ${MODULE_API}/qtexture.h

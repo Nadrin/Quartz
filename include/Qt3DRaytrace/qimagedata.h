@@ -10,27 +10,38 @@
 #include <QtCore/qmetatype.h>
 
 #include <QByteArray>
+#include <QSharedPointer>
 
 namespace Qt3DRaytrace {
-
-enum class QImageDataType
-{
-    Undefined = 0,
-    UInt8     = 1,
-    Float16   = 2,
-    Float32   = 4,
-};
 
 // TODO: Add support for layers and mipmaps.
 struct QImageData
 {
-    int imageWidth  = 0;
-    int imageHeight = 0;
-    int numChannels = 0;
-    QImageDataType type = QImageDataType::Undefined;
+    enum class ValueType {
+        Undefined = 0,
+        UInt8     = 1,
+        Float16   = 2,
+        Float32   = 4,
+    };
+    enum class Format {
+        Undefined = 0,
+        RGB,
+        BGR,
+        RGBA,
+        BGRA,
+    };
+
+    int width  = 0;
+    int height = 0;
+    int channels = 0;
+    ValueType type = ValueType::Undefined;
+    Format format = Format::Undefined;
     QByteArray data;
 };
+
+using QImageDataPtr = QSharedPointer<QImageData>;
 
 } // Qt3DRaytrace
 
 Q_DECLARE_METATYPE(Qt3DRaytrace::QImageData)
+Q_DECLARE_METATYPE(Qt3DRaytrace::QImageDataPtr)

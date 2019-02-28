@@ -26,6 +26,7 @@
 
 #include <QVulkanInstance>
 #include <QWindow>
+#include <QThread>
 #include <QTimer>
 #include <QElapsedTimer>
 
@@ -36,9 +37,8 @@ namespace Config {
 
 constexpr bool     EnableVsync = false;
 constexpr VkFormat RenderBufferFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
-constexpr uint32_t DescriptorPoolCapacity = 128;
+constexpr uint32_t DescriptorPoolCapacity = 1024;
 constexpr uint32_t GlobalMaxRecursionDepth = 16;
-constexpr int      StatisticsDisplayInterval = 500;
 
 } // Config
 
@@ -46,8 +46,7 @@ Q_LOGGING_CATEGORY(logVulkan, "raytrace.vulkan")
 
 Renderer::Renderer(QObject *parent)
     : QObject(parent)
-    , m_renderTimer(new QTimer(this))
-    , m_statisticsTimer(new QTimer(this))
+    , m_renderFrameTimer(new QTimer(this))
     , m_cameraManager(new CameraManager)
     , m_frameAdvanceService(new FrameAdvanceService)
     , m_updateWorldTransformJob(new Raytrace::UpdateWorldTransformJob)
@@ -57,9 +56,7 @@ Renderer::Renderer(QObject *parent)
     , m_updateEmittersJob(new UpdateEmittersJob(this))
 {
     Q_INIT_RESOURCE(vulkan_shaders);
-
-    QObject::connect(m_renderTimer, &QTimer::timeout, this, &Renderer::renderFrame);
-    QObject::connect(m_statisticsTimer, &QTimer::timeout, this, &Renderer::displayStatistics);
+    QObject::connect(m_renderFrameTimer, &QTimer::timeout, this, &Renderer::renderFrame);
 }
 
 bool Renderer::initialize()
@@ -117,18 +114,14 @@ bool Renderer::initialize()
         return false;
     }
 
-    m_statisticsTimer->setInterval(Config::StatisticsDisplayInterval);
-    m_statisticsTimer->start();
-
-    m_renderTimer->start();
+    m_renderFrameTimer->start();
     m_frameAdvanceService->proceedToNextFrame();
     return true;
 }
 
 void Renderer::shutdown()
 {
-    m_statisticsTimer->stop();
-    m_renderTimer->stop();
+    m_renderFrameTimer->stop();
 
     if(m_device) {
         m_device->waitIdle();
@@ -344,7 +337,7 @@ void Renderer::createSwapchainResources()
 
     for(auto &frame : m_frameResources) {
         ImageCreateInfo renderBufferCreateInfo{VK_IMAGE_TYPE_2D, Config::RenderBufferFormat, m_swapchainSize};
-        renderBufferCreateInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        renderBufferCreateInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
         if(!(frame.renderBuffer = m_device->createImage(renderBufferCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY))) {
             qCCritical(logVulkan) << "Failed to create render buffer";
             return;
@@ -376,6 +369,8 @@ void Renderer::releaseSwapchainResources()
         m_device->destroyImage(frame.renderBuffer);
     }
     m_renderBuffersReady = false;
+    m_lastRenderBuffer   = nullptr;
+    m_lastSwapchainImage = nullptr;
 }
 
 void Renderer::beginRenderIteration()
@@ -650,6 +645,7 @@ void Renderer::renderFrame()
             commandBuffer.bindDescriptorSets(m_renderPipeline, 0, descriptorSets);
             commandBuffer.pushConstants(m_renderPipeline, 0, &m_renderParams);
             commandBuffer.traceRays(m_renderPipeline, uint32_t(renderRect.width()), uint32_t(renderRect.height()));
+            m_lastRenderBuffer = &currentFrame.renderBuffer;
         }
 
         commandBuffer.resourceBarrier({currentFrame.renderBuffer, ImageState::ShaderReadWrite, ImageState::ShaderRead});
@@ -664,6 +660,7 @@ void Renderer::renderFrame()
             commandBuffer.setScissor(renderRect);
             commandBuffer.draw(3, 1);
             commandBuffer.endRenderPass();
+            m_lastSwapchainImage = &attachment.image;
         }
 
         commandBuffer.resourceBarrier({currentFrame.renderBuffer, ImageState::ShaderRead, ImageState::ShaderReadWrite});
@@ -677,33 +674,9 @@ void Renderer::renderFrame()
     m_frameAdvanceService->proceedToNextFrame();
 
     // TODO: Don't wait on previous frame query availability (though in practice it doesn't seem to reduce performance).
-    double previousDeviceTime;
-    if(m_device->queryTimeElapsed(m_defaultQueryPool, previousFrameQueryIndex, previousDeviceTime, VK_QUERY_RESULT_WAIT_BIT)) {
-        m_deviceTimeAverage.add(previousDeviceTime);
-    }
-    m_hostTimeAverage.add(frameTimer.nsecsElapsed() * 1e-6);
-}
-
-void Renderer::displayStatistics()
-{
-    QReadLocker lock(&m_windowSurfaceLock);
-    if(!m_window) {
-        return;
-    }
-
-    const double cpuTime = m_hostTimeAverage.average();
-    const double gpuTime = m_deviceTimeAverage.average();
-    const double frameTime = std::max(cpuTime, gpuTime);
-    const double fps = (frameTime > 0.0) ? 1000.0 / frameTime : 0.0;
-
-    const QString statistics = QString("%1 [ CPU: %2 ms | GPU: %3 ms | FPS: %4 | Current image: %5 s / %6 iterations ]")
-            .arg(m_windowTitle)
-            .arg(cpuTime, 0, 'f', 2)
-            .arg(gpuTime, 0, 'f', 2)
-            .arg(fps, 0, 'f', 0)
-            .arg(m_frameElapsedTimer.elapsed() * 1e-3, 0, 'f', 2)
-            .arg(m_frameNumber);
-    m_window->setTitle(statistics);
+    double previousDeviceTime = -1.0;
+    m_device->queryTimeElapsed(m_defaultQueryPool, previousFrameQueryIndex, previousDeviceTime, VK_QUERY_RESULT_WAIT_BIT);
+    updateFrameTimings(frameTimer.nsecsElapsed() * 1e-6, previousDeviceTime);
 }
 
 VkPhysicalDevice Renderer::choosePhysicalDevice(const QByteArrayList &requiredExtensions, uint32_t &queueFamilyIndex) const
@@ -834,6 +807,76 @@ RenderPass Renderer::createDisplayRenderPass(VkFormat swapchainFormat) const
     return renderPass;
 }
 
+void Renderer::updateFrameTimings(double cpuFrameTime, double gpuFrameTime)
+{
+    QWriteLocker lock(&m_frameTimingsLock);
+    m_hostTimeAverage.add(cpuFrameTime);
+    if(gpuFrameTime > 0.0) {
+        m_deviceTimeAverage.add(gpuFrameTime);
+    }
+}
+
+QImageData Renderer::grabImage(const Image *image, ImageState imageState, uint32_t width, uint32_t height, VkFormat format)
+{
+    Q_ASSERT(image);
+    Q_ASSERT(width > 0 && height > 0);
+
+    QImageData output = {};
+    output.width    = int(width);
+    output.height   = int(height);
+    output.channels = 4;
+
+    switch(format) {
+    case VK_FORMAT_R8G8B8A8_SRGB:
+    case VK_FORMAT_R8G8B8A8_UNORM:
+        output.type   = QImageData::ValueType::UInt8;
+        output.format = QImageData::Format::RGBA;
+        break;
+    case VK_FORMAT_B8G8R8A8_SRGB:
+    case VK_FORMAT_B8G8R8A8_UNORM:
+        output.type   = QImageData::ValueType::UInt8;
+        output.format = QImageData::Format::BGRA;
+        break;
+    case VK_FORMAT_R32G32B32A32_SFLOAT:
+        output.type   = QImageData::ValueType::Float32;
+        output.format = QImageData::Format::RGBA;
+        break;
+    default:
+        Q_ASSERT_X(0, Q_FUNC_INFO, "Unsupported image format");
+    }
+
+    const VkDeviceSize pixelSize = uint32_t(output.channels * static_cast<int>(output.type));
+    const VkDeviceSize stagingBufferSize = VkDeviceSize(width * height * pixelSize);
+
+    Buffer stagingBuffer = m_device->createStagingBuffer(stagingBufferSize);
+    if(!stagingBuffer || !stagingBuffer.isHostAccessible()) {
+        qCCritical(logVulkan) << "Failed to grab image: staging buffer creation failed";
+        return output;
+    }
+
+    TransientCommandBuffer commandBuffer = m_commandBufferManager->acquireCommandBuffer();
+    {
+        VkBufferImageCopy region = {};
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.layerCount = 1;
+        region.imageExtent = VkExtent3D{ width, height, 1 };
+
+        commandBuffer->resourceBarrier(ImageTransition{ image->handle, imageState, ImageState::CopySource });
+        commandBuffer->copyImageToBuffer(image->handle, ImageState::CopySource, stagingBuffer, region);
+        commandBuffer->resourceBarrier(ImageTransition{ image->handle, ImageState::CopySource, imageState });
+        commandBuffer->pipelineBarrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_HOST_BIT, VK_ACCESS_HOST_READ_BIT);
+    }
+    if(!m_commandBufferManager->executeCommandBufferImmediate(m_graphicsQueue, commandBuffer)) {
+        qCCritical(logVulkan) << "Failed to grab image: tansfer operation failed";
+        return output;
+    }
+
+    output.data = QByteArray(stagingBuffer.memory<const char>(), int(stagingBufferSize));
+    m_device->destroyBuffer(stagingBuffer);
+
+    return output;
+}
+
 int Renderer::currentFrameIndex() const
 {
     return m_frameIndex;
@@ -860,7 +903,6 @@ void Renderer::setSurface(QObject *surfaceObject)
     if(surfaceObject) {
         if(QWindow *window = qobject_cast<QWindow*>(surfaceObject)) {
             m_window = window;
-            m_windowTitle = window->title();
         }
         else {
             qCWarning(logVulkan) << "Incompatible surface object: expected QWindow instance";
@@ -894,6 +936,31 @@ void Renderer::setSceneRoot(Raytrace::Entity *rootEntity)
 Raytrace::RenderSettings *Renderer::settings() const
 {
     return m_settings;
+}
+
+QRenderStatistics Renderer::statistics() const
+{
+    QReadLocker lock(&m_frameTimingsLock);
+
+    QRenderStatistics stats;
+    stats.cpuFrameTime = m_hostTimeAverage.average();
+    stats.gpuFrameTime = m_deviceTimeAverage.average();
+    stats.totalRenderTime = m_frameElapsedTimer.elapsed() * 1e-3;
+    stats.numFramesRendered = m_frameNumber;
+
+    /*
+    const double frameTime = std::max(cpuTime, gpuTime);
+    const double fps = (frameTime > 0.0) ? 1000.0 / frameTime : 0.0;
+
+    const QString statistics = QString("%1 [ CPU: %2 ms | GPU: %3 ms | FPS: %4 | Current image: %5 s / %6 iterations ]")
+            .arg(m_windowTitle)
+            .arg(cpuTime, 0, 'f', 2)
+            .arg(gpuTime, 0, 'f', 2)
+            .arg(fps, 0, 'f', 0)
+            .arg(m_frameElapsedTimer.elapsed() * 1e-3, 0, 'f', 2)
+            .arg(m_frameNumber);
+            */
+    return stats;
 }
 
 void Renderer::setSettings(Raytrace::RenderSettings *settings)
@@ -1064,6 +1131,28 @@ QVector<Qt3DCore::QAspectJobPtr> Renderer::jobsToExecute(qint64 time)
 uint32_t Renderer::numConcurrentFrames() const
 {
     return uint32_t(m_frameResources.size());
+}
+
+QImageData Renderer::grabImage(QRenderImage type)
+{
+    uint32_t width  = uint32_t(m_swapchainSize.width());
+    uint32_t height = uint32_t(m_swapchainSize.height());
+
+    switch(type) {
+    case QRenderImage::HDR:
+        if(!m_lastRenderBuffer) {
+            qCWarning(logVulkan) << "Cannot grab render buffer: image not ready";
+            return QImageData{};
+        }
+        return grabImage(m_lastRenderBuffer, ImageState::ShaderReadWrite, width, height, Config::RenderBufferFormat);
+    case QRenderImage::FinalLDR:
+        if(!m_lastSwapchainImage) {
+            qCWarning(logVulkan) << "Cannot grab swapchain: image not ready";
+            return QImageData{};
+        }
+        return grabImage(m_lastSwapchainImage, ImageState::PresentSource, width, height, m_swapchainFormat.format);
+    }
+    return QImageData{};
 }
 
 } // Vulkan

@@ -7,8 +7,6 @@
 #include <qt3dquickwindow_p.h>
 
 #include <Qt3DCore/QEntity>
-#include <Qt3DRaytrace/qrendererinterface.h>
-
 #include <QPlatformSurfaceEvent>
 
 namespace Qt3DRaytraceExtras {
@@ -40,10 +38,7 @@ Qt3DQuickWindow::Qt3DQuickWindow(QWindow *parent)
     d->m_engine->aspectEngine()->registerAspect(d->m_inputAspect);
     d->m_engine->aspectEngine()->registerAspect(d->m_logicAspect);
 
-    Qt3DRaytrace::QRendererInterface *renderer = d->m_raytraceAspect->renderer();
-    if(renderer) {
-        renderer->setSurface(this);
-    }
+    d->m_raytraceAspect->setSurface(this);
 }
 
 void Qt3DQuickWindow::registerAspect(Qt3DCore::QAbstractAspect *aspect)
@@ -98,9 +93,7 @@ bool Qt3DQuickWindow::event(QEvent *event)
         break;
     case QEvent::PlatformSurface:
         if(static_cast<QPlatformSurfaceEvent*>(event)->surfaceEventType() == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
-            if(d->m_raytraceAspect->renderer()) {
-                d->m_raytraceAspect->renderer()->setSurface(nullptr);
-            }
+            d->m_raytraceAspect->setSurface(nullptr);
         }
         break;
     default:

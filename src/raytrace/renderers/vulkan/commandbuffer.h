@@ -93,6 +93,10 @@ public:
         bufferCopy.size = size;
         vkCmdCopyBuffer(handle, src, dest, 1, &bufferCopy);
     }
+    void copyImageToBuffer(VkImage srcImage, ImageState srcState, VkBuffer dstBuffer, const VkBufferImageCopy &region) const
+    {
+        vkCmdCopyImageToBuffer(handle, srcImage, ResourceBarrier::getImageLayoutFromState(srcState), dstBuffer, 1, &region);
+    }
     void dispatch(uint32_t groupCountX, uint32_t groupCountY=1, uint32_t groupCountZ=1) const
     {
         vkCmdDispatch(handle, groupCountX, groupCountY, groupCountZ);

@@ -22,7 +22,7 @@ DefaultImageImporter::DefaultImageImporter()
 
 bool DefaultImageImporter::import(const QUrl &url, QImageData &data)
 {
-    QByteArray imageFileBytes;
+    QByteArray imageBytes;
     {
         QFile imageFile(url.path());
         if(!imageFile.open(QFile::ReadOnly)) {
@@ -31,15 +31,15 @@ bool DefaultImageImporter::import(const QUrl &url, QImageData &data)
         }
 
         qCInfo(logImport) << "Loading texture image:" << url.toString();
-        imageFileBytes = imageFile.readAll();
-        if(imageFileBytes.size() == 0) {
+        imageBytes = imageFile.readAll();
+        if(imageBytes.size() == 0) {
             qCCritical(logImport) << "Failed to read image file:" << url.toString();
             return false;
         }
     }
 
-    const stbi_uc *compressedData = reinterpret_cast<const stbi_uc*>(imageFileBytes.constData());
-    const int compressedDataSize = imageFileBytes.size();
+    const stbi_uc *compressedData = reinterpret_cast<const stbi_uc*>(imageBytes.constData());
+    const int compressedDataSize = imageBytes.size();
 
     int imageWidth, imageHeight, imageChannels;
     if(!stbi_info_from_memory(compressedData, compressedDataSize, &imageWidth, &imageHeight, &imageChannels)) {
@@ -48,11 +48,12 @@ bool DefaultImageImporter::import(const QUrl &url, QImageData &data)
     }
 
     if(stbi_is_hdr_from_memory(compressedData, compressedDataSize) == 1) {
-        float *image = stbi_loadf_from_memory(compressedData, compressedDataSize, &data.imageWidth, &data.imageHeight, &data.numChannels, 0);
+        float *image = stbi_loadf_from_memory(compressedData, compressedDataSize, &data.width, &data.height, &data.channels, 0);
         if(image) {
-            const int imageSize = data.imageWidth * data.imageHeight * data.numChannels * sizeof(float);
-            data.type = QImageDataType::Float32;
-            data.data = QByteArray(reinterpret_cast<const char*>(image), imageSize);
+            const int imageSize = data.width * data.height * data.channels * sizeof(float);
+            data.format = QImageData::Format::RGB;
+            data.type   = QImageData::ValueType::Float32;
+            data.data   = QByteArray(reinterpret_cast<const char*>(image), imageSize);
             stbi_image_free(image);
             return true;
         }
@@ -62,14 +63,15 @@ bool DefaultImageImporter::import(const QUrl &url, QImageData &data)
         if(imageChannels == 3) {
             imageChannels = 4;
         }
-        data.numChannels = imageChannels;
+        data.channels = imageChannels;
 
         int numActualChannels;
-        stbi_uc *image = stbi_load_from_memory(compressedData, compressedDataSize, &data.imageWidth, &data.imageHeight, &numActualChannels, imageChannels);
+        stbi_uc *image = stbi_load_from_memory(compressedData, compressedDataSize, &data.width, &data.height, &numActualChannels, imageChannels);
         if(image) {
-            const int imageSize = data.imageWidth * data.imageHeight * data.numChannels;
-            data.type = QImageDataType::UInt8;
-            data.data = QByteArray(reinterpret_cast<const char*>(image), imageSize);
+            const int imageSize = data.width * data.height * data.channels;
+            data.format = QImageData::Format::RGBA;
+            data.type   = QImageData::ValueType::UInt8;
+            data.data   = QByteArray(reinterpret_cast<const char*>(image), imageSize);
             stbi_image_free(image);
             return true;
         }

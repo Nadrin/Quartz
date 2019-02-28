@@ -27,6 +27,7 @@
 #include <utility/movingaverage.h>
 
 #include <Qt3DCore/QNodeId>
+
 #include <QObject>
 #include <QSharedPointer>
 #include <QReadWriteLock>
@@ -37,6 +38,7 @@
 
 class QWindow;
 class QTimer;
+class QVulkanInstance;
 
 namespace Qt3DRaytrace {
 namespace Vulkan {
@@ -48,11 +50,7 @@ class Renderer final : public QObject
 public:
     explicit Renderer(QObject *parent = nullptr);
 
-    API api() const override { return API::Vulkan; }
-
     QSurface *surface() const override;
-    void setSurface(QObject *surfaceObject) override;
-
     Device *device() const;
 
     bool initialize() override;
@@ -62,7 +60,9 @@ public:
 
     Raytrace::Entity *sceneRoot() const override;
     Raytrace::RenderSettings *settings() const override;
+    QRenderStatistics statistics() const override;
 
+    void setSurface(QObject *surfaceObject) override;
     void setSceneRoot(Raytrace::Entity *rootEntity) override;
     void setSettings(Raytrace::RenderSettings *settings) override;
     void setNodeManagers(Raytrace::NodeManagers *nodeManagers) override;
@@ -79,9 +79,10 @@ public:
     int previousFrameIndex() const;
     uint32_t numConcurrentFrames() const;
 
+    QImageData grabImage(QRenderImage type) override;
+
 private slots:
     void renderFrame();
-    void displayStatistics();
 
 private:
     QVector<Qt3DCore::QAspectJobPtr> createGeometryJobs();
@@ -108,13 +109,15 @@ private:
     VkPhysicalDevice choosePhysicalDevice(const QByteArrayList &requiredExtensions, uint32_t &queueFamilyIndex) const;
     RenderPass createDisplayRenderPass(VkFormat swapchainFormat) const;
 
+    void updateFrameTimings(double cpuFrameTime, double gpuFrameTime);
+    QImageData grabImage(const Image *image, ImageState imageState, uint32_t width, uint32_t height, VkFormat format);
+
     QVulkanInstance *m_instance = nullptr;
     QWindow *m_window = nullptr;
-    QString m_windowTitle;
     mutable QReadWriteLock m_windowSurfaceLock;
+    mutable QReadWriteLock m_frameTimingsLock;
 
-    QTimer *m_renderTimer = nullptr;
-    QTimer *m_statisticsTimer = nullptr;
+    QTimer *m_renderFrameTimer = nullptr;
 
     Raytrace::NodeManagers *m_nodeManagers = nullptr;
     Raytrace::RenderSettings *m_settings = nullptr;
@@ -182,6 +185,9 @@ private:
 
     Utility::MovingAverage<double> m_deviceTimeAverage;
     Utility::MovingAverage<double> m_hostTimeAverage;
+
+    const Image *m_lastRenderBuffer = nullptr;
+    const Image *m_lastSwapchainImage = nullptr;
 };
 
 } // Vulkan

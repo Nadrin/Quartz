@@ -18,8 +18,8 @@ namespace Vulkan {
 static VkFormat getOptimalTextureFormat(const QImageData &data)
 {
     switch(data.type) {
-    case QImageDataType::UInt8:
-        switch(data.numChannels) {
+    case QImageData::ValueType::UInt8:
+        switch(data.channels) {
         case 1: return VK_FORMAT_R8_UNORM;
         case 2: return VK_FORMAT_R8G8_UNORM;
         // Assume sRGB colorspace for RGBA LDR format.
@@ -27,9 +27,9 @@ static VkFormat getOptimalTextureFormat(const QImageData &data)
         case 4: return VK_FORMAT_R8G8B8A8_SRGB;
         }
         break;
-    case QImageDataType::Float16:
-    case QImageDataType::Float32:
-        switch(data.numChannels) {
+    case QImageData::ValueType::Float16:
+    case QImageData::ValueType::Float32:
+        switch(data.channels) {
         case 1: return VK_FORMAT_R16_SFLOAT;
         case 2: return VK_FORMAT_R16G16_SFLOAT;
         case 3:
@@ -44,9 +44,10 @@ static VkFormat getOptimalTextureFormat(const QImageData &data)
 
 static VkFormat getLinearTextureFormat(const QImageData &data)
 {
+    // TODO: Support BGR & BGRA formats.
     switch(data.type) {
-    case QImageDataType::UInt8:
-        switch(data.numChannels) {
+    case QImageData::ValueType::UInt8:
+        switch(data.channels) {
         case 1: return VK_FORMAT_R8_UNORM;
         case 2: return VK_FORMAT_R8G8_UNORM;
         // Assume sRGB colorspace for RGB & RGBA LDR formats.
@@ -54,16 +55,16 @@ static VkFormat getLinearTextureFormat(const QImageData &data)
         case 4: return VK_FORMAT_R8G8B8A8_SRGB;
         }
         break;
-    case QImageDataType::Float16:
-        switch(data.numChannels) {
+    case QImageData::ValueType::Float16:
+        switch(data.channels) {
         case 1: return VK_FORMAT_R16_SFLOAT;
         case 2: return VK_FORMAT_R16G16_SFLOAT;
         case 3: return VK_FORMAT_R16G16B16_SFLOAT;
         case 4: return VK_FORMAT_R16G16B16A16_SFLOAT;
         }
         break;
-    case QImageDataType::Float32:
-        switch(data.numChannels) {
+    case QImageData::ValueType::Float32:
+        switch(data.channels) {
         case 1: return VK_FORMAT_R32_SFLOAT;
         case 2: return VK_FORMAT_R32G32_SFLOAT;
         case 3: return VK_FORMAT_R32G32B32_SFLOAT;
@@ -91,8 +92,8 @@ void UploadTextureJob::run()
     }
 
     const auto &imageData = textureImageNode->data();
-    const uint32_t imageWidth = uint32_t(imageData.imageWidth);
-    const uint32_t imageHeight = uint32_t(imageData.imageHeight);
+    const uint32_t imageWidth = uint32_t(imageData.width);
+    const uint32_t imageHeight = uint32_t(imageData.height);
 
     auto *device = m_renderer->device();
     auto *commandBufferManager = m_renderer->commandBufferManager();
@@ -118,7 +119,7 @@ void UploadTextureJob::run()
         return;
     }
 
-    Image stagingImage = device->createStagingImage(imageWidth, imageHeight, stagingFormat);
+    Image stagingImage = device->createStagingImage(imageWidth, imageHeight, stagingFormat, ImageState::Staging);
     if(!stagingImage || !stagingImage.isHostAccessible()) {
         qCCritical(logVulkan) << "Failed to create staging image for GPU texture upload";
         device->destroyImage(textureImage);

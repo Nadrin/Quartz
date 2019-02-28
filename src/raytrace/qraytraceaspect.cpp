@@ -42,6 +42,8 @@ void QRaytraceAspectPrivate::registerBackendTypes()
     qRegisterMetaType<Qt3DRaytrace::QTriangle>();
     qRegisterMetaType<Qt3DRaytrace::QGeometryData>();
     qRegisterMetaType<Qt3DRaytrace::QImageData>();
+    qRegisterMetaType<Qt3DRaytrace::QImageDataPtr>();
+    qRegisterMetaType<Qt3DRaytrace::QRenderImage>();
 
     qRegisterMetaType<Qt3DRaytrace::QCamera*>();
     qRegisterMetaType<Qt3DRaytrace::QGeometry*>();
@@ -119,10 +121,29 @@ QRaytraceAspect::QRaytraceAspect(QObject *parent)
     : QRaytraceAspect(*new QRaytraceAspectPrivate, parent)
 {}
 
-QRendererInterface *QRaytraceAspect::renderer() const
+QSurface *QRaytraceAspect::surface() const
 {
     Q_D(const QRaytraceAspect);
-    return d->m_renderer.get();
+    return d->m_renderer ? d->m_renderer->surface() : nullptr;
+}
+
+void QRaytraceAspect::setSurface(QObject *surfaceObject)
+{
+    Q_D(QRaytraceAspect);
+    if(d->m_renderer) {
+        d->m_renderer->setSurface(surfaceObject);
+    }
+}
+
+bool QRaytraceAspect::queryRenderStatistics(QRenderStatistics &statistics) const
+{
+    Q_D(const QRaytraceAspect);
+
+    if(d->m_renderer) {
+        statistics = d->m_renderer->statistics();
+        return true;
+    }
+    return false;
 }
 
 void QRaytraceAspect::suspendJobs()
@@ -135,6 +156,24 @@ void QRaytraceAspect::resumeJobs()
 {
     Q_D(QRaytraceAspect);
     d->m_jobsSuspended = false;
+}
+
+void QRaytraceAspect::requestImage(QRenderImage type)
+{
+    QMetaObject::invokeMethod(this, "grabImage", Qt::AutoConnection,
+                              Q_ARG(Qt3DRaytrace::QRenderImage, type));
+}
+
+void QRaytraceAspect::grabImage(QRenderImage type)
+{
+    Q_D(QRaytraceAspect);
+    if(d->m_renderer) {
+        QImageDataPtr image(new QImageData);
+        *image = d->m_renderer->grabImage(type);
+        if(!image->data.isEmpty()) {
+            emit imageReady(type, image);
+        }
+    }
 }
 
 QRaytraceAspect::QRaytraceAspect(QRaytraceAspectPrivate &dd, QObject *parent)

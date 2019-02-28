@@ -76,7 +76,7 @@ bool CommandBufferManager::releaseCommandBuffer(TransientCommandBuffer &commandB
 bool CommandBufferManager::releaseCommandBuffer(TransientCommandBuffer &commandBuffer, const QVector<Buffer> &transientBuffers, const QVector<Image> &transientImages)
 {
     if(!commandBuffer.buffer.end()) {
-        qCWarning(logVulkan) << "Cannot end recoding transient command buffer";
+        qCWarning(logVulkan) << "CommandBufferManager: Unable to end recoding transient command buffer";
         return false;
     }
 
@@ -84,6 +84,29 @@ bool CommandBufferManager::releaseCommandBuffer(TransientCommandBuffer &commandB
     m_executableCommandBuffers.append({commandBuffer, transientBuffers, transientImages});
     commandBuffer = {};
     return true;
+}
+
+bool CommandBufferManager::executeCommandBufferImmediate(VkQueue queue, TransientCommandBuffer &commandBuffer)
+{
+    if(!commandBuffer.buffer.end()) {
+        qCWarning(logVulkan) << "CommandBufferManager: Unable to end recoding transient command buffer";
+        return false;
+    }
+
+    Result submitResult;
+    VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer.buffer.handle;
+    if(VKSUCCEEDED(submitResult = vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE))) {
+        vkQueueWaitIdle(queue);
+    }
+    else {
+        qCCritical(logVulkan) << "CommandBufferManager: Failed to submit command buffer for immediate execution:" << submitResult.toString();
+    }
+
+    m_device->freeCommandBuffer(commandBuffer.parentCommandPool, commandBuffer);
+    commandBuffer = {};
+    return submitResult == VK_SUCCESS;
 }
 
 bool CommandBufferManager::submitCommandBuffers(VkQueue queue)

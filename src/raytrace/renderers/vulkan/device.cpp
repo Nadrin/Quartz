@@ -187,7 +187,7 @@ Swapchain Device::createSwapchain(QWindow *window, VkSurfaceFormatKHR format, Vk
     swapchainCreateInfo.imageColorSpace = format.colorSpace;
     swapchainCreateInfo.imageExtent = surfaceCaps.currentExtent;
     swapchainCreateInfo.imageArrayLayers = 1;
-    swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
     swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     swapchainCreateInfo.preTransform = surfaceCaps.currentTransform;
     swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
@@ -220,7 +220,7 @@ Image Device::createImage(const ImageCreateInfo &createInfo, const AllocationCre
     }
     image.hostAddress = allocInfo.pMappedData;
 
-    if(createInfo.usage == VK_IMAGE_USAGE_TRANSFER_SRC_BIT) {
+    if(createInfo.usage == (VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT)) {
         // Skip image view creation for staging images.
         return image;
     }
@@ -263,7 +263,7 @@ Image Device::createImage(const ImageCreateInfo &createInfo, const AllocationCre
     return image;
 }
 
-Image Device::createStagingImage(uint32_t width, uint32_t height, VkFormat format)
+Image Device::createStagingImage(uint32_t width, uint32_t height, VkFormat format, ImageState initialState)
 {
     ImageCreateInfo createInfo;
     createInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -271,8 +271,8 @@ Image Device::createStagingImage(uint32_t width, uint32_t height, VkFormat forma
     createInfo.extent.width = width;
     createInfo.extent.height = height;
     createInfo.tiling = VK_IMAGE_TILING_LINEAR;
-    createInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-    createInfo.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
+    createInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    createInfo.initialLayout = ResourceBarrier::getImageLayoutFromState(initialState);
     return createImage(createInfo, VMA_MEMORY_USAGE_CPU_ONLY);
 }
 
@@ -301,7 +301,7 @@ Buffer Device::createStagingBuffer(VkDeviceSize size)
 {
     BufferCreateInfo createInfo;
     createInfo.size = size;
-    createInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    createInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     return createBuffer(createInfo, VMA_MEMORY_USAGE_CPU_ONLY);
 }
 
