@@ -18,6 +18,14 @@ class QEntity;
 class QAbstractAspect;
 } // Qt3DCore
 
+namespace Qt3DInput {
+class QInputAspect;
+} // Qt3DInput
+
+namespace Qt3DRaytrace {
+class QRaytraceAspect;
+} // Qt3DRaytrace
+
 namespace Qt3DRaytraceExtras {
 
 class Qt3DWindowPrivate;
@@ -31,6 +39,9 @@ public:
 
     void registerAspect(Qt3DCore::QAbstractAspect *aspect);
     void registerAspect(const QString &name);
+
+    Qt3DRaytrace::QRaytraceAspect *raytraceAspect() const;
+    Qt3DInput::QInputAspect *inputAspect() const;
 
     void setRootEntity(Qt3DCore::QEntity *root);
 

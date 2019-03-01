@@ -61,6 +61,18 @@ void Qt3DWindow::registerAspect(const QString &name)
     d->m_aspectEngine->registerAspect(name);
 }
 
+Qt3DRaytrace::QRaytraceAspect *Qt3DWindow::raytraceAspect() const
+{
+    Q_D(const Qt3DWindow);
+    return d->m_raytraceAspect;
+}
+
+Qt3DInput::QInputAspect *Qt3DWindow::inputAspect() const
+{
+    Q_D(const Qt3DWindow);
+    return d->m_inputAspect;
+}
+
 void Qt3DWindow::setRootEntity(Qt3DCore::QEntity *root)
 {
     Q_D(Qt3DWindow);

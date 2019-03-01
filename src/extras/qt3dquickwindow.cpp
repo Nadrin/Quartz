@@ -55,6 +55,18 @@ void Qt3DQuickWindow::registerAspect(const QString &name)
     d->m_engine->aspectEngine()->registerAspect(name);
 }
 
+Qt3DRaytrace::QRaytraceAspect *Qt3DQuickWindow::raytraceAspect() const
+{
+    Q_D(const Qt3DQuickWindow);
+    return d->m_raytraceAspect;
+}
+
+Qt3DInput::QInputAspect *Qt3DQuickWindow::inputAspect() const
+{
+    Q_D(const Qt3DQuickWindow);
+    return d->m_inputAspect;
+}
+
 void Qt3DQuickWindow::setSource(const QUrl &source)
 {
     Q_D(Qt3DQuickWindow);

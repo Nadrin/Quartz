@@ -22,6 +22,14 @@ class QQmlAspectEngine;
 } // Quick
 } // Qt3DCore
 
+namespace Qt3DInput {
+class QInputAspect;
+} // Qt3DInput
+
+namespace Qt3DRaytrace {
+class QRaytraceAspect;
+} // Qt3DRaytrace
+
 namespace Qt3DRaytraceExtras {
 namespace Quick {
 
@@ -37,6 +45,9 @@ public:
 
     void registerAspect(Qt3DCore::QAbstractAspect *aspect);
     void registerAspect(const QString &name);
+
+    Qt3DRaytrace::QRaytraceAspect *raytraceAspect() const;
+    Qt3DInput::QInputAspect *inputAspect() const;
 
     void setSource(const QUrl &source);
     Qt3DCore::Quick::QQmlAspectEngine *engine() const;
