@@ -21,6 +21,9 @@ public:
     bool setSourceFile(const QString &path);
     void setSceneName(const QString &name);
 
+private slots:
+    void updateTitle();
+
 private:
     QString m_sceneName;
 };

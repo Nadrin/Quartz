@@ -997,19 +997,6 @@ QRenderStatistics Renderer::statistics() const
     stats.gpuFrameTime = m_deviceTimeAverage.average();
     stats.totalRenderTime = m_frameElapsedTimer.elapsed() * 1e-3;
     stats.numFramesRendered = m_frameNumber;
-
-    /*
-    const double frameTime = std::max(cpuTime, gpuTime);
-    const double fps = (frameTime > 0.0) ? 1000.0 / frameTime : 0.0;
-
-    const QString statistics = QString("%1 [ CPU: %2 ms | GPU: %3 ms | FPS: %4 | Current image: %5 s / %6 iterations ]")
-            .arg(m_windowTitle)
-            .arg(cpuTime, 0, 'f', 2)
-            .arg(gpuTime, 0, 'f', 2)
-            .arg(fps, 0, 'f', 0)
-            .arg(m_frameElapsedTimer.elapsed() * 1e-3, 0, 'f', 2)
-            .arg(m_frameNumber);
-            */
     return stats;
 }
 

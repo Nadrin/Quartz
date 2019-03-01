@@ -5,19 +5,28 @@
  */
 
 #include "renderwindow.h"
+#include <Qt3DRaytrace/qraytraceaspect.h>
 
-#include <QVulkanInstance>
 #include <QScopedPointer>
 
+#include <QApplication>
 #include <QMessageBox>
+#include <QTimer>
+
 #include <QFileDialog>
 #include <QFile>
 #include <QFileInfo>
 #include <QDir>
 
+namespace Config {
+static constexpr int UpdateTitleInterval = 200;
+} // Config
+
 RenderWindow::RenderWindow()
 {
-    setTitle("Quartz");
+    QTimer *updateTitleTimer = new QTimer(this);
+    QObject::connect(updateTitleTimer, &QTimer::timeout, this, &RenderWindow::updateTitle);
+    updateTitleTimer->start(Config::UpdateTitleInterval);
 }
 
 QVulkanInstance *RenderWindow::createDefaultVulkanInstance()
@@ -72,7 +81,33 @@ bool RenderWindow::setSourceFile(const QString &path)
 void RenderWindow::setSceneName(const QString &name)
 {
     m_sceneName = name;
-    if(m_sceneName.length() > 0) {
-        setTitle(QString("%1 - %2").arg(m_sceneName).arg(title()));
+    updateTitle();
+}
+
+void RenderWindow::updateTitle()
+{
+    Qt3DRaytrace::QRenderStatistics statistics;
+    if(raytraceAspect()->queryRenderStatistics(statistics)) {
+        double frameTime = std::max(statistics.cpuFrameTime, statistics.gpuFrameTime);
+        if(qFuzzyIsNull(frameTime)) {
+            return;
+        }
+
+        QString statisticsString = QString("CPU: %1 ms | GPU: %2 ms | FPS: %3 | Current image: %5 s / %6 spp")
+                .arg(statistics.cpuFrameTime, 0, 'f', 2)
+                .arg(statistics.gpuFrameTime, 0, 'f', 2)
+                .arg(1000.0 / frameTime, 0, 'f', 0)
+                .arg(statistics.totalRenderTime, 0, 'f', 2)
+                .arg(statistics.numFramesRendered);
+
+        setTitle(QString("%1 - %2 [ %3 ]")
+                 .arg(m_sceneName)
+                 .arg(QApplication::applicationName())
+                 .arg(statisticsString));
+    }
+    else {
+        setTitle(QString("%1 - %2")
+                 .arg(m_sceneName)
+                 .arg(QApplication::applicationName()));
     }
 }
