@@ -9,9 +9,12 @@
 
 #include <Qt3DRaytrace/qraytraceaspect.h>
 
-#include <QScopedPointer>
-
 #include <QApplication>
+#include <QQmlEngine>
+
+#include <QScopedPointer>
+#include <QRegularExpression>
+
 #include <QMessageBox>
 #include <QTimer>
 #include <QKeyEvent>
@@ -21,8 +24,6 @@
 #include <QFileInfo>
 #include <QDir>
 
-#include <QRegularExpression>
-
 namespace Config {
 static constexpr int     UpdateTitleInterval = 200;
 static constexpr int     SaveImageQuality = 100;
@@ -31,6 +32,9 @@ static constexpr Qt::Key SaveImageKey = Qt::Key_F2;
 
 RenderWindow::RenderWindow()
 {
+    QString qmlImportPath = QString("%1/%2").arg(QApplication::applicationDirPath()).arg("qml");
+    qmlEngine()->setImportPathList({qmlImportPath});
+
     QTimer *updateTitleTimer = new QTimer(this);
     QObject::connect(updateTitleTimer, &QTimer::timeout, this, &RenderWindow::updateTitle);
     updateTitleTimer->start(Config::UpdateTitleInterval);
