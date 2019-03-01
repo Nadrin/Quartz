@@ -8,6 +8,8 @@ add_executable(${APP_NAME}
     main.cpp
     renderwindow.cpp
     renderwindow.h
+    imagewriter.cpp
+    imagewriter.h
 )
 
 target_compile_features(${APP_NAME} PRIVATE cxx_std_14)

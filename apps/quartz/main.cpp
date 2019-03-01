@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
         }
     }
     else {
-        if(!window.chooseSourceFile()) {
+        if(!window.requestSourceFile()) {
             return 1;
         }
     }
