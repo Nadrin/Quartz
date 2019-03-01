@@ -68,8 +68,8 @@ signals:
 protected:
     Qt3DQuickWindow(Qt3DQuickWindowPrivate &dd, QWindow *parent);
 
-    bool event(QEvent *event) override;
-    void showEvent(QShowEvent *event) override;
+    virtual bool event(QEvent *event) override;
+    virtual void showEvent(QShowEvent *event) override;
 
 private slots:
     void sceneCreated(QObject *root);

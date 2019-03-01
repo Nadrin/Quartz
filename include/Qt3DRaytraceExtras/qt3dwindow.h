@@ -51,8 +51,8 @@ signals:
 protected:
     Qt3DWindow(Qt3DWindowPrivate &dd, QWindow *parent);
 
-    bool event(QEvent *event) override;
-    void showEvent(QShowEvent *event) override;
+    virtual bool event(QEvent *event) override;
+    virtual void showEvent(QShowEvent *event) override;
 };
 
 } // Qt3DRaytraceExtras
