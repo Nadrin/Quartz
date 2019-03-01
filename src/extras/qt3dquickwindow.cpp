@@ -67,6 +67,12 @@ Qt3DInput::QInputAspect *Qt3DQuickWindow::inputAspect() const
     return d->m_inputAspect;
 }
 
+QQmlEngine *Qt3DQuickWindow::qmlEngine() const
+{
+    Q_D(const Qt3DQuickWindow);
+    return d->m_engine->qmlEngine();
+}
+
 void Qt3DQuickWindow::setSource(const QUrl &source)
 {
     Q_D(Qt3DQuickWindow);

@@ -13,6 +13,7 @@
 #include <QUrl>
 
 class QVulkanInstance;
+class QQmlEngine;
 
 namespace Qt3DCore {
 class QEntity;
@@ -48,6 +49,8 @@ public:
 
     Qt3DRaytrace::QRaytraceAspect *raytraceAspect() const;
     Qt3DInput::QInputAspect *inputAspect() const;
+
+    QQmlEngine *qmlEngine() const;
 
     void setSource(const QUrl &source);
     Qt3DCore::Quick::QQmlAspectEngine *engine() const;
