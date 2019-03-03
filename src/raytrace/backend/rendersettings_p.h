@@ -10,6 +10,9 @@
 #include <backend/backendnode_p.h>
 #include <backend/types_p.h>
 
+#include <QColor>
+#include <QVector2D>
+
 namespace Qt3DRaytrace {
 namespace Raytrace {
 
@@ -34,6 +37,7 @@ public:
 
     float skyIntensity() const { return m_skyIntensity; }
     Qt3DCore::QNodeId skyTextureId() const { return m_skyTextureId; }
+    QVector2D skyTextureOffset() const { return m_skyTextureOffset; }
 
     void sceneChangeEvent(const Qt3DCore::QSceneChangePtr &change) override;
 
@@ -50,6 +54,7 @@ private:
     QColor m_skyColor;
     float m_skyIntensity;
     Qt3DCore::QNodeId m_skyTextureId;
+    QVector2D m_skyTextureOffset;
 };
 
 class RenderSettingsMapper final : public Qt3DCore::QBackendNodeMapper

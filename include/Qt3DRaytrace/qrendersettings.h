@@ -10,6 +10,7 @@
 
 #include <Qt3DCore/QComponent>
 #include <QColor>
+#include <QVector2D>
 
 namespace Qt3DRaytrace {
 
@@ -31,6 +32,7 @@ class QT3DRAYTRACESHARED_EXPORT QRenderSettings : public Qt3DCore::QComponent
     Q_PROPERTY(QColor skyColor READ skyColor WRITE setSkyColor NOTIFY skyColorChanged)
     Q_PROPERTY(float skyIntensity READ skyIntensity WRITE setSkyIntensity NOTIFY skyIntensityChanged)
     Q_PROPERTY(Qt3DRaytrace::QAbstractTexture* skyTexture READ skyTexture WRITE setSkyTexture NOTIFY skyTextureChanged)
+    Q_PROPERTY(QVector2D skyTextureOffset READ skyTextureOffset WRITE setSkyTextureOffset NOTIFY skyTextureOffsetChanged)
 public:
     explicit QRenderSettings(Qt3DCore::QNode *parent = nullptr);
 
@@ -44,6 +46,7 @@ public:
     QColor skyColor() const;
     float skyIntensity() const;
     QAbstractTexture *skyTexture() const;
+    QVector2D skyTextureOffset() const;
 
 public slots:
     void setCamera(QCamera *camera);
@@ -56,6 +59,7 @@ public slots:
     void setSkyColor(const QColor &skyColor);
     void setSkyIntensity(float skyIntensity);
     void setSkyTexture(QAbstractTexture *texture);
+    void setSkyTextureOffset(const QVector2D &offset);
 
 signals:
     void cameraChanged(QCamera *camera);
@@ -68,6 +72,7 @@ signals:
     void skyColorChanged(const QColor &skyColor);
     void skyIntensityChanged(float skyIntensity);
     void skyTextureChanged(QAbstractTexture *texture);
+    void skyTextureOffsetChanged(const QVector2D &offset);
 
 protected:
     explicit QRenderSettings(QRenderSettingsPrivate &dd, QNode *parent = nullptr);

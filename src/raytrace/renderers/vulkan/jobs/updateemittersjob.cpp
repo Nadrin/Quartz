@@ -55,6 +55,7 @@ void UpdateEmittersJob::run()
             settings->skyRadiance().writeToBuffer(skyEmitter.radiance.data);
             skyEmitter.intensity = settings->skyIntensity();
             skyEmitter.textureIndex = lookupTextureImageIndex(settings->skyTextureId());
+            skyEmitter.direction = QVector3D(settings->skyTextureOffset(), 0.0f);
         }
         emitters.append(skyEmitter);
     }

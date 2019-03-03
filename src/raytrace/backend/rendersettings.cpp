@@ -68,6 +68,9 @@ void RenderSettings::sceneChangeEvent(const QSceneChangePtr &change)
         else if(propertyChange->propertyName() == QByteArrayLiteral("skyTexture")) {
             m_skyTextureId = propertyChange->value().value<QNodeId>();
         }
+        else if(propertyChange->propertyName() == QByteArrayLiteral("skyTextureOffset")) {
+            m_skyTextureOffset = propertyChange->value().value<QVector2D>();
+        }
 
         markDirty(AbstractRenderer::AllDirty);
     }
@@ -90,6 +93,7 @@ void RenderSettings::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
     m_skyColor = data.skyColor;
     m_skyIntensity = data.skyIntensity;
     m_skyTextureId = data.skyTextureId;
+    m_skyTextureOffset = data.skyTextureOffset;
 
     markDirty(AbstractRenderer::AllDirty);
 }

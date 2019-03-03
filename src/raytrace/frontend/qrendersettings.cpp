@@ -80,6 +80,12 @@ QAbstractTexture *QRenderSettings::skyTexture() const
     return d->m_skyTexture;
 }
 
+QVector2D QRenderSettings::skyTextureOffset() const
+{
+    Q_D(const QRenderSettings);
+    return d->m_settings.skyTextureOffset;
+}
+
 void QRenderSettings::setCamera(QCamera *camera)
 {
     Q_D(QRenderSettings);
@@ -192,6 +198,15 @@ void QRenderSettings::setSkyTexture(QAbstractTexture *texture)
         }
         d->m_settings.skyTextureId = qIdForNode(texture);
         emit skyTextureChanged(texture);
+    }
+}
+
+void QRenderSettings::setSkyTextureOffset(const QVector2D &offset)
+{
+    Q_D(QRenderSettings);
+    if(!qFuzzyCompare(d->m_settings.skyTextureOffset, offset)) {
+        d->m_settings.skyTextureOffset = offset;
+        emit skyTextureOffsetChanged(offset);
     }
 }
 

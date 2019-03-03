@@ -91,6 +91,7 @@ vec3 fetchSkyRadiance(vec2 uv)
     Emitter skyEmitter = emitterBuffer.emitters[0];
     vec3 radiance = skyEmitter.radiance;
     if(skyEmitter.textureIndex != ~0u) {
+        uv += skyEmitter.direction.xy; // Apply uv offset.
         radiance = skyEmitter.intensity * texture(sampler2D(textures[nonuniformEXT(skyEmitter.textureIndex)], textureSampler), uv).rgb;
     }
     return radiance;

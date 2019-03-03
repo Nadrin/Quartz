@@ -27,6 +27,7 @@ struct QRenderSettingsData
     QColor skyColor = Qt::GlobalColor::black;
     float skyIntensity = 1.0f;
     Qt3DCore::QNodeId skyTextureId;
+    QVector2D skyTextureOffset;
 };
 
 class QRenderSettingsPrivate : public Qt3DCore::QComponentPrivate
