@@ -18,8 +18,8 @@ struct QRenderSettingsData
 
     int primarySamples = 1;
     int secondarySamples = 1;
-    int minDepth = 2;
-    int maxDepth = 4;
+    int minDepth = 1;
+    int maxDepth = 3;
 
     float directRadianceClamp = 0.0f;
     float indirectRadianceClamp = 0.0f;
