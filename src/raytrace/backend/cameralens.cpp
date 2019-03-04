@@ -28,6 +28,12 @@ void CameraLens::sceneChangeEvent(const QSceneChangePtr &change)
         else if(propertyChange->propertyName() == QByteArrayLiteral("aspectRatio")) {
             m_aspectRatio = propertyChange->value().value<float>();
         }
+        else if(propertyChange->propertyName() == QByteArrayLiteral("diameter")) {
+            m_diameter = propertyChange->value().value<float>();
+        }
+        else if(propertyChange->propertyName() == QByteArrayLiteral("focalDistance")) {
+            m_focalDistance = propertyChange->value().value<float>();
+        }
         else if(propertyChange->propertyName() == QByteArrayLiteral("gamma")) {
             m_gamma = propertyChange->value().value<float>();
         }
@@ -46,6 +52,8 @@ void CameraLens::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
 
     m_aspectRatio = data.aspectRatio;
     m_fieldOfView = data.fieldOfView;
+    m_diameter = data.diameter;
+    m_focalDistance = data.focalDistance;
     m_gamma = data.gamma;
     m_exposure = data.exposure;
 

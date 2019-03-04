@@ -42,6 +42,8 @@ private:
     QVector3D m_forwardVector;
     float m_aspectRatio;
     float m_tanHalfFOV;
+    float m_lensRadius;
+    float m_lensFocalDistance;
     float m_invGamma;
     float m_exposure;
 };

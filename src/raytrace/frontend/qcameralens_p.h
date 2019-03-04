@@ -15,6 +15,8 @@ struct QCameraLensData
 {
     float aspectRatio = 1.0f;
     float fieldOfView = 90.0f;
+    float diameter = 0.0f;
+    float focalDistance = 1.0f;
     float gamma = 2.2f;
     float exposure = 1.0f;
 };

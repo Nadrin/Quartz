@@ -30,6 +30,18 @@ float QCameraLens::fieldOfView() const
     return d->m_data.fieldOfView;
 }
 
+float QCameraLens::diameter() const
+{
+    Q_D(const QCameraLens);
+    return d->m_data.diameter;
+}
+
+float QCameraLens::focalDistance() const
+{
+    Q_D(const QCameraLens);
+    return d->m_data.focalDistance;
+}
+
 float QCameraLens::gamma() const
 {
     Q_D(const QCameraLens);
@@ -57,6 +69,24 @@ void QCameraLens::setFieldOfView(float fov)
     if(!qFuzzyCompare(d->m_data.fieldOfView, fov)) {
         d->m_data.fieldOfView = fov;
         emit fieldOfViewChanged(fov);
+    }
+}
+
+void QCameraLens::setDiameter(float diameter)
+{
+    Q_D(QCameraLens);
+    if(!qFuzzyCompare(d->m_data.diameter, diameter)) {
+        d->m_data.diameter = diameter;
+        emit diameterChanged(diameter);
+    }
+}
+
+void QCameraLens::setFocalDistance(float distance)
+{
+    Q_D(QCameraLens);
+    if(!qFuzzyCompare(d->m_data.focalDistance, distance)) {
+        d->m_data.focalDistance = distance;
+        emit focalDistanceChanged(distance);
     }
 }
 

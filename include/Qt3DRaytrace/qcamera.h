@@ -35,6 +35,8 @@ class QT3DRAYTRACESHARED_EXPORT QCamera : public Qt3DCore::QEntity
     // QCameraLens
     Q_PROPERTY(float aspectRatio READ aspectRatio WRITE setAspectRatio NOTIFY aspectRatioChanged)
     Q_PROPERTY(float fieldOfView READ fieldOfView WRITE setFieldOfView NOTIFY fieldOfViewChanged)
+    Q_PROPERTY(float lensDiameter READ lensDiameter WRITE setLensDiameter NOTIFY lensDiameterChanged)
+    Q_PROPERTY(float lensFocalDistance READ lensFocalDistance WRITE setLensFocalDistance NOTIFY lensFocalDistanceChanged)
     Q_PROPERTY(float gamma READ gamma WRITE setGamma NOTIFY gammaChanged)
     Q_PROPERTY(float exposure READ exposure WRITE setExposure NOTIFY exposureChanged)
 public:
@@ -55,6 +57,8 @@ public:
 
     float aspectRatio() const;
     float fieldOfView() const;
+    float lensDiameter() const;
+    float lensFocalDistance() const;
     float gamma() const;
     float exposure() const;
 
@@ -69,6 +73,8 @@ public:
     Q_INVOKABLE void panWorld(float angle);
     Q_INVOKABLE void rollWorld(float angle);
 
+    Q_INVOKABLE void setLensFocalRatio(float fstop);
+
 public slots:
     void setPosition(const QVector3D &position);
     void setRotation(const QQuaternion &rotation);
@@ -82,6 +88,8 @@ public slots:
 
     void setAspectRatio(float aspectRatio);
     void setFieldOfView(float fov);
+    void setLensDiameter(float diameter);
+    void setLensFocalDistance(float distance);
     void setGamma(float gamma);
     void setExposure(float exposure);
 
@@ -98,6 +106,8 @@ signals:
 
     void aspectRatioChanged(float aspectRatio);
     void fieldOfViewChanged(float fov);
+    void lensDiameterChanged(float diameter);
+    void lensFocalDistanceChanged(float distance);
     void gammaChanged(float gamma);
     void exposureChanged(float exposure);
 

@@ -19,6 +19,8 @@ public:
 
     float fieldOfView() const { return m_fieldOfView; }
     float aspectRatio() const { return m_aspectRatio; }
+    float diameter() const { return m_diameter; }
+    float focalDistance() const { return m_focalDistance; }
     float gamma() const { return m_gamma; }
     float exposure() const { return m_exposure; }
 
@@ -29,6 +31,8 @@ private:
 
     float m_fieldOfView;
     float m_aspectRatio;
+    float m_diameter;
+    float m_focalDistance;
     float m_gamma;
     float m_exposure;
 };

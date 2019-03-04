@@ -49,6 +49,8 @@ void CameraManager::setDefaultParameters()
     m_forwardVector = IdentityForwardVector;
     m_aspectRatio = 1.0f;
     m_tanHalfFOV = std::tan(0.5f * qDegreesToRadians(DefaultFOV));
+    m_lensRadius = 0.0f;
+    m_lensFocalDistance = 1.0f;
     m_invGamma = 1.0f / 2.2f;
     m_exposure = 1.0f;
 }
@@ -71,6 +73,8 @@ void CameraManager::updateParameters()
     if(lens) {
         m_aspectRatio = lens->aspectRatio();
         m_tanHalfFOV = std::tan(0.5f * qDegreesToRadians(lens->fieldOfView()));
+        m_lensRadius = 0.5f * lens->diameter();
+        m_lensFocalDistance = lens->focalDistance();
         m_invGamma = 1.0f / lens->gamma();
         m_exposure = lens->exposure();
     }
@@ -78,23 +82,25 @@ void CameraManager::updateParameters()
 
 void CameraManager::applyRenderParameters(RenderParameters &params) const
 {
-    params.cameraPositionAndAspect.data[0] = m_position.x();
-    params.cameraPositionAndAspect.data[1] = m_position.y();
-    params.cameraPositionAndAspect.data[2] = m_position.z();
-    params.cameraPositionAndAspect.data[3] = m_aspectRatio;
+    params.cameraPositionAspect.data[0] = m_position.x();
+    params.cameraPositionAspect.data[1] = m_position.y();
+    params.cameraPositionAspect.data[2] = m_position.z();
+    params.cameraPositionAspect.data[3] = m_aspectRatio;
 
-    params.cameraUpVectorAndTanHalfFOV.data[0] = m_upVector.x();
-    params.cameraUpVectorAndTanHalfFOV.data[1] = m_upVector.y();
-    params.cameraUpVectorAndTanHalfFOV.data[2] = m_upVector.z();
-    params.cameraUpVectorAndTanHalfFOV.data[3] = m_tanHalfFOV;
+    params.cameraUpVectorTanHalfFOV.data[0] = m_upVector.x();
+    params.cameraUpVectorTanHalfFOV.data[1] = m_upVector.y();
+    params.cameraUpVectorTanHalfFOV.data[2] = m_upVector.z();
+    params.cameraUpVectorTanHalfFOV.data[3] = m_tanHalfFOV;
 
-    params.cameraRightVector[0] = m_rightVector.x();
-    params.cameraRightVector[1] = m_rightVector.y();
-    params.cameraRightVector[2] = m_rightVector.z();
+    params.cameraRightVectorLensR[0] = m_rightVector.x();
+    params.cameraRightVectorLensR[1] = m_rightVector.y();
+    params.cameraRightVectorLensR[2] = m_rightVector.z();
+    params.cameraRightVectorLensR[3] = m_lensRadius;
 
-    params.cameraForwardVector[0] = m_forwardVector.x();
-    params.cameraForwardVector[1] = m_forwardVector.y();
-    params.cameraForwardVector[2] = m_forwardVector.z();
+    params.cameraForwardVectorLensF[0] = m_forwardVector.x();
+    params.cameraForwardVectorLensF[1] = m_forwardVector.y();
+    params.cameraForwardVectorLensF[2] = m_forwardVector.z();
+    params.cameraForwardVectorLensF[3] = m_lensFocalDistance;
 }
 
 void CameraManager::applyDisplayPrameters(DisplayParameters &params) const

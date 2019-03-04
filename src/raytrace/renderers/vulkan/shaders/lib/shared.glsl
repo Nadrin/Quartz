@@ -62,10 +62,10 @@ struct RenderParameters
     uint numSecondarySamples;
     float directRadianceClamp;
     float indirectRadianceClamp;
-    vec4 cameraPositionAndAspect;
-    vec4 cameraUpVectorAndTanHalfFOV;
-    vec4 cameraRightVector;
-    vec4 cameraForwardVector;
+    vec4 cameraPositionAspect;
+    vec4 cameraUpVectorTanHalfFOV;
+    vec4 cameraRightVectorLensR;
+    vec4 cameraForwardVectorLensF;
 };
 
 struct DisplayParameters
