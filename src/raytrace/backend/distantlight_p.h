@@ -27,7 +27,7 @@ public:
 
     LinearColor radiance() const
     {
-        return LinearColor(m_color, m_intensity);
+        return LinearColor::from_sRgb(m_color, m_intensity);
     }
     QVector3D direction() const
     {

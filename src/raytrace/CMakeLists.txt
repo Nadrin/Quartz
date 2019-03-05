@@ -16,6 +16,7 @@ set(SOURCES_PRIVATE
     qt3draytrace_global_p.h
     qraytraceaspect.cpp
     qraytraceaspect_p.h
+    qt3draytracecontext.cpp
     frontend/qgeometryrenderer.cpp
     frontend/qgeometryrenderer_p.h
     frontend/qgeometry.cpp
@@ -83,11 +84,13 @@ set(SOURCES_PRIVATE
 
 set(SOURCES_PUBLIC
     ${MODULE_API}/qt3draytrace_global.h
+    ${MODULE_API}/qt3draytracecontext.h
     ${MODULE_API}/qraytraceaspect.h
     ${MODULE_API}/qgeometryrenderer.h
     ${MODULE_API}/qgeometry.h
     ${MODULE_API}/qgeometrydata.h
     ${MODULE_API}/qgeometryfactory.h
+    ${MODULE_API}/qcolorspace.h
     ${MODULE_API}/qmesh.h
     ${MODULE_API}/qmaterial.h
     ${MODULE_API}/qdistantlight.h

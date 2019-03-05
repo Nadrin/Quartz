@@ -32,7 +32,7 @@ public:
 
     LinearColor skyRadiance() const
     {
-        return LinearColor(m_skyColor, m_skyIntensity);
+        return LinearColor::from_sRgb(m_skyColor, m_skyIntensity);
     }
 
     float skyIntensity() const { return m_skyIntensity; }
