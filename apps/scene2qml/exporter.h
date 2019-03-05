@@ -14,6 +14,12 @@
 
 class QTextStream;
 
+enum class Colorspace
+{
+    Linear,
+    sRGB,
+};
+
 class Exporter
 {
 public:
@@ -22,6 +28,7 @@ public:
     void setPrefix(const QString &prefix);
     void setMeshDirectory(const QString &path);
     void setTexturesDirectory(const QString &path);
+    void setColorspace(Colorspace colorspace);
 
     bool exportQml(const QString &path, const QString &sceneName);
     bool exportMeshes();
@@ -58,6 +65,8 @@ private:
     QString getTextureLogicalPath(const TextureComponent &texture, const QString &prefix="") const;
     QString getTextureAbsolutePath(const TextureComponent &texture) const;
 
+    QString colorString(const Color &c) const;
+
     const Scene &m_scene;
 
     QMap<QString, int> m_identifiers;
@@ -70,6 +79,8 @@ private:
     QDir m_texturesDirectory;
 
     QString m_prefix;
+
+    Colorspace m_colorspace;
 
     int m_numExportedEntities;
     int m_numExportedMeshes;

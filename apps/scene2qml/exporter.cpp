@@ -51,6 +51,7 @@ static QString idPrintable(const QString &id)
 
 Exporter::Exporter(const Scene &scene)
     : m_scene(scene)
+    , m_colorspace(Colorspace::Linear)
     , m_numExportedEntities(0)
     , m_numExportedMeshes(0)
     , m_numExportedTextures(0)
@@ -69,6 +70,11 @@ void Exporter::setMeshDirectory(const QString &path)
 void Exporter::setTexturesDirectory(const QString &path)
 {
     m_texturesDirectory = path;
+}
+
+void Exporter::setColorspace(Colorspace colorspace)
+{
+    m_colorspace = colorspace;
 }
 
 bool Exporter::exportMeshes()
@@ -260,6 +266,9 @@ QString Exporter::writeQmlMesh(QTextStream &out, const MeshComponent &mesh, cons
     const QString id = getOrCreateComponentId(&mesh, "mesh", parentEntity);
     out << qml::indent(depth) << "Mesh {\n";
     out << qml::indent(depth+1) << "id: " << qml::idPrintable(id) << "\n";
+    if(mesh.name.length() > 0) {
+        out << qml::indent(depth+1) << "objectName: \"" << mesh.name << "\"\n";
+    }
     out << qml::indent(depth+1) << "source: \"file:" << getMeshLogicalPath(mesh, m_prefix) << "\"\n";
     out << qml::indent(depth) << "}\n";
     return id;
@@ -284,6 +293,9 @@ QString Exporter::writeQmlMaterial(QTextStream &out, const MaterialComponent &ma
     const QString id = getOrCreateComponentId(&material, "material", parentEntity);
     out << qml::indent(depth) << "Material {\n";
     out << qml::indent(depth+1) << "id: " << qml::idPrintable(id) << "\n";
+    if(material.name.length() > 0) {
+        out << qml::indent(depth+1) << "objectName: \"" << material.name << "\"\n";
+    }
 
     QString albedoTextureId = resolveTextureId(material.albedoTextureIndex);
     QString roughnessTextureId = resolveTextureId(material.roughnessTextureIndex);
@@ -293,8 +305,7 @@ QString Exporter::writeQmlMaterial(QTextStream &out, const MaterialComponent &ma
         out << qml::indent(depth+1) << "albedoTexture: " << qml::idPrintable(albedoTextureId) << "\n";
     }
     else {
-        const auto &c = material.albedo;
-        out << qml::indent(depth+1) << "albedo: Qt.rgba(" << c.r << "," << c.g << "," << c.b << ")\n";
+        out << qml::indent(depth+1) << "albedo: " << colorString(material.albedo) << "\n";
     }
 
     if(roughnessTextureId.length() > 0) {
@@ -312,8 +323,7 @@ QString Exporter::writeQmlMaterial(QTextStream &out, const MaterialComponent &ma
     }
 
     if(!material.emission.isBlack()) {
-        const auto &c = material.emission;
-        out << qml::indent(depth+1) << "emission: Qt.rgba(" << c.r << "," << c.g << "," << c.b << ")\n";
+        out << qml::indent(depth+1) << "emission: " << colorString(material.emission) << "\n";
         out << qml::indent(depth+1) << "emissionIntensity: " << material.emissionIntensity << "\n";
     }
 
@@ -567,4 +577,14 @@ QString Exporter::getTextureLogicalPath(const TextureComponent &texture, const Q
 QString Exporter::getTextureAbsolutePath(const TextureComponent &texture) const
 {
     return QString("%1/%2").arg(m_rootDirectory.absolutePath()).arg(getTextureLogicalPath(texture));
+}
+
+QString Exporter::colorString(const Color &c) const
+{
+    switch(m_colorspace) {
+    case Colorspace::Linear:
+        return QString("Qt3DRaytrace.lrgba(%1,%2,%3)").arg(c.r).arg(c.g).arg(c.b);
+    case Colorspace::sRGB:
+        return QString("Qt3DRaytrace.srgba(%1,%2,%3)").arg(c.r).arg(c.g).arg(c.b);
+    }
 }

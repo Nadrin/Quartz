@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 {
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName("scene2qml");
-    QCoreApplication::setApplicationVersion("1.0.0");
+    QCoreApplication::setApplicationVersion("1.0.2");
 
     QCommandLineParser parser;
     parser.setApplicationDescription("3D scene file to Quartz QML converter.");
@@ -30,6 +30,8 @@ int main(int argc, char* argv[])
     parser.addOption(meshDirectoryOption);
     QCommandLineOption textureDirectoryOption("t", "Custom texture directory (relative to QML file location).", "path");
     parser.addOption(textureDirectoryOption);
+    QCommandLineOption srgbOption("srgb", "Assume color properties to be in sRGB colorspace.");
+    parser.addOption(srgbOption);
 
     parser.process(app);
 
@@ -68,6 +70,10 @@ int main(int argc, char* argv[])
     }
     else {
         exporter.setTexturesDirectory(QString("%1_textures").arg(targetBaseName));
+    }
+
+    if(parser.isSet(srgbOption)) {
+        exporter.setColorspace(Colorspace::sRGB);
     }
 
     if(!exporter.exportQml(targetPath, QFileInfo(sourcePath).fileName())) {
