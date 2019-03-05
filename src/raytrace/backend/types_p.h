@@ -7,8 +7,7 @@
 #pragma once
 
 #include <qt3draytrace_global_p.h>
-
-#include <QColor>
+#include <Qt3DRaytrace/qcolorspace.h>
 
 namespace Qt3DRaytrace {
 namespace Raytrace {
@@ -27,18 +26,9 @@ struct LinearColor
         , b(float(c.blueF()) * intensity)
     {}
 
-    static LinearColor from_sRGB(const QColor &c)
+    static LinearColor from_sRgb(const QColor &c, float intensity=1.0f)
     {
-        auto inv_sRGB = [](double u) -> double {
-            if(u < 0.04045) return u / 12.92;
-            else return std::pow(((u + 0.055) / 1.055), 2.4);
-        };
-
-        LinearColor lc;
-        lc.r = static_cast<float>(inv_sRGB(c.redF()));
-        lc.g = static_cast<float>(inv_sRGB(c.greenF()));
-        lc.b = static_cast<float>(inv_sRGB(c.blueF()));
-        return lc;
+        return LinearColor(to_linearRgb(c), intensity);
     }
 
     bool isBlack() const

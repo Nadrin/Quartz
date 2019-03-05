@@ -7,6 +7,7 @@
 #include <qtquick3draytraceplugin.h>
 #include <qqml.h>
 
+#include <Qt3DRaytrace/qt3draytracecontext.h>
 #include <Qt3DRaytrace/qgeometry.h>
 #include <Qt3DRaytrace/qgeometryrenderer.h>
 #include <Qt3DRaytrace/qmesh.h>
@@ -21,6 +22,11 @@
 
 void Qt3DQuick3DRaytracePlugin::registerTypes(const char *uri)
 {
+    // Context
+    qmlRegisterSingletonType<Qt3DRaytrace::Quick::Qt3DRaytraceContext>(uri, 1, 0, "Qt3DRaytrace", [](QQmlEngine*, QJSEngine*) -> QObject* {
+        return new Qt3DRaytrace::Quick::Qt3DRaytraceContext;
+    });
+
     // Geometry
     qmlRegisterType<Qt3DRaytrace::QGeometry>(uri, 1, 0, "Geometry");
     qmlRegisterType<Qt3DRaytrace::QGeometryRenderer>(uri, 1, 0, "GeometryRenderer");

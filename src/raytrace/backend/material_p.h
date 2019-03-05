@@ -25,7 +25,7 @@ public:
 
     LinearColor albedo() const
     {
-        return LinearColor::from_sRGB(m_albedo);
+        return LinearColor::from_sRgb(m_albedo);
     }
     float roughness() const
     {
@@ -37,7 +37,7 @@ public:
     }
     LinearColor emission() const
     {
-        return LinearColor(m_emission, m_emissionIntensity);
+        return LinearColor::from_sRgb(m_emission, m_emissionIntensity);
     }
 
     Qt3DCore::QNodeId albedoTextureId() const
