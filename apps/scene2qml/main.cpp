@@ -30,6 +30,9 @@ int main(int argc, char* argv[])
     parser.addOption(meshDirectoryOption);
     QCommandLineOption textureDirectoryOption("t", "Custom texture directory (relative to QML file location).", "path");
     parser.addOption(textureDirectoryOption);
+
+    QCommandLineOption transformOption("transform", "Pre-transform entities during import.");
+    parser.addOption(transformOption);
     QCommandLineOption srgbOption("srgb", "Assume color properties to be in sRGB colorspace.");
     parser.addOption(srgbOption);
 
@@ -48,6 +51,11 @@ int main(int argc, char* argv[])
     QTextStream(stdout) << QFileInfo(targetPath).absoluteFilePath() << " ...\n";
 
     Importer importer;
+
+    if(parser.isSet(transformOption)) {
+        importer.setImportFlag(aiProcess_PreTransformVertices);
+    }
+
     if(!importer.importScene(sourcePath)) {
         return 1;
     }
@@ -57,21 +65,18 @@ int main(int argc, char* argv[])
     if(parser.isSet(prefixOption)) {
         exporter.setPrefix(parser.value(prefixOption));
     }
-
     if(parser.isSet(meshDirectoryOption)) {
         exporter.setMeshDirectory(parser.value(meshDirectoryOption));
     }
     else {
         exporter.setMeshDirectory(QString("%1_meshes").arg(targetBaseName));
     }
-
     if(parser.isSet(textureDirectoryOption)) {
         exporter.setTexturesDirectory(parser.value(textureDirectoryOption));
     }
     else {
         exporter.setTexturesDirectory(QString("%1_textures").arg(targetBaseName));
     }
-
     if(parser.isSet(srgbOption)) {
         exporter.setColorspace(Colorspace::sRGB);
     }

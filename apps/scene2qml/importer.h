@@ -12,13 +12,16 @@
 #include <QScopedPointer>
 
 #include "scene.h"
+
 #include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
 
 class Importer
 {
 public:
     Importer();
 
+    void setImportFlag(unsigned int flag);
     bool importScene(const QString &path);
 
     const Scene &scene() const
@@ -36,4 +39,5 @@ private:
     Scene m_scene;
     Assimp::Importer m_importer;
     QMap<QString, int> m_texturesByPath;
+    unsigned int m_importFlags;
 };

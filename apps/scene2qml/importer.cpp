@@ -9,10 +9,9 @@
 #include <QDebug>
 #include <QFileInfo>
 
-#include <assimp/postprocess.h>
 #include <assimp/DefaultLogger.hpp>
 
-static constexpr unsigned int ImportFlags =
+static constexpr unsigned int DefaultImportFlags =
         aiProcess_GenUVCoords |
         aiProcess_TransformUVCoords |
         aiProcess_JoinIdenticalVertices |
@@ -21,8 +20,14 @@ static constexpr unsigned int ImportFlags =
         aiProcess_FindInstances;
 
 Importer::Importer()
+    : m_importFlags(DefaultImportFlags)
 {
     Assimp::DefaultLogger::create("", Assimp::Logger::NORMAL);
+}
+
+void Importer::setImportFlag(unsigned int flag)
+{
+    m_importFlags |= flag;
 }
 
 bool Importer::importScene(const QString &path)
@@ -32,7 +37,7 @@ bool Importer::importScene(const QString &path)
         return false;
     }
 
-    const aiScene *scene = m_importer.ReadFile(path.toUtf8().constData(), ImportFlags);
+    const aiScene *scene = m_importer.ReadFile(path.toUtf8().constData(), m_importFlags);
     if(!scene) {
         qCritical() << "Error: Failed to import source file:" << path;
         return false;
