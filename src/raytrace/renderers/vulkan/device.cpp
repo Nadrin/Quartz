@@ -299,6 +299,18 @@ void Device::destroyImage(Image &image)
     image = {};
 }
 
+VkSubresourceLayout Device::getImageSubresourceLayout(VkImage image, VkImageAspectFlags aspectMask, uint32_t mipLevel, uint32_t arrayLayer) const
+{
+    VkImageSubresource imageSubresource;
+    imageSubresource.aspectMask = aspectMask;
+    imageSubresource.mipLevel   = mipLevel;
+    imageSubresource.arrayLayer = arrayLayer;
+
+    VkSubresourceLayout layout;
+    vkGetImageSubresourceLayout(m_device, image, &imageSubresource, &layout);
+    return layout;
+}
+
 Buffer Device::createBuffer(const BufferCreateInfo &createInfo, const AllocationCreateInfo &allocCreateInfo)
 {
     Buffer buffer;

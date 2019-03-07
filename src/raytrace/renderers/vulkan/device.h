@@ -49,6 +49,8 @@ public:
     Image createStagingImage(uint32_t width, uint32_t height, VkFormat format, ImageState initialState);
     void destroyImage(Image &image);
 
+    VkSubresourceLayout getImageSubresourceLayout(VkImage image, VkImageAspectFlags aspectMask, uint32_t mipLevel, uint32_t arrayLayer) const;
+
     Buffer createBuffer(const BufferCreateInfo &createInfo, const AllocationCreateInfo &allocCreateInfo);
     Buffer createStagingBuffer(VkDeviceSize size);
     void destroyBuffer(Buffer &buffer);

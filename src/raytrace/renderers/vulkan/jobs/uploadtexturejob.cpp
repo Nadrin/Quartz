@@ -77,6 +77,24 @@ static VkFormat getLinearTextureFormat(const QImageData &data)
     return VK_FORMAT_UNDEFINED;
 }
 
+static void copyImageData(void *dest, const QImageData &src, const VkSubresourceLayout &layout)
+{
+    uint8_t *destPixels  = reinterpret_cast<uint8_t*>(dest) + layout.offset;
+    uint32_t srcRowPitch = uint32_t(src.width * src.channels * static_cast<int>(src.type));
+
+    if(layout.rowPitch == srcRowPitch) {
+        std::memcpy(destPixels, src.data.constData(), layout.size);
+    }
+    else {
+        const uint8_t *srcPixels = reinterpret_cast<const uint8_t*>(src.data.constData());
+        for(int row=0; row < src.height; ++row) {
+            std::memcpy(destPixels, srcPixels, srcRowPitch);
+            srcPixels  += srcRowPitch;
+            destPixels += layout.rowPitch;
+        }
+    }
+}
+
 UploadTextureJob::UploadTextureJob(Renderer *renderer, const Raytrace::HTextureImage &handle)
     : m_renderer(renderer)
     , m_handle(handle)
@@ -126,7 +144,8 @@ void UploadTextureJob::run()
         return;
     }
 
-    std::memcpy(stagingImage.hostAddress, imageData.data.data(), size_t(imageData.data.size()));
+    VkSubresourceLayout stagingImageLayout = device->getImageSubresourceLayout(stagingImage, VK_IMAGE_ASPECT_COLOR_BIT, 0, 0);
+    copyImageData(stagingImage.hostAddress, imageData, stagingImageLayout);
 
     TransientCommandBuffer commandBuffer = commandBufferManager->acquireCommandBuffer();
     {
