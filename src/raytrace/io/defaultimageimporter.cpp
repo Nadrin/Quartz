@@ -4,6 +4,7 @@
  * See LICENSE file for licensing information.
  */
 
+#include <io/common_p.h>
 #include <io/defaultimageimporter_p.h>
 
 #include <QFile>
@@ -24,7 +25,7 @@ bool DefaultImageImporter::import(const QUrl &url, QImageData &data)
 {
     QByteArray imageBytes;
     {
-        QFile imageFile(url.path());
+        QFile imageFile(getAssetPathFromUrl(url));
         if(!imageFile.open(QFile::ReadOnly)) {
             qCCritical(logImport) << "Cannot open image file:" << url.toString();
             return false;

@@ -4,6 +4,7 @@
  * See LICENSE file for licensing information.
  */
 
+#include <io/common_p.h>
 #include <io/defaultmeshimporter_p.h>
 
 #include <assimp/scene.h>
@@ -133,7 +134,7 @@ bool DefaultMeshImporter::import(const QUrl &url, QGeometryData &data)
     const aiScene *scene = nullptr;
     Assimp::Importer importer;
     {
-        QFile sceneFile(url.path());
+        QFile sceneFile(getAssetPathFromUrl(url));
         if(!sceneFile.open(QFile::ReadOnly)) {
             qCCritical(logImport) << "Cannot open mesh file:" << url.toString();
             return false;

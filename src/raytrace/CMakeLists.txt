@@ -73,6 +73,7 @@ set(SOURCES_PRIVATE
     jobs/loadgeometryjob_p.h
     jobs/loadtexturejob.cpp
     jobs/loadtexturejob_p.h
+    io/common_p.h
     io/meshimporter_p.h
     io/imageimporter_p.h
     io/defaultmeshimporter.cpp
