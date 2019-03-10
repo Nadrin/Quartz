@@ -4,7 +4,7 @@ set(APP_NAME "raytrace-cpp")
 
 find_package(Qt5 COMPONENTS Core Gui 3DCore REQUIRED)
 
-add_executable(${APP_NAME} main.cpp)
+add_executable(${APP_NAME} main.cpp raytrace-cpp.qrc)
 
 target_compile_features(${APP_NAME} PRIVATE cxx_std_14)
 target_include_directories(${APP_NAME} PRIVATE ${QUARTZ_3RDPARTY})

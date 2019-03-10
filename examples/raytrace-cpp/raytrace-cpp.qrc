@@ -1,7 +1,6 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
     <qresource>
-        <file>main.qml</file>
         <file alias="plane.obj">../assets/plane.obj</file>
         <file alias="monkey.obj">../assets/monkey.obj</file>
     </qresource>
