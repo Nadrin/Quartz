@@ -53,6 +53,7 @@ void CameraManager::setDefaultParameters()
     m_lensFocalDistance = 1.0f;
     m_invGamma = 1.0f / 2.2f;
     m_exposure = 1.0f;
+    m_tonemapFactor = 1.0f;
 }
 
 void CameraManager::updateParameters()
@@ -77,6 +78,7 @@ void CameraManager::updateParameters()
         m_lensFocalDistance = lens->focalDistance();
         m_invGamma = 1.0f / lens->gamma();
         m_exposure = lens->exposure();
+        m_tonemapFactor = lens->tonemapFactor();
     }
 }
 
@@ -107,6 +109,7 @@ void CameraManager::applyDisplayPrameters(DisplayParameters &params) const
 {
     params.invGamma = m_invGamma;
     params.exposure = m_exposure;
+    params.tonemapFactorSq = m_tonemapFactor * m_tonemapFactor;
 }
 
 } // Vulkan

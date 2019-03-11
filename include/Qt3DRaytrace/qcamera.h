@@ -39,6 +39,7 @@ class QT3DRAYTRACESHARED_EXPORT QCamera : public Qt3DCore::QEntity
     Q_PROPERTY(float lensFocalDistance READ lensFocalDistance WRITE setLensFocalDistance NOTIFY lensFocalDistanceChanged)
     Q_PROPERTY(float gamma READ gamma WRITE setGamma NOTIFY gammaChanged)
     Q_PROPERTY(float exposure READ exposure WRITE setExposure NOTIFY exposureChanged)
+    Q_PROPERTY(float tonemapFactor READ tonemapFactor WRITE setTonemapFactor NOTIFY tonemapFactorChanged)
 public:
     explicit QCamera(Qt3DCore::QNode *parent = nullptr);
 
@@ -61,6 +62,7 @@ public:
     float lensFocalDistance() const;
     float gamma() const;
     float exposure() const;
+    float tonemapFactor() const;
 
     Q_INVOKABLE void translate(const QVector3D &t);
     Q_INVOKABLE void translateWorld(const QVector3D &t);
@@ -92,6 +94,7 @@ public slots:
     void setLensFocalDistance(float distance);
     void setGamma(float gamma);
     void setExposure(float exposure);
+    void setTonemapFactor(float factor);
 
 signals:
     void positionChanged(const QVector3D &position);
@@ -110,6 +113,7 @@ signals:
     void lensFocalDistanceChanged(float distance);
     void gammaChanged(float gamma);
     void exposureChanged(float exposure);
+    void tonemapFactorChanged(float factor);
 
 protected:
     explicit QCamera(QCameraPrivate &dd, Qt3DCore::QNode *parent = nullptr);

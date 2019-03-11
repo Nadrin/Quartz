@@ -54,6 +54,12 @@ float QCameraLens::exposure() const
     return d->m_data.exposure;
 }
 
+float QCameraLens::tonemapFactor() const
+{
+    Q_D(const QCameraLens);
+    return d->m_data.tonemapFactor;
+}
+
 void QCameraLens::setAspectRatio(float aspectRatio)
 {
     Q_D(QCameraLens);
@@ -105,6 +111,15 @@ void QCameraLens::setExposure(float exposure)
     if(!qFuzzyCompare(d->m_data.exposure, exposure)) {
         d->m_data.exposure = exposure;
         emit exposureChanged(exposure);
+    }
+}
+
+void QCameraLens::setTonemapFactor(float factor)
+{
+    Q_D(QCameraLens);
+    if(!qFuzzyCompare(d->m_data.tonemapFactor, factor)) {
+        d->m_data.tonemapFactor = factor;
+        emit tonemapFactorChanged(factor);
     }
 }
 

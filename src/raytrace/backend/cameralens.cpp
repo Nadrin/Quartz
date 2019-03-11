@@ -40,6 +40,9 @@ void CameraLens::sceneChangeEvent(const QSceneChangePtr &change)
         else if(propertyChange->propertyName() == QByteArrayLiteral("exposure")) {
             m_exposure = propertyChange->value().value<float>();
         }
+        else if(propertyChange->propertyName() == QByteArrayLiteral("tonemapFactor")) {
+            m_tonemapFactor = propertyChange->value().value<float>();
+        }
         markDirty(AbstractRenderer::CameraDirty);
     }
     BackendNode::sceneChangeEvent(change);
@@ -56,6 +59,7 @@ void CameraLens::initializeFromPeer(const QNodeCreatedChangeBasePtr &change)
     m_focalDistance = data.focalDistance;
     m_gamma = data.gamma;
     m_exposure = data.exposure;
+    m_tonemapFactor = data.tonemapFactor;
 
     markDirty(AbstractRenderer::CameraDirty);
 }

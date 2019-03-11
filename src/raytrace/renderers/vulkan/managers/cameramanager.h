@@ -46,6 +46,7 @@ private:
     float m_lensFocalDistance;
     float m_invGamma;
     float m_exposure;
+    float m_tonemapFactor;
 };
 
 } // Vulkan

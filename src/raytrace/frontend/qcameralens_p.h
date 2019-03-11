@@ -19,6 +19,7 @@ struct QCameraLensData
     float focalDistance = 1.0f;
     float gamma = 2.2f;
     float exposure = 1.0f;
+    float tonemapFactor = 1.0f;
 };
 
 class QCameraLensPrivate : public Qt3DCore::QComponentPrivate

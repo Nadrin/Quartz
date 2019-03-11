@@ -19,8 +19,6 @@ layout(push_constant) uniform DisplayParametersBlock
     DisplayParameters displayParams;
 };
 
-const float MaxLuminance = 1.0;
-
 void main()
 {
     vec3 linearColor = texture(displayBuffer, uv).rgb * displayParams.exposure;
@@ -28,7 +26,7 @@ void main()
     // Reinhard tonemapping operator.
     // see: "Photographic Tone Reproduction for Digital Images", eq. 4
     float luminance = dot(linearColor, vec3(0.2126, 0.7152, 0.0722));
-    float mappedLuminance = (luminance * (1.0 + luminance/(MaxLuminance*MaxLuminance))) / (1.0 + luminance);
+    float mappedLuminance = (luminance * (1.0 + luminance / displayParams.tonemapFactorSq)) / (1.0 + luminance);
 
     // Scale color by ratio of average luminances.
     vec3 mappedColor = (mappedLuminance / luminance) * linearColor;

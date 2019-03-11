@@ -24,6 +24,7 @@ class QT3DRAYTRACESHARED_EXPORT QCameraLens : public Qt3DCore::QComponent
     Q_PROPERTY(float focalDistance READ focalDistance WRITE setFocalDistance NOTIFY focalDistanceChanged)
     Q_PROPERTY(float gamma READ gamma WRITE setGamma NOTIFY gammaChanged)
     Q_PROPERTY(float exposure READ exposure WRITE setExposure NOTIFY exposureChanged)
+    Q_PROPERTY(float tonemapFactor READ tonemapFactor WRITE setTonemapFactor NOTIFY tonemapFactorChanged)
 public:
     explicit QCameraLens(Qt3DCore::QNode *parent = nullptr);
 
@@ -33,6 +34,7 @@ public:
     float focalDistance() const;
     float gamma() const;
     float exposure() const;
+    float tonemapFactor() const;
 
 public slots:
     void setAspectRatio(float aspectRatio);
@@ -41,6 +43,7 @@ public slots:
     void setFocalDistance(float distance);
     void setGamma(float gamma);
     void setExposure(float exposure);
+    void setTonemapFactor(float factor);
 
 signals:
     void aspectRatioChanged(float aspectRatio);
@@ -49,6 +52,7 @@ signals:
     void focalDistanceChanged(float distance);
     void gammaChanged(float gamma);
     void exposureChanged(float exposure);
+    void tonemapFactorChanged(float factor);
 
 protected:
     explicit QCameraLens(QCameraLensPrivate &dd, QNode *parent = nullptr);

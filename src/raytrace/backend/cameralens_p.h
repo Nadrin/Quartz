@@ -23,6 +23,7 @@ public:
     float focalDistance() const { return m_focalDistance; }
     float gamma() const { return m_gamma; }
     float exposure() const { return m_exposure; }
+    float tonemapFactor() const { return m_tonemapFactor; }
 
     void sceneChangeEvent(const Qt3DCore::QSceneChangePtr &change) override;
 
@@ -35,6 +36,7 @@ private:
     float m_focalDistance;
     float m_gamma;
     float m_exposure;
+    float m_tonemapFactor;
 };
 
 } // Raytrace

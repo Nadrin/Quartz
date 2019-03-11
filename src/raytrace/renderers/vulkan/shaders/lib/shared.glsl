@@ -72,7 +72,8 @@ struct DisplayParameters
 {
     float invGamma;
     float exposure;
-    float _padding[2];
+    float tonemapFactorSq;
+    float _padding[1];
 };
 
 #endif // QUARTZ_SHADERS_TYPES_H

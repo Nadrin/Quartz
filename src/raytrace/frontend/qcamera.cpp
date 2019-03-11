@@ -75,6 +75,7 @@ QCamera::QCamera(QCameraPrivate &dd, QNode *parent)
     QObject::connect(d->m_lens, SIGNAL(focalDistanceChanged(float)), this, SIGNAL(lensFocalDistanceChanged(float)));
     QObject::connect(d->m_lens, SIGNAL(exposureChanged(float)), this, SIGNAL(exposureChanged(float)));
     QObject::connect(d->m_lens, SIGNAL(gammaChanged(float)), this, SIGNAL(gammaChanged(float)));
+    QObject::connect(d->m_lens, SIGNAL(tonemapFactorChanged(float)), this, SIGNAL(tonemapFactorChanged(float)));
 
     addComponent(d->m_lens);
     addComponent(d->m_transform);
@@ -168,6 +169,12 @@ float QCamera::exposure() const
 {
     Q_D(const QCamera);
     return d->m_lens->exposure();
+}
+
+float QCamera::tonemapFactor() const
+{
+    Q_D(const QCamera);
+    return d->m_lens->tonemapFactor();
 }
 
 void QCamera::translate(const QVector3D &t)
@@ -325,6 +332,12 @@ void QCamera::setExposure(float exposure)
 {
     Q_D(QCamera);
     d->m_lens->setExposure(exposure);
+}
+
+void QCamera::setTonemapFactor(float factor)
+{
+    Q_D(QCamera);
+    d->m_lens->setTonemapFactor(factor);
 }
 
 } // Qt3DRaytrace
