@@ -119,7 +119,6 @@ target_compile_definitions(${MODULE_NAME} PRIVATE VK_NO_PROTOTYPES)
 target_link_libraries(${MODULE_NAME} Qt5::Core Qt5::Gui Qt5::3DCorePrivate stb ${assimp_LIBRARIES})
 
 add_subdirectory(renderers)
-add_dependencies(${MODULE_NAME} RendererShaders)
 target_link_libraries(${MODULE_NAME} ${RENDERER_LIBRARIES})
 
 if(BUILD_SHARED_LIBS)

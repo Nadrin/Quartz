@@ -1,3 +1,4 @@
+# Sources
 target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/vkcommon.h
     renderers/vulkan/vkresources.h
@@ -16,8 +17,6 @@ target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/glsl.h
     renderers/vulkan/services/frameadvanceservice.cpp
     renderers/vulkan/services/frameadvanceservice.h
-    renderers/vulkan/shaders/lib/bindings.glsl
-    renderers/vulkan/shaders/lib/shared.glsl
     renderers/vulkan/pipeline/pipeline.cpp
     renderers/vulkan/pipeline/pipeline.h
     renderers/vulkan/pipeline/graphicspipeline.cpp
@@ -53,5 +52,11 @@ target_sources(${MODULE_NAME} PRIVATE
     renderers/vulkan/managers/cameramanager.h
 )
 
-add_subdirectory(shaders)
+# Shaders
+target_sources(${MODULE_NAME} PRIVATE
+    renderers/vulkan/shaders/lib/bindings.glsl
+    renderers/vulkan/shaders/lib/shared.glsl
+    renderers/vulkan/shaders/vulkan_shaders.qrc
+)
+
 set(VULKAN_LIBRARIES volk vma spirv_reflect PARENT_SCOPE)
