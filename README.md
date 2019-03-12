@@ -2,7 +2,7 @@
 
 &copy; 2018 - 2019 Michał Siejak ([@Nadrin](https://twitter.com/Nadrin))
 
-A physically based GPU path tracing renderer with a declarative ES7-like scene description language.
+A physically based GPU path tracing renderer with a declarative, ES7-like, scene description language.
 
 Powered by Qt 3D, NVIDIA RTX & Vulkan.
 
@@ -12,9 +12,9 @@ Powered by Qt 3D, NVIDIA RTX & Vulkan.
 
 Quartz consists of several components:
 
-* At its core is a raytracing aspect for [Qt 3D](https://doc.qt.io/qt-5/qt3d-index.html) implemented by `Qt3DRaytrace` module. It provides both C++ and [QML](https://en.wikipedia.org/wiki/QML) APIs for use in Qt 3D based applications and is a drop-in replacement for `Qt3DRender` (rasterization-based rendering aspect). While not (yet) on par with `Qt3DRender` features, many types are named the same and provide similar functionality, thus making the two aspects somewhat analogous.
+* At its core is a raytracing aspect for [Qt 3D](https://doc.qt.io/qt-5/qt3d-index.html) implemented by the `Qt3DRaytrace` module. It provides both C++ and [QML](https://en.wikipedia.org/wiki/QML) APIs for use in Qt 3D based applications and is a drop-in replacement for `Qt3DRender` (rasterization-based rendering aspect). While not (yet) on par with `Qt3DRender` feature set, many `Qt3DRaytrace` types are named the same and provide similar functionality, thus making the two aspects somewhat analogous.
 * A standalone renderer application that can load and render arbitrary scenes in Qt 3D [QML](https://en.wikipedia.org/wiki/QML) format. It provides live, progressive preview and can save to many LDR and HDR image formats.
-* An "extras" module (`Qt3DRaytraceExtras`) providing various auxiliary utilities.
+* An "extras" module (`Qt3DRaytraceExtras`) providing a set of prebuilt elements and various auxiliary utilities.
 * A command-line tool for assisting in conversion of complex 3D scenes to QML-defined hierarchies (`scene2qml`).
 
 ## Features
@@ -46,7 +46,7 @@ This project is still a work in progress. Items without a check mark are planned
 
 ## System requirements
 
-Quartz requires an NVIDIA RTX-series GPU with support for the following Vulkan extensions:
+Quartz requires a NVIDIA RTX-series GPU with support for the following Vulkan extensions:
 
 - `VK_KHR_swapchain`
 - `VK_NV_ray_tracing`
@@ -142,7 +142,7 @@ Entity {
 
 ### Note on colors
 
-Since Qt has no notion of color spaces, all color values are assumed to be in sRGB by default. To specify linear color use `Qt3DRaytrace.lrgba()` function.
+Since Qt has no notion of color spaces, all color values are assumed to be in sRGB by default. To specify linear color use the `Qt3DRaytrace.lrgba()` function.
 
 For symmetry there's also `Qt3DRaytrace.srgba()` which is equivalent to `Qt.rgba()`.
 
@@ -154,7 +154,7 @@ Note that `Mesh` component treats its source file as if containing a single 3D o
 
 To work with complex 3D scenes use the `scene2qml` tool. It converts an input scene file into QML-defined `Entity` hierarchy and extracts individual meshes, and textures into separate files. The resulting QML file can then be imported by using the [`EntityLoader`](https://doc.qt.io/qt-5/qml-qt3d-core-entityloader.html) node.
 
-Conversion quality depends on input file format and complexity of a particular scene. The resulting QML file can be further edited by hand to supplement certain information, like some `Material` attributes.
+Conversion quality depends on the input file format and complexity of a particular scene. The resulting QML file can be further edited by hand to supplement certain information, like some `Material` attributes.
 
 ## Building
 
