@@ -10,6 +10,7 @@
 #include <QScopedPointer>
 
 #include "renderwindow.h"
+#include "version.h"
 
 namespace Config {
 static constexpr int DefaultViewportWidth  = 1280;
@@ -18,8 +19,14 @@ static constexpr int DefaultViewportHeight = 720;
 
 static void parseOptions(int &viewportWidth, int &viewportHeight, QString &sceneFilePath)
 {
+    const QString description = QString("%1 %2\n%3\n%4")
+            .arg(ApplicationDisplayName)
+            .arg(ApplicationVersion)
+            .arg(ApplicationCopyright)
+            .arg(ApplicationUrl);
+
     QCommandLineParser parser;
-    parser.setApplicationDescription("Quartz Standalone Renderer");
+    parser.setApplicationDescription(description);
     parser.addHelpOption();
     parser.addVersionOption();
 
@@ -46,13 +53,15 @@ static void parseOptions(int &viewportWidth, int &viewportHeight, QString &scene
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    QApplication::setApplicationName("Quartz");
-    QApplication::setApplicationVersion("1.0.0");
+    QApplication::setApplicationName(ApplicationDisplayName);
+    QApplication::setApplicationVersion(ApplicationVersion);
 
     int viewportWidth;
     int viewportHeight;
     QString sceneFilePath;
     parseOptions(viewportWidth, viewportHeight, sceneFilePath);
+
+    QTextStream(stdout) << ApplicationDisplayName << " " << ApplicationVersion << "\n";
 
     QScopedPointer<QVulkanInstance> vulkanInstance(RenderWindow::createDefaultVulkanInstance());
     if(!vulkanInstance) {
