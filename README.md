@@ -155,6 +155,37 @@ To work with complex 3D scenes use the `scene2qml` tool. It converts an input sc
 
 Conversion quality depends on input file format and complexity of a particular scene. The resulting QML file can be further edited by hand to supplement certain information, like some `Material` attributes.
 
+## Building
+
+### Prerequisites
+
+- [Qt 5.12 SDK](https://www.qt.io/download-qt-installer)
+- [Khronos Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
+- [Assimp 4.1 SDK](https://github.com/assimp/assimp/releases/tag/v4.1.0/)
+- CMake 3.8 or newer
+- Python 3.5 or newer
+
+### Environment setup
+
+Variable | Description | Example value
+---------|-------------|--------------
+`QTDIR` | Path to Qt 5.12 headers & libraries | `C:\Qt\5.12.0\msvc2017_64`
+`VULKAN_SDK` | Path to Khronos Vulkan SDK | `C:\VulkanSDK\1.1.97.0`
+`ASSIMP_ROOT_DIR` | Path to Assimp SDK (Windows only) | `C:\Program Files\Assimp`
+
+### Steps to build
+
+1. Compile GLSL shaders to SPIR-V by running: `src\raytrace\renderers\vulkan\shaders\compile.py`.
+2. Configure & build the project using the top level `CMakeLists.txt` file.
+
+**Note for Linux:** Official Qt 5.12 binaries for Linux/X11 seem to have Vulkan support disabled at compile time ([QTBUG-72763](https://bugreports.qt.io/browse/QTBUG-72763)). If your distribution does not ship Qt 5.12 with Vulkan support enabled you will need to build Qt from sources and make sure that Vulkan support is enabled.
+
+### Running development builds
+
+Before you run anything make sure that `QML2_IMPORT_PATH` is configured to look for Quartz QML plugin binaries.
+
+On Windows, also make sure that respective directories containing `Qt53DRaytrace.dll` and `Qt53DRaytraceExtras.dll` are both in `PATH`.
+
 ## Project structure
 
 Path | Description
