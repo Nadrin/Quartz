@@ -25,6 +25,7 @@ This project is still a work in progress. Items without a check mark are planned
 - [x] Multiple importance sampling (MIS)
 - [x] Next event estimation
 - [x] Physically based BRDF with metalness workflow (based on Unreal Engine 4 material model)
+- [x] Triangle mesh geometry
 - [x] Texture mapping (albedo, roughness & metalness maps)
 - [x] Instancing
 - [x] Distant (directional) lights
