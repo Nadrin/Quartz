@@ -16,7 +16,7 @@ Entity {
         InputSettings {},
         RenderSettings {
             camera: camera
-            skyColor: Qt3DRaytrace.lrgba(0.8, 0.9, 1.0)
+            skyColor: "#00C5FF"
             skyIntensity: 0.5
         }
     ]
@@ -37,13 +37,13 @@ Entity {
     Entity {
         Transform {
             id: sunTransform
-            rotationX: -5
-            rotationZ: 20
+            rotationX: 60
+            rotationZ: 35
         }
         DistantLight {
             id: sunLight
             color: Qt3DRaytrace.lrgba(1.0, 0.9, 0.8)
-            intensity: 1.0
+            intensity: 4
         }
         components: [ sunTransform, sunLight ]
     }

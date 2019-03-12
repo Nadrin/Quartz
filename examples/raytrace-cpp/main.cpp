@@ -36,19 +36,19 @@ static Qt3DCore::QEntity *createScene()
 
     auto *renderSettings = new Qt3DRaytrace::QRenderSettings;
     renderSettings->setCamera(camera);
-    renderSettings->setSkyColor(Qt3DRaytrace::to_sRgb(QColor::fromRgbF(0.8f, 0.9f, 1.0f)));
+    renderSettings->setSkyColor(QColor("#00C5FF"));
     renderSettings->setSkyIntensity(0.5f);
     rootEntity->addComponent(renderSettings);
 
     auto *sunEntity = new Qt3DCore::QEntity(rootEntity);
     {
         auto *sunTransform = new Qt3DCore::QTransform;
-        sunTransform->setRotationX(-5.0f);
-        sunTransform->setRotationZ(20.0f);
+        sunTransform->setRotationX(60.0f);
+        sunTransform->setRotationZ(35.0f);
 
         auto *sunLight = new Qt3DRaytrace::QDistantLight;
         sunLight->setColor(Qt3DRaytrace::to_sRgb(QColor::fromRgbF(1.0f, 0.9f, 0.8f)));
-        sunLight->setIntensity(1.0f);
+        sunLight->setIntensity(4.0f);
 
         sunEntity->addComponent(sunTransform);
         sunEntity->addComponent(sunLight);
