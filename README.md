@@ -2,11 +2,16 @@
 
 &copy; 2018 - 2019 Michał Siejak ([@Nadrin](https://twitter.com/Nadrin))
 
-A physically based GPU path tracing renderer with a declarative, ES7-like, scene description language.
+A physically based GPU path tracing renderer with a declarative scene description language based on ES7.
 
 Powered by Qt 3D, NVIDIA RTX & Vulkan.
 
 ![Images rendered by Quartz](https://raw.githubusercontent.com/Nadrin/Quartz/master/doc/renders.jpg)
+
+## Current release
+
+* [Quartz Standalone Renderer - Windows 64bit](https://github.com/Nadrin/Quartz/releases/download/v1.0.0/quartz_1.0.0_win64.zip) [version 1.0.0]
+* [Example 3D scenes](https://github.com/Nadrin/Quartz/releases/download/v1.0.0/quartz_scenes.zip)
 
 ## Overview
 
@@ -65,9 +70,9 @@ If the opened QML file contains an instance of `FirstPersonCameraController` the
 
 Press `F2` to save an output image file. Saving to HDR (Radiance) format writes a raw floating-point image in linear space. Saving to any other format writes a tone-mapped, gamma corrected image.
 
-### QML scene files
+### QML scene description language
 
-QML is a declarative language used by Qt 3D (and thus Quartz) to describe scene hierarchy and all required resources like textures and triangle meshes.
+QML is a declarative language based on ES7, used by Qt 3D (and thus Quartz) to describe scene hierarchy and all required resources like textures and triangle meshes.
 
 Each QML file consists of a root `Entity` and any number of child nodes, which themselves can also contain child nodes (thus forming a DAG). In most cases a `Node` is either an `Entity` or a `Component`. Entities can contain a number of components (but no more than one component of each type). Examples of components include: `Transform`, `Material`, and `Mesh`.
 
