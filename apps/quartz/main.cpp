@@ -20,7 +20,7 @@ static constexpr int DefaultViewportHeight = 720;
 static void parseOptions(int &viewportWidth, int &viewportHeight, QString &sceneFilePath)
 {
     const QString description = QString("%1 %2\n%3\n%4")
-            .arg(ApplicationDisplayName)
+            .arg(ApplicationDescription)
             .arg(ApplicationVersion)
             .arg(ApplicationCopyright)
             .arg(ApplicationUrl);
@@ -53,7 +53,7 @@ static void parseOptions(int &viewportWidth, int &viewportHeight, QString &scene
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    QApplication::setApplicationName(ApplicationDisplayName);
+    QApplication::setApplicationName(ApplicationName);
     QApplication::setApplicationVersion(ApplicationVersion);
 
     int viewportWidth;
@@ -61,7 +61,8 @@ int main(int argc, char *argv[])
     QString sceneFilePath;
     parseOptions(viewportWidth, viewportHeight, sceneFilePath);
 
-    QTextStream(stdout) << ApplicationDisplayName << " " << ApplicationVersion << "\n";
+    QTextStream(stdout) << ApplicationDescription << " "
+                        << ApplicationVersion << "\n";
 
     QScopedPointer<QVulkanInstance> vulkanInstance(RenderWindow::createDefaultVulkanInstance());
     if(!vulkanInstance) {

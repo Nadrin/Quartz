@@ -8,7 +8,8 @@
 
 #include <QString>
 
-static const QString ApplicationDisplayName("Quartz Standalone Renderer");
+static const QString ApplicationName("Quartz");
+static const QString ApplicationDescription("Quartz Standalone Renderer");
 static const QString ApplicationCopyright("(c) 2018-2019 Michal Siejak <michal@siejak.pl>");
 static const QString ApplicationUrl("https://github.com/Nadrin/Quartz");
 static const QString ApplicationVersion("1.0.0");
