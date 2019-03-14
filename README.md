@@ -167,8 +167,8 @@ Conversion quality depends on the input file format and complexity of a particul
 ### Prerequisites
 
 - [Qt 5.12 SDK](https://www.qt.io/download-qt-installer)
-- [Khronos Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
 - [Assimp 4.1 SDK](https://github.com/assimp/assimp/releases/tag/v4.1.0/)
+- [Khronos Vulkan SDK](https://vulkan.lunarg.com/sdk/home) 1.1.92 or newer
 - CMake 3.8 or newer
 - Python 3.5 or newer
 
