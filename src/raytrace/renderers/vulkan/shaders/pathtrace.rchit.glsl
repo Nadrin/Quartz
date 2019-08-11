@@ -190,11 +190,12 @@ void main()
     surface.albedo    = fetchMaterialAlbedo(material, uv);
     surface.roughness = fetchMaterialRoughness(material, uv);
     surface.metalness = fetchMaterialMetalness(material, uv);
+	initializeSurfaceBSDF(surface);
 
     vec3 p  = gl_WorldRayOriginNV + gl_RayTmaxNV * gl_WorldRayDirectionNV;
     vec3 wo = worldToTangent(surface.basis, -gl_WorldRayDirectionNV);
 
-    payload.L  = step(payload.depth, 0) * material.emission.rgb;
+    payload.L  = (payload.depth == 0) ? material.emission.rgb : vec3(0.0);
     payload.L += directLighting(p, wo, surface);
     if(payload.depth + 1 <= params.maxDepth) {
         payload.L += indirectLighting(p, wo, surface, params.minDepth);

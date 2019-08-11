@@ -44,8 +44,11 @@ struct TangentBasis {
 struct DifferentialSurface {
     TangentBasis basis;
     vec3 albedo;
+	vec3 reflectance;
     float roughness;
     float metalness;
+	float alpha, alpha2;
+	float swSpecular;
 };
 
 float maxcomp(vec3 v)
@@ -56,6 +59,11 @@ float maxcomp(vec3 v)
 bool isblack(vec3 v)
 {
     return dot(v, v) < Epsilon;
+}
+
+float luminance(vec3 color)
+{
+	return dot(color, vec3(0.2126, 0.7152, 0.0722));
 }
 
 float pow2(float x)

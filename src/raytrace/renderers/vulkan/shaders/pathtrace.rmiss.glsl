@@ -16,5 +16,10 @@ rayPayloadInNV PathTracePayload payload;
 
 void main()
 {
-    payload.L = step(payload.depth, 0) * fetchSkyRadiance(skyuv(gl_WorldRayDirectionNV));
+	if(payload.depth == 0) {
+		payload.L = fetchSkyRadiance(skyuv(gl_WorldRayDirectionNV));
+	}
+	else {
+		payload.L = vec3(0.0);
+	}
 }
