@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 #include <QtGlobal>
 
 #include <QVector3D>

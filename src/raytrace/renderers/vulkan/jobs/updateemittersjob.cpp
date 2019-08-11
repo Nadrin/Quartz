@@ -10,6 +10,7 @@
 #include <backend/managers_p.h>
 #include <backend/rendersettings_p.h>
 
+#include <cstring>
 #include <QVector>
 
 using namespace Qt3DCore;

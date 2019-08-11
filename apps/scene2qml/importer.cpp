@@ -64,7 +64,6 @@ Entity *Importer::processScene(const aiScene *scene)
     for(unsigned int textureIndex=0; textureIndex < scene->mNumTextures; ++textureIndex) {
         const aiTexture *texture = scene->mTextures[textureIndex];
         TextureComponent textureComponent;
-        textureComponent.name = QString::fromUtf8(texture->mFilename.C_Str());
         textureComponent.width = texture->mWidth;
         textureComponent.height = texture->mHeight;
         if(texture->mHeight == 0) {

@@ -64,12 +64,12 @@ void Exporter::setPrefix(const QString &prefix)
 
 void Exporter::setMeshDirectory(const QString &path)
 {
-    m_meshDirectory = path;
+    m_meshDirectory.setPath(path);
 }
 
 void Exporter::setTexturesDirectory(const QString &path)
 {
-    m_texturesDirectory = path;
+    m_texturesDirectory.setPath(path);
 }
 
 void Exporter::setColorspace(Colorspace colorspace)
@@ -160,7 +160,7 @@ bool Exporter::exportQml(const QString &path, const QString &sceneName)
         return false;
     }
 
-    m_rootDirectory = QFileInfo(path).path();
+    m_rootDirectory.setPath(QFileInfo(path).path());
 
     QTextStream out(&outputFile);
     writeQmlHeader(out, sceneName);
@@ -587,4 +587,6 @@ QString Exporter::colorString(const Color &c) const
     case Colorspace::sRGB:
         return QString("Qt3DRaytrace.srgba(%1,%2,%3)").arg(c.r).arg(c.g).arg(c.b);
     }
+    Q_ASSERT(false);
+    return QString();
 }

@@ -30,6 +30,11 @@
 #include <QTimer>
 #include <QElapsedTimer>
 
+static void initializeResources()
+{
+    Q_INIT_RESOURCE(vulkan_shaders);
+}
+
 namespace Qt3DRaytrace {
 namespace Vulkan {
 
@@ -55,7 +60,7 @@ Renderer::Renderer(QObject *parent)
     , m_updateInstanceBufferJob(new UpdateInstanceBufferJob(this))
     , m_updateEmittersJob(new UpdateEmittersJob(this))
 {
-    Q_INIT_RESOURCE(vulkan_shaders);
+    initializeResources();
     QObject::connect(m_renderFrameTimer, &QTimer::timeout, this, &Renderer::renderFrame);
 }
 

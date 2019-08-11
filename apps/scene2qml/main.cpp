@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 {
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName("scene2qml");
-    QCoreApplication::setApplicationVersion("1.0.2");
+    QCoreApplication::setApplicationVersion("1.0.3");
 
     QCommandLineParser parser;
     parser.setApplicationDescription("3D scene file to Quartz QML converter.");

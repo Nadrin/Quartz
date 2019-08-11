@@ -10,6 +10,8 @@
 #include <Qt3DCore/private/qnode_p.h>
 #include <Qt3DCore/private/qtypedpropertyupdatechange_p.h>
 
+#include <memory>
+
 namespace Qt3DRaytrace {
 
 class QAbstractTexturePrivate : public Qt3DCore::QNodePrivate

@@ -46,19 +46,8 @@ if(WIN32)
 	endif()
 	
 else(WIN32)
-
-	find_path(
-	  assimp_INCLUDE_DIRS
-	  NAMES postprocess.h scene.h version.h config.h cimport.h
-	  PATHS /usr/local/include/
-	)
-
-	find_library(
-	  assimp_LIBRARIES
-	  NAMES assimp
-	  PATHS /usr/local/lib/
-	)
-
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(assimp REQUIRED assimp)
 endif(WIN32)
 
 if (assimp_INCLUDE_DIRS AND assimp_LIBRARIES)
