@@ -32,8 +32,8 @@ static constexpr Qt::Key SaveImageKey = Qt::Key_F2;
 
 RenderWindow::RenderWindow()
 {
-    QString qmlImportPath = QString("%1/%2").arg(QApplication::applicationDirPath()).arg("qml");
-    qmlEngine()->setImportPathList({qmlImportPath});
+    qmlEngine()->addImportPath(QString("%1/qml").arg(QApplication::applicationDirPath()));
+    qmlEngine()->addImportPath(QString("%1/qml").arg(QDir::currentPath()));
 
     QTimer *updateTitleTimer = new QTimer(this);
     QObject::connect(updateTitleTimer, &QTimer::timeout, this, &RenderWindow::updateTitle);
