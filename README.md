@@ -52,7 +52,7 @@ This project is still a work in progress. Items without a check mark are planned
 
 ## System requirements
 
-Quartz requires a NVIDIA RTX-series GPU with support for the following Vulkan extensions:
+Quartz requires a NVIDIA GPU with support for the following Vulkan extensions:
 
 - `VK_KHR_swapchain`
 - `VK_NV_ray_tracing`
@@ -166,18 +166,19 @@ Conversion quality depends on the input file format and complexity of a particul
 
 ### Prerequisites
 
-- [Qt 5.12 SDK](https://www.qt.io/download-qt-installer)
+- [Qt 5.12+ SDK](https://www.qt.io/download-qt-installer)
 - [Assimp 4.1 SDK](https://github.com/assimp/assimp/releases/tag/v4.1.0/)
 - [Khronos Vulkan SDK](https://vulkan.lunarg.com/sdk/home) 1.1.92 or newer
 - CMake 3.8 or newer
 - Python 3.5 or newer
+- pkg-config (on Linux)
 
 ### Environment setup
 
 Variable | Description | Example value
 ---------|-------------|--------------
 `QTDIR` | Path to Qt 5.12 headers & libraries | `C:\Qt\5.12.0\msvc2017_64`
-`VULKAN_SDK` | Path to Khronos Vulkan SDK | `C:\VulkanSDK\1.1.97.0`
+`VULKAN_SDK` | Path to Khronos Vulkan SDK (Windows only) | `C:\VulkanSDK\1.1.97.0`
 `ASSIMP_ROOT_DIR` | Path to Assimp SDK (Windows only) | `C:\Program Files\Assimp`
 
 ### Steps to build
@@ -185,7 +186,7 @@ Variable | Description | Example value
 1. Compile GLSL shaders to SPIR-V by running: `src\raytrace\renderers\vulkan\shaders\compile.py`.
 2. Configure & build the project using the top level `CMakeLists.txt` file.
 
-**Note for Linux:** Official Qt 5.12 binaries for Linux/X11 seem to have Vulkan support disabled at compile time ([QTBUG-72763](https://bugreports.qt.io/browse/QTBUG-72763)). If your distribution does not ship Qt 5.12 with Vulkan support enabled you will need to build Qt from sources and make sure that Vulkan support is enabled.
+**Note for Linux:** Make sure that the version of Qt being used ships with Vulkan support enabled at compile time. Official Qt binaries for Linux support Vulkan since version **5.13**.
 
 ### Running development builds
 
@@ -215,7 +216,7 @@ Path | Description
 
 This project makes use of the following open source libraries:
 
-- [Qt 5.12](https://www.qt.io/)
+- [Qt](https://www.qt.io/)
 - [Open Asset Import Library](http://www.assimp.org/)
 - [Vulkan Memory Allocator](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)
 - [SPIRV-Reflect](https://github.com/chaoticbob/SPIRV-Reflect)
