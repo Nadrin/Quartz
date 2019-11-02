@@ -148,6 +148,7 @@ void Renderer::shutdown()
 
     m_swapchain = {};
     m_graphicsQueue = VK_NULL_HANDLE;
+    m_renderedFirstFrame = false;
 }
 
 QVector<Qt3DCore::QAspectJobPtr> Renderer::createGeometryJobs()
@@ -728,10 +729,15 @@ void Renderer::renderFrame()
     m_commandBufferManager->proceedToNextFrame();
     m_frameAdvanceService->proceedToNextFrame();
 
-    // TODO: Don't wait on previous frame query availability (though in practice it doesn't seem to reduce performance).
     double previousDeviceTime = -1.0;
-    m_device->queryTimeElapsed(m_defaultQueryPool, previousFrameQueryIndex, previousDeviceTime, VK_QUERY_RESULT_WAIT_BIT);
-    updateFrameTimings(frameTimer.nsecsElapsed() * 1e-6, previousDeviceTime);
+    if(m_renderedFirstFrame) {
+        // TODO: Don't wait on previous frame query availability (though in practice it doesn't seem to reduce performance).
+        m_device->queryTimeElapsed(m_defaultQueryPool, previousFrameQueryIndex, previousDeviceTime, VK_QUERY_RESULT_WAIT_BIT);
+        updateFrameTimings(frameTimer.nsecsElapsed() * 1e-6, previousDeviceTime);
+    }
+    else {
+        m_renderedFirstFrame = true;
+    }
 }
 
 VkPhysicalDevice Renderer::choosePhysicalDevice(const QByteArrayList &requiredExtensions, uint32_t &queueFamilyIndex) const

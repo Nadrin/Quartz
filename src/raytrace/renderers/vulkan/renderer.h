@@ -176,6 +176,7 @@ private:
     RenderParameters m_renderParams = {};
     DisplayParameters m_displayParams = {};
 
+    bool m_renderedFirstFrame = false;
     bool m_renderBuffersReady = false;
     bool m_clearPreviousRenderBuffer = false;
 
